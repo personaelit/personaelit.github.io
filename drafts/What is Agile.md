@@ -4,7 +4,7 @@
 
 It ain't kanban. It ain't scrum. It ain't burndown, or velocity, or standups. It ain't Jira, or Azure DevOps or Trello.
 
-It's people and interations over processes and tools. It's working software over documentation. It's customer collaboration over contract negotiation and it's responding to change over following a plan. 
+It's people and interactions over processes and tools. It's working software over documentation. It's customer collaboration over contract negotiation and it's responding to change over following a plan. 
 
 I'd even argue that most Agile today fails the very first point...
 
