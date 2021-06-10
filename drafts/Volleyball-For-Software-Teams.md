@@ -2,7 +2,7 @@
 
 What makes for a good volleyball team?
 
-Well good athletes of course. Tall, atheltic, quick, good mental aquity. 
+Well good athletes of course. Tall, atheltic, quick, good mental acuity. 
 
 And you have those athletes, right? Because like every organization, you only hire the best. Even if best means has wicked growth potential.
 
@@ -23,6 +23,6 @@ But it does tie into the [Agile Manifesto](what-is-agile):
 > Customer collaboration over contract negotiation
 > Responding to change over following a plan
 
-In my mind, three of the four tennents, are about communication. Value people over process. Collaborate with customers. Responding to change.  
+In my mind, three of the four principles, are about communication. Value people over process. Collaborate with customers. Responding to change.  
 
 All of those require clear communication.
