@@ -1,0 +1,9 @@
+    <p><a href="https://agilemanifesto.org/">The Agile Manifesto</a>.</p>
+
+    <p>It ain't kanban. It ain't scrum. It ain't burndown, or velocity, or standups. It ain't Jira, or Azure DevOps or Trello.</p>
+
+    <p>It's people and interactions over processes and tools. It's working software over documentation. It's customer collaboration over contract negotiation and it's responding to change over following a plan. </p>
+
+    <p>I'd even argue that most Agile today fails the very first point...</p>
+
+    <p>And don't take my word for it, Andy Hunt was there when it started. <a href="https://www.youtube.com/watch?v=a-BOSpxYJ9M">And he's saying this too</a>.</p>
