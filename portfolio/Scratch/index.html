@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            border: 0;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: auto;
+            padding: 10px;
+
+        }
+    </style>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.body.addEventListener("keyup", handleKeyUp);
+
+            if (localStorage.getItem('scratch-body') != null) {
+                document.body.innerHTML = localStorage.getItem('scratch-body');
+            }
+
+            function handleKeyUp(event) {
+                localStorage.setItem('scratch-body', document.body.innerHTML);
+            }
+
+
+        });
+    </script>
+</head>
+
+<body contenteditable="true">
+
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+* {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    border-collapse:unset;
+}
+
+.quad {
+    width: 50%;
+    height: 50vh;
+    float:left;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: auto;
+}
+
+
+#UrgentImportant {
+    background-color: rgb(183, 255, 183);
+}
+
+#NotUrgentImportant {
+    background-color: rgb(156, 156, 253);
+}
+
+#NotImportantUrgent {
+    background-color: rgb(255, 115, 115);
+}
+
+#NotImportantNotUrgent {
+    background-color: rgb(255, 255, 168);
+}
+
+.plus {
+    background-color: rgb(6, 172, 48);
+    color:white;
+    width: 20px;
+    border-radius: 5px;
+    text-align: center;
+    padding: 2px;
+    font-weight: bold;
+    margin: 5px;
+    cursor: pointer;
+    border: 2px solid black;
+    display: inline-block;
+}
+
+.taskInput {
+    background-color: white;
+    border-radius: 3px;
+    margin: 3px;
+    padding: 3px;
+    width: 92%;
+    cursor:move;
+    display: inline-block;
+    user-select: none;
+}
+
+.x {
+    background-color:rgb(211, 85, 85);
+    color:white;
+    width: 20px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid black;
+    display: inline-block;
+}
+
+.title {
+    text-align: center;
+    display: inline-block;
+}
