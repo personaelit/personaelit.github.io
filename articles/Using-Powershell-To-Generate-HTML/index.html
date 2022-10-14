@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Using Powershell To Generate HTML</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../personaelit.css">
+    <script src="../../personaelit.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1 id="title">Using Powershell To Generate HTML</h1>
+        <div id="subtitle">why not?</div>
+    </header>
+    <time datetime="2022-10-14">2022-10-14</time>
+    <main id="content">
+        <p>
+            Here is a quick script I wrote to overwrite the index file with a list of links to articles in the articles directory. I use it to regenerate the index file when I write a new article. It's simple, and like most simple things, it sparks some joy.
+        </p>
+        <pre>
+            <code>
+                $articles = Get-ChildItem -Path "articles" -Directory
+                $links = "";
+                foreach($article in $articles) {
+                    $name = $article.Name.Replace("-", " ");
+                    $links += "`t`t`t&lt;li&gt;&lt;a href=""$article""&gt;$name&lt;/a&gt;&lt;/li&gt;`r`n";
+                }
+                
+                $template = Get-Content .\articles\index.template
+                $template = $template.Replace("[[LINKS]]", $links);
+                Set-Content -Path .\articles\index.html -Value $template;
+            </code>
+        </pre>
+    </main>
+    <nav>
+        <a href="../">../</a>
+    </nav>
+</body>
+
+</html>

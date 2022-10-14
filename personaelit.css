@@ -20,7 +20,7 @@ header {
     text-align: center;
 } */
 
-#content {
+#content, nav, pre {
     padding: 11px;
 }
 
