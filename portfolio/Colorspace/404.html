@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <title>Color Space - 404</title>
+    <meta name="description" content="404 - Invlaid Hex code.">
+</head>
+
+<body>
+    <div style="background:#fff;display:inline-block;">
+        404 - Invalid Hex Code: #<span id="hex"></span>
+    </div>
+    <script type="text/javascript">
+
+        let invalidHexCode = window.location.search;
+        hex.innerText = invalidHexCode.replace("?", "")
+
+        setInterval(randomHex, 500)
+
+        function randomHex() {
+            //https://www.paulirish.com/2009/random-hex-color-code-snippets/
+            document.body.style.backgroundColor =  '#' + Math.floor(Math.random() * 16777215).toString(16);
+        }
+
+    </script>
+</body>
+
+</html>
