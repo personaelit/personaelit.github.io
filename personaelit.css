@@ -28,6 +28,31 @@ header {
     font-style: italic;
 }
 
-/* @media only screen and (max-width: 480px) {
+time {
+    padding:3px 11px;
+    background-color: #7c7c7c;
+    color: #ffffff;
+    display: block;
+}
 
-}  */
+p {
+    padding:11px 0;
+    
+}
+code {
+    background-color:  yellow;
+    display: inline-block;
+}
+
+blockquote {
+    margin-left: 33px;
+    padding-left:11px;
+    border-left: 5px solid black;
+    background-color: #ebebeb;
+}
+
+@media only screen and (min-width: 900px) {
+    header {
+        text-align: left;
+    }
+} 
