@@ -1,0 +1,90 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    
+    <head>
+        <title>Hello world - First Blog Post</title>
+        <meta name="description"
+            content="Hello world! This is the first blog post." />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../../personaelit.css">
+        <script src="../../../../personaelit.js"></script>
+    </head>
+    
+    <body>
+        <header>
+            <h1 id="title">Hello world - First Blog Post</h1>
+            <div id="subtitle">First!</div>
+        </header>
+        <time class="created-at" datetime="10/17/2022 10:14:17">Created at: 10/17/2022 10:14:17</time>
+        <time class="last-updated"></time>
+        <main id="content">
+            <p>
+                This is the first blog post.  Well my first blog post since the aughts. This is a quick and dirty blog. I plan to keep a loose log of daily activities here, just for my reference.  Not a lot of value to others, so I probably won't even link this from the main page.
+            </p>
+            <p>
+                 I am in a bit of a holding pattern at work while I wait for the data discrepancies to be cleared.
+            </p>
+            <p> 
+                 I reached out to our marketing partner today to challenge them on a proposed plan to duplicate our blog content, as duplicate content is usually a bad thing.
+            </p>
+            <p>
+                 I wrote this script which will potentially help me be more consistent with my blogging efforts.
+                 <pre>
+                     <code>
+ if (!(Test-Path 'blog')) {
+     mkdir 'blog'
+ }
+ 
+ $date = Get-Date;
+ $year = $date.Year;
+ $month = $date.Month;
+ $day = $date.Day;
+ 
+ 
+ if (!(Test-Path "blog/$year/$month/$day")) {
+     mkdir "blog/$year/$month/$day";
+     Set-Content -Path "blog/$year/$month/$day/index.html" -Value @"
+     &lt;!DOCTYPE html&gt;
+     &lt;html lang="en"&gt;
+     
+     &lt;head&gt;
+         &lt;title&gt;&lt;/title&gt;
+         &lt;meta name="description"
+             content="" /&gt;
+         &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+         &lt;link rel="stylesheet" href="personaelit.css"&gt;
+         &lt;script src="personaelit.js"&gt;&lt;/script&gt;
+     &lt;/head&gt;
+     
+     &lt;body&gt;
+         &lt;header&gt;
+             &lt;h1 id="title"&gt;&lt;/h1&gt;
+             &lt;div id="subtitle"&gt;&lt;/div&gt;
+         &lt;/header&gt;
+         &lt;time class="created-at" datetime="$date"&gt;Created at: $date&lt;/time&gt;
+         &lt;time class="last-updated"&gt;&lt;/time&gt;
+         &lt;main id="content"&gt;
+             
+         &lt;/main&gt;
+         &lt;nav&gt;
+             &lt;a href="../"&gt;../&lt;/a&gt;
+         &lt;/nav&gt;
+     &lt;/body&gt;
+     
+     &lt;/html&gt;
+ "@
+ }
+                     </code>
+                 </pre> 
+                 It basically creates a directory for the day, and adds some template stuff in an index.html file.  Thus, this blog only supports one post per day.
+            </p>
+            <p>
+ 
+            </p>
+        </main>
+        <nav>
+            <a href="/">/</a>
+        </nav>
+    </body>
+    
+    </html>
