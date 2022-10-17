@@ -1,7 +1,3 @@
-if (!(Test-Path 'blog')) {
-    mkdir 'blog'
-}
-
 $date = Get-Date;
 $year = $date.Year;
 $month = $date.Month;

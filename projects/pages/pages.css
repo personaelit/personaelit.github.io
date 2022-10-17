@@ -1,0 +1,46 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#page {
+    min-height: 90vh;
+    overflow: auto;
+    border: 1px solid #ddd;
+    box-shadow: 3px 3px 3px #ddd;
+    padding: 40px 20px 0 20px;
+    background-color:#fcfcfc;
+}
+
+#page:focus {
+    outline:0;
+
+}
+
+#plus {
+    background-color: rgb(6, 172, 48);
+    color:white;
+    width: 20px;
+    border-radius: 5px;
+    text-align: center;
+    padding: 2px;
+    font-weight: bold;
+    margin: 5px auto;
+    cursor: pointer;
+    border: 2px solid black;
+    display: inline-block;
+}
+
+#index {
+    display: block;
+    overflow: auto;
+}
+
+#index a {
+    margin:5px;
+    float:left;
+}
+
+#title {
+    display: inline-block;
+    margin: 5px;
+}
