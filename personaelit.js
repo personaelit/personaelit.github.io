@@ -1,8 +1,7 @@
 window.addEventListener('DOMContentLoaded', (event) => {
-    let time = document.getElementsByTagName("time")[0];
-    if (time != null) {
-        time.innerHTML = document.lastModified;
+    let lastUpdated = document.getElementsByClassName("last-updated")[0];
+    if (lastUpdated != null) {
+        lastUpdated.innerHTML = "Last updated: " + document.lastModified;
+        lastUpdated.setAttribute('datetime', document.lastModified);
     }
-
-
 });
