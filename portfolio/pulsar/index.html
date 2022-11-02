@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Pulsar</title>
+    <meta name="description" content="">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .orb {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: calc(50vh - 50px);
+            left: calc(50% - 50px);
+            /* border: 1px solid #6e6e6e; */
+            border-radius: 100px;
+        }
+    </style>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            let orb = document.getElementById("orb");
+            let orbBackground =  document.getElementById("orbBackground");
+            let red = Math.floor(Math.random() * 255);
+            let green = Math.floor(Math.random() * 255);
+            let blue = Math.floor(Math.random() * 255);
+            let redAscending = true;
+            let blueAscending = true;
+            let greenAscending = true;
+            
+            
+            setInterval(() => {
+                if (redAscending && red < 255) {
+                    red++;
+                }
+                else if (red >= 0) {
+                    if (red == 0) {
+                        redAscending = true;
+                    }
+                    else {
+                        redAscending = false;
+                        red--;
+                    }
+                }
+            }, Math.round(Math.random() * (100 - 10)) + 10);
+
+            setInterval(() => {
+                if (blueAscending && blue < 255) {
+                    blue++;
+                }
+                else if (blue >= 0) {
+                    if (blue == 0) {
+                        blueAscending = true;
+                    }
+                    else {
+                        blueAscending = false;
+                        blue--;
+                    }
+                }
+            },  Math.round(Math.random() * (100 - 10)) + 10);
+
+            setInterval(() => {
+                if (greenAscending && green < 255) {
+                    green++;
+                }
+                else if (green >= 0) {
+                    if (green == 0) {
+                        greenAscending = true;
+                    }
+                    else {
+                        greenAscending = false;
+                        green--;
+                    }
+                }
+            },  Math.round(Math.random() * (100 - 10)) + 10);
+
+            setInterval(() => {
+                orb.style.boxShadow = `inset 0px 0px 80px 40px rgb(${red},${green},${blue})`
+                orb.style.border = `1px solid rgb(${red},${green},${blue})`
+                orbBackground.style.boxShadow = `0px 0px 80px 40px rgb(${red},${green},${blue})`
+                orbBackground.style.border = `1px solid rgb(${red},${green},${blue})`
+
+            }, 10)
+
+
+
+
+
+
+
+
+
+        });
+    </script>
+</head>
+
+<body>
+    <div class="orb" id="orb"></div>
+    <div class="orb" id="orbBackground"></div>
+</body>
+
+</html>
