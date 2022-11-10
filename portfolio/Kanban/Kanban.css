@@ -18,7 +18,7 @@
     background-color: rgb(125, 243, 125);
 }
 #done {
-    background-color: rgb(44, 44, 44);
+    background-color: rgb(59, 59, 59);
     color:whitesmoke;
 }
 
@@ -38,6 +38,7 @@
 
 .taskInput {
     background-color: whitesmoke;
+    color:black;
     border-radius: 3px;
     margin: 3px;
     padding: 3px;
