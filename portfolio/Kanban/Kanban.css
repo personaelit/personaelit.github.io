@@ -1,0 +1,64 @@
+* {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    border-collapse:unset;
+}
+.list {
+    width: 33.33%;
+    height: 100vh;
+    float:left;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: auto;
+}
+#todo {
+    background-color: rgb(245, 245, 140);
+}
+#doing {
+    background-color: rgb(125, 243, 125);
+}
+#done {
+    background-color: rgb(44, 44, 44);
+    color:whitesmoke;
+}
+
+.plus {
+    background-color: rgb(6, 172, 48);
+    color:white;
+    width: 20px;
+    border-radius: 5px;
+    text-align: center;
+    padding: 2px;
+    font-weight: bold;
+    margin: 5px;
+    cursor: pointer;
+    border: 2px solid black;
+    display: inline-block;
+}
+
+.taskInput {
+    background-color: whitesmoke;
+    border-radius: 3px;
+    margin: 3px;
+    padding: 3px;
+    width: 92%;
+    cursor:move;
+    display: inline-block;
+    user-select: none;
+}
+
+.x {
+    background-color:rgb(211, 85, 85);
+    color:whitesmoke;
+    width: 20px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid black;
+    display: inline-block;
+}
+
+.title {
+    text-align: center;
+    display: inline-block;
+}
