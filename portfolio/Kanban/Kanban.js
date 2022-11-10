@@ -8,9 +8,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
         localStorage.clear();
     }
 
-    if (localStorage.getItem('body') != null)
+    if (localStorage.getItem('kanban-body') != null)
     {
-        document.body.innerHTML = localStorage.getItem('body');
+        document.body.innerHTML = localStorage.getItem('kanban-body');
     }
     
     let draggedTask = null;
@@ -100,6 +100,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function storeBody() {
-        localStorage.setItem('body', document.body.innerHTML);
+        localStorage.setItem('kanban-body', document.body.innerHTML);
     }
 });
