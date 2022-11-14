@@ -1,0 +1,49 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    
+    <head>
+        <title></title>
+        <meta name="description"
+            content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../../personaelit.css">
+        <script src="../../../../personaelit.js"></script>
+    </head>
+    
+    <body>
+        <header>
+            <h1 id="title">RayGun4Net Not Showing Errors</h1>
+            <div id="subtitle">and there is no error to debug.</div>
+        </header>
+        <time class="created-at" datetime="11/11/2022 11:02:27">Created at: 11/11/2022 11:02:27</time>
+        <time class="last-updated"></time>
+        <main id="content">
+           <p>
+               If you are having trouble with error not showing up in RayGun, and you are using the RayGun4Net Nuget package, set `throwOnError=true` in the web.config.
+           </p>
+
+           <code>
+            <pre>
+                &lt;RaygunSettings apikey="[Raygun4Net api key goes here]" throwOnError="true"/ &gt;
+            </pre>
+           </code>
+
+           <p>
+               In my case, the recommended tip to add the following to the global.asax did the trick. Note, that this line should go in the `Application_Start` method.
+           </p>
+           <code>
+            <pre>
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12
+            </pre>
+           </code>
+
+           <p>
+               Source: <a href="https://github.com/MindscapeHQ/raygun4net#troubleshooting">https://github.com/MindscapeHQ/raygun4net#troubleshooting</a>
+           </p>
+        </main>
+        <nav>
+            <a href="/">/</a>
+        </nav>
+    </body>
+    
+    </html>
