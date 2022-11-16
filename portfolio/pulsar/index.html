@@ -7,28 +7,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        @keyframes change-width {
+            from {
+                height: 100px;
+                width: 100px;
+                top: calc(50vh - 100px/2);
+                left: calc(50% - 100px/2);            
+            }
+            to {
+                height: 300px;                
+                width: 300px;
+                top: calc(50vh - 300px/2);
+                left: calc(50% - 300px/2);
+            }
+        }
+
+
         .orb {
             width: 100px;
-            height:100px;
+            height: 100px;
+            animation-duration: 10s;
+            animation-name: change-width;
+
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
             position: absolute;
             top: calc(50vh - 100px/2);
             left: calc(50% - 100px/2);
             /* border: 1px solid #6e6e6e; */
             border-radius: 100%;
         }
+
+        body {
+            background-color: #e3e3e3;
+        }
     </style>
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
             let orb = document.getElementById("orb");
-            let orbBackground =  document.getElementById("orbBackground");
+            let orbBackground = document.getElementById("orbBackground");
             let red = Math.floor(Math.random() * 255);
             let green = Math.floor(Math.random() * 255);
             let blue = Math.floor(Math.random() * 255);
             let redAscending = true;
             let blueAscending = true;
             let greenAscending = true;
-            
-            
+
+
             setInterval(() => {
                 if (redAscending && red < 255) {
                     red++;
@@ -57,7 +82,7 @@
                         blue--;
                     }
                 }
-            },  Math.round(Math.random() * (100 - 10)) + 10);
+            }, Math.round(Math.random() * (100 - 10)) + 10);
 
             setInterval(() => {
                 if (greenAscending && green < 255) {
@@ -72,7 +97,7 @@
                         green--;
                     }
                 }
-            },  Math.round(Math.random() * (100 - 10)) + 10);
+            }, Math.round(Math.random() * (100 - 10)) + 10);
 
             setInterval(() => {
                 orb.style.boxShadow = `inset 0px 0px 80px 40px rgb(${red},${green},${blue})`
