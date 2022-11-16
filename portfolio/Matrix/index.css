@@ -45,14 +45,14 @@
 }
 
 .taskInput {
-    /* background-color: white;
+    background-color: white;
     border-radius: 3px;
     margin: 3px;
     padding: 3px;
     width: 92%;
     cursor:move;
     display: inline-block;
-    user-select: none; */
+    user-select: none;
 }
 
 .x {
