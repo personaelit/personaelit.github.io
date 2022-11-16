@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Disappear</title>
+        <meta name="description" content="Text that disappears at a variable rate depending on a random integer chosen at page load.">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script>
+            window.addEventListener('DOMContentLoaded', (event) => {
+                let text = document.getElementById('text').innerText;
+                let words = text.split(" ");
+                let interval = Math.floor(Math.random() * 1000) + 1
+                setInterval(() => {
+                    words = words.slice(1, words.length);
+
+                    document.getElementById('text').innerText = words.join(" ");
+                }, interval);
+
+
+
+            });
+        </script>
+        <style>
+            #text {
+                display: block;
+                margin: 20% auto;
+                width: 80%;
+            }
+        </style>
+    </head>
+    <body>
+        <p id="text">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit tenetur, odit numquam praesentium cumque quos quis vel corrupti at amet similique in rem tempora aut aspernatur temporibus mollitia quia distinctio.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. In libero ratione vitae qui commodi quas, sit culpa harum possimus. Maxime laboriosam ipsa saepe aperiam nam asperiores facere quibusdam! Natus, id!
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas voluptatibus provident excepturi unde doloremque, amet repellat quo eius perspiciatis accusantium eos officiis eligendi. Natus aliquid officia quod! Enim, eum aliquam!
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. A quas quae, saepe deleniti fugiat provident tempora? Voluptatem exercitationem delectus cumque minus, dolor officia, doloribus vel, consectetur rerum quos enim eius.
+            I hesitated before untying the bow that bound this book together.
+        </p>
+
+    </body>
+</html>
