@@ -27,12 +27,13 @@ function randomHex() {
     //https://www.paulirish.com/2009/random-hex-color-code-snippets/
     let hex = Math.floor(Math.random()*16777215).toString(16);
     if (hex.length === 5){
-        hex = "0" + hex;
+         hex = "0" + hex;
     }
     return '#'+ hex;
 }
 
     window.addEventListener('DOMContentLoaded', (event) => {
+        getRandom();
         paint();
     })
 
@@ -43,13 +44,21 @@ function randomHex() {
     function paint() {
         let hex = window.location.hash;
 
-        if (!isHex(hex) && window.location.hash !== "") {
-            window.location = "404.html?" + hex.replace("#","");
-        }
-        console.log(hex);
         document.body.style.background = hex;
-        hexCode.value = hex;
-        rgbCode.value = hex.replace('#', '').convertToRGB();
+        hexCode.innerText = hex;
+        let rgb = hex.replace('#', '').convertToRGB();
+        rgbCode.innerText = rgb;
+        console.log(hex);
+        console.log(rgb);
+
+        if (rgb[0] + rgb[1] + rgb[2] > 255 * 3 / 2) {
+            document.body.style.color = `rgb(${0},${0},${0})`
+        }
+        else {
+            document.body.style.color = `rgb(${255},${255},${255})`
+        }
+
+
     }
 
     function getRandom() {

@@ -1,5 +1,7 @@
 body {
     text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: xx-large;
 }
 #inputContainer {
     margin-top: 50vh;
