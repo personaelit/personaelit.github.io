@@ -1,15 +1,15 @@
 window.addEventListener('DOMContentLoaded', (event) => {
     tryClearStorage();
 
-    let plus = document.getElementById('plus');
-    let page = document.getElementById('page');
-    let index = document.getElementById('index');
+    let _plus = document.getElementById('plus');
+    let _page = document.getElementById('page');
+    let _index = document.getElementById('index');
 
-    plus.addEventListener('click', addNewPage);
-    page.addEventListener('keyup', savePage);
+    _plus.addEventListener('click', addNewPage);
+    _page.addEventListener('keyup', savePage);
 
-    let pageCount = 0;
-    let currentPageNumber = 0;
+    let _pageCount = 0;
+    let _currentPageNumber = 0;
 
     try {
         loadPageCount();
@@ -21,53 +21,55 @@ window.addEventListener('DOMContentLoaded', (event) => {
     function loadCurrentPage() {
         let hash = window.location.hash;
         if (hash === '') {
-            currentPageNumber = 0;
+            _currentPageNumber = 0;
+            savePage();
         }
         else {
-            currentPageNumber = hash.replace('#', '');
-            currentPageNumber = parseInt(currentPageNumber);
+            _currentPageNumber = hash.replace('#', '');
+            _currentPageNumber = parseInt(_currentPageNumber);
         }
 
-        let currentPage = localStorage.getItem(`pages-page${currentPageNumber}`);
+        let currentPage = localStorage.getItem(`pages-page${_currentPageNumber}`);
         if (currentPage === null) {
             throw 'Current page does not exist.';
         }
         else {
-            page.innerHTML = currentPage;
+            _page.innerHTML = currentPage;
         }
     }
 
     function loadPageCount() {
 
         if (localStorage.getItem('pages-pageCount') === null) {
-            localStorage.setItem('pages-pageCount', pageCount);
+            localStorage.setItem('pages-pageCount', _pageCount);
         }
 
-        pageCount = localStorage.getItem('pages-pageCount');
-        pageCount = parseInt(pageCount);
+        _pageCount = localStorage.getItem('pages-pageCount');
+        _pageCount = parseInt(_pageCount);
         createLinks();
     }
 
     function savePage(event) {
-        localStorage.setItem(`pages-page${currentPageNumber}`, page.innerHTML);
+        localStorage.setItem(`pages-page${_currentPageNumber}`, _page.innerHTML);
     }
 
     function addNewPage(event) {
-        pageCount += 1;
-        createLinks(pageCount);
-        localStorage.setItem('pages-pageCount', pageCount);
-        page.innerHTML = ""
+        _pageCount += 1;
+        _currentPageNumber +=1;
+        createLinks(_pageCount);
+        localStorage.setItem('pages-pageCount', _pageCount);
+        _page.innerHTML = ""
         savePage();
     }
 
     function createLinks(i) {
-        index.innerHTML = '';
-        for (let i = 0; i <= pageCount; i++) {
+        _index.innerHTML = '';
+        for (let i = 0; i <= _pageCount; i++) {
             let link = document.createElement('a');
             link.setAttribute('href', `#${i}`);
             link.innerHTML = `${i}`;
             link.addEventListener('click', indexClick);
-            index.appendChild(link);
+            _index.appendChild(link);
         }
     }
 
