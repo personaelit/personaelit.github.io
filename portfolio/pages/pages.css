@@ -1,14 +1,24 @@
 body {
     font-family: 'Courier New', Courier, monospace;
+    margin: 200px;
 }
 
 #page {
-    min-height: 90vh;
+    min-height: calc(90vh - 400px);
     overflow: auto;
     border: 1px solid #ddd;
     box-shadow: 3px 3px 3px #ddd;
     padding: 40px 20px 0 20px;
     background-color:#fcfcfc;
+}
+
+@media only screen and (max-width: 900px) {
+    body {
+     margin: 5px;
+    }
+    #page {
+        min-height: 80vh;
+    }
 }
 
 #page:focus {
