@@ -1,7 +1,7 @@
-body {
+body, button {
     text-align: center;
     font-family: 'Courier New', Courier, monospace;
-    font-size: xx-large;
+    font-size: xxx-large;
 }
 #inputContainer {
     margin-top: 50vh;
