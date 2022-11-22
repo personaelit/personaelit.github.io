@@ -42,7 +42,7 @@
     border-radius: 3px;
     margin: 3px;
     padding: 3px;
-    width: 92%;
+    width: 72%;
     cursor:move;
     display: inline-block;
     user-select: none;
@@ -51,7 +51,7 @@
 .x {
     background-color:rgb(211, 85, 85);
     color:whitesmoke;
-    width: 20px;
+    width: 15%;
     border-radius: 5px;
     text-align: center;
     cursor: pointer;
@@ -73,5 +73,8 @@
     }
     .plus::after {
         content: 'Add Task';
+    }
+    .title {
+        margin: 0  3px;
     }
 } 
