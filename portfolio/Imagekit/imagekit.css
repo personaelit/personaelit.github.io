@@ -1,8 +1,7 @@
 img {
-    width:500px;
+    max-width:100%;
     margin:auto;
 }
 #tray label {
     display: block;
 }
-#canvas {left:250px;position:absolute;top:0;}
