@@ -53,10 +53,15 @@ function updateSaturate(value){
 
 function ApplyValues() {
 
-    let values = '';
-    Object.keys(filters).forEach(key => {
-        values += filters[key] + " ";
-      });
-
-    document.getElementById("canvas").style.filter = values; 
+    try {
+        let values = '';
+        Object.keys(filters).forEach(key => {
+            values += filters[key] + " ";
+          });
+    
+        document.getElementById("canvas").style.filter = values; 
+        
+    } catch (error) {
+        alert(error);
+    }
 }
