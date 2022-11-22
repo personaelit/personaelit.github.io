@@ -63,3 +63,15 @@
     text-align: center;
     display: inline-block;
 }
+
+@media only screen and (max-width: 900px) {
+    .plus {
+        width: 75%;
+        border:2px solid black;
+        padding:11px;
+        margin: 3px;
+    }
+    .plus::after {
+        content: 'Add Task';
+    }
+} 
