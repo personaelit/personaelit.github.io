@@ -10,46 +10,327 @@
             padding: 0;
             margin: 0;
             border: 0;
+            transition: .3s;
+
         }
 
-        body {
-            width: 100%;
-            height: 100vh;
-            overflow: auto;
-            padding: 10px;
+        #scratch-button-new-note {
+            margin: 0 5%;
+            background-color: green;
+            width: 50px;
+            height: 50px;
+            border-radius: 100%;
+            color: whitesmoke;
+            font-size: xx-large;
+            cursor: pointer;
+            margin-top: 11px;
+        }
 
+        #scratch-button-new-note:hover {
+            background-color: rgb(2, 187, 2);
+        }
+
+        .scratch-tag-filtered {
+            display: none !important;
+
+        }
+
+        .scratch-tag-selected {
+            border: 2px solid black;
+        }
+
+        #scratch-notepad {
+            /* width: 100%; */
+            font-family: 'Courier New', Courier, monospace;
+            overflow: auto;
+            padding: 11px;
+        }
+
+        .scratch-note {
+            padding: 11px;
+            margin: 11px auto;
+            background-color: rgb(253, 253, 159);
+            border-radius: 11px;
+            position: relative;
+            display: block;
+            width: 90%;
+        }
+
+        .scratch-tag-input {
+            background-color: rgb(2, 187, 2);
+            display: block;
+            /* position: absolute;
+            top: 0;
+            right:0; */
+            border-radius: 5%;
+            text-align: center;
+            color: whitesmoke;
+            padding: 7px 11px;
+            width: 60px;
+            margin: 7px 0px;
+            cursor: pointer;
+        }
+
+        .scratch-tag {
+            display: inline-block;
+            margin: 3px;
+            background-color: lightblue;
+            padding: 4px 12px;
+            border-radius: 5%;
+            cursor: pointer;
+            /* text-transform: lowercase; */
+        }
+
+        #scratch-tags {
+            background-color: grey;
+            display: block;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .x {
+            background-color: rgb(211, 85, 85);
+            color: whitesmoke;
+            /* width: 25px; */
+            /* height: 25px; */
+            margin: 7px;
+            border-radius: 100%;
+            /* text-align: center; */
+            cursor: pointer;
+            /* display: inline-block; */
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            padding: 10px 15px;
+            /* text-transform: uppercase; */
         }
     </style>
     <script>
+
         window.addEventListener('DOMContentLoaded', (event) => {
-           
-            document.body.addEventListener("keyup", handleKeyUp);
+
+            const _addTagText = "Add Tag";
+
+            document.body.addEventListener("keyup", saveBody);
+
 
             if (localStorage.getItem('scratch-body') != null) {
                 document.body.innerHTML = localStorage.getItem('scratch-body');
             }
 
-            function handleKeyUp(event) {
+            function saveBody(event) {
                 localStorage.setItem('scratch-body', document.body.innerHTML);
             }
 
-            document.body.focus();
+
+            document.getElementById("scratch-button-new-note").addEventListener('click', addNewNote)
+            console.log(document.getElementById("scratch-button-new-note"));
+
+            function addNewNote(event) {
+
+                let div = document.createElement('div');
+                div.contentEditable = true;
+                div.classList.add('scratch-note')
+                div.innerHTML = "&nbsp;";
+                let tagInput = document.createElement('input');
+                tagInput.classList.add('scratch-tag-input');
+                tagInput.value = _addTagText;
+                tagInput.addEventListener('focus', tagInputFocus);
+                tagInput.addEventListener('blur', tagInputBlur);
+                tagInput.addEventListener('keyup', tagInputKeyup);
+                tagInput.addEventListener('keyup', tagInputKeydown)
+                div.appendChild(tagInput);
+
+                const x = document.createElement('div');
+                x.setAttribute('class', 'x');
+                x.addEventListener('click', handleXClick);
+                x.innerText = "X";
+                div.appendChild(x);
+
+                document.getElementById('scratch-notepad').prepend(div);
+                div.focus();
+            }
+            // document.getElementById("scratch-button-new-note").addEventListener("click", (event) => {
+            //     event.preventDefault();
+            //     alert('foo');
+            // });
+
+
+
+            let notes = document.getElementById('scratch-notepad').children;
+
+            for (let note of notes) {
+                note.classList.add("scratch-note");
+                if (note.querySelector('.scratch-tag-input') == null) {
+                    let tagInput = document.createElement('input');
+                    tagInput.classList.add('scratch-tag-input');
+                    tagInput.value = _addTagText;
+                    note.appendChild(tagInput);
+
+                }
+
+                if (note.querySelector('.x') == null) {
+                    const x = document.createElement('div');
+                    x.setAttribute('class', 'x');
+                    x.addEventListener('click', handleXClick);
+                    x.innerText = "X";
+                    note.appendChild(x);
+                }
+
+
+            }
+
+            function handleXClick(e) {
+                if(confirm("Are you sure you want to delete this note?  No undo.")) {
+                    e.target.parentNode.remove();
+                    saveBody();
+                }
+
+            }
+
+            const exes = document.querySelectorAll('.x');
+            exes.forEach(function (x) {
+                x.addEventListener('click', handleXClick);
+            })
+
+
+            let tags = document.querySelectorAll('.scratch-tag');
+            tags.forEach(function (tag) {
+                tag.addEventListener('click', tagClick);
+            });
+
+            let tagInputs = document.querySelectorAll('.scratch-tag-input');
+            tagInputs.forEach(function (tagInput) {
+                tagInput.value = _addTagText;
+                tagInput.addEventListener('focus', tagInputFocus);
+                tagInput.addEventListener('blur', tagInputBlur);
+                tagInput.addEventListener('keyup', tagInputKeyup);
+                tagInput.addEventListener('keyup', tagInputKeydown)
+            })
+
+
+
+
+
+            function tagInputKeyup(event) {
+                event.target.parentNode.lastChild.innerText = this.value.replace(/[\W_]+/g, '').toLowerCase();
+            }
+
+            function tagInputKeydown(event) {
+                if (event.key === 'Enter') {
+                    this.blur();
+                    this.focus();
+
+                }
+            }
+
+            function tagInputFocus(event) {
+                if (this.value === _addTagText) this.value = "";
+                let tag = document.createElement('div');
+                tag.classList.add('scratch-tag');
+                tag.contentEditable = false;
+                tag.addEventListener('click', tagClick);
+                event.target.parentNode.appendChild(tag)
+            }
+
+            function tagClick(event) {
+
+                let tagName = event.target.innerText;
+                let selected = event.target.classList.contains('scratch-tag-selected');
+
+                if (selected) {
+
+                    let selectedTags = document.querySelectorAll(`.${tagName}.scratch-tag-selected`);
+                    selectedTags.forEach(tag => {
+                        tag.classList.remove('scratch-tag-selected');
+                    });
+
+                    let filteredNotes = document.querySelectorAll(`.scratch-note.scratch-tag-filtered`);
+                    filteredNotes.forEach(function (note) {
+                        note.classList.remove('scratch-tag-filtered');
+                    })
+                }
+                else {
+
+
+                    let allNotes = document.querySelectorAll(`.scratch-note`);
+                    allNotes.forEach(note => {
+                        if (!note.classList.contains(tagName)) {
+                            note.classList.add('scratch-tag-filtered');
+                        }
+                    });
+
+                    let targetTags = document.querySelectorAll(`.${tagName}.scratch-tag`);
+                    targetTags.forEach(tag => {
+                        tag.classList.add('scratch-tag-selected');
+                    })
+                }
+            }
+
+            function tagInputBlur(event) {
+
+                if (this.value == "") {
+                    event.target.parentNode.lastChild.remove();
+                }
+                else {
+                    let tag = this.value.replace(/[\W_]+/g, '').toLowerCase();
+                    event.target.parentNode.classList.add(tag);
+                    event.target.parentNode.lastChild.classList.add(tag);
+                }
+                this.value = _addTagText;
+            }
+            //document.body.focus();
+
+            // for (let div of divs){
+            //     div.addEventListener('contextmenu', handleContextMenu);               
+            // };
+
+            // function tagNote(event) {
+            //     let userInput = prompt("Tag Note", "");
+            //     event.target.parentNode.classList.add(userInput);
+            //     let tag = document.createElement('div');
+            //     tag.classList.add('tag');
+            //     tag.innerText = userInput;
+
+            //     let rgb = [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
+            //     tag.style.backgroundColor = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+            //     if (rgb[0] + rgb[1] + rgb[2] > 255 * 3 / 2) {
+            //         tag.style.color = `rgb(${0},${0},${0})`
+            //     }
+            //     else {
+            //         tag.style.color = `rgb(${255},${255},${255})`
+            //     }
+
+            //     event.target.parentNode.appendChild(tag);
+            //     saveBody();
+
+
+            // }
 
         });
     </script>
 </head>
 
-<body contenteditable="true">
-    This is a scratch pad. Type anything you want here.
-    <br />
-    <br />
-    Add a line break. 
-    <br />
-    <br />
-    Paste an image.
-    <br />
-    <br />
-    Refresh your browser and the data persists. 
+<body>
+    <button id="scratch-button-new-note">+</button>
+    <section id="scratch-notepad">
+        <div contenteditable="true">
+            This is a scratch pad. Type anything you want here.
+            <br />
+            <br />
+            Try pasting an image.
+            <br />
+            <img src="https://res.cdn.office.net/owamail/20221111004.15/resources/images/illustration_balloon-hash-339a1bd3.svg"
+                alt="Cartoon of a Hot Air Balloon">
+            <br />
+            <br />
+            Data is stored in local storage, so it never leaves your browser. 
+        </div>
+    </section>
+    <section id="scratch-tags">
+
+    </section>
+
 </body>
 
 </html>
