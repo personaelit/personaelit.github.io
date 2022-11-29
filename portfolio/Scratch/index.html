@@ -103,6 +103,7 @@
             right: 0px;
             padding: 10px 15px;
             /* text-transform: uppercase; */
+            /* font-size: xx-large; */
         }
     </style>
     <script>
@@ -145,15 +146,13 @@
                 x.setAttribute('class', 'x');
                 x.addEventListener('click', handleXClick);
                 x.innerText = "X";
+                x.contentEditable = false;
                 div.appendChild(x);
 
                 document.getElementById('scratch-notepad').prepend(div);
                 div.focus();
             }
-            // document.getElementById("scratch-button-new-note").addEventListener("click", (event) => {
-            //     event.preventDefault();
-            //     alert('foo');
-            // });
+
 
 
 
@@ -174,6 +173,7 @@
                     x.setAttribute('class', 'x');
                     x.addEventListener('click', handleXClick);
                     x.innerText = "X";
+                    x.contentEditable = false;
                     note.appendChild(x);
                 }
 
