@@ -124,7 +124,6 @@
 
 
             document.getElementById("scratch-button-new-note").addEventListener('click', addNewNote)
-            console.log(document.getElementById("scratch-button-new-note"));
 
             function addNewNote(event) {
 
@@ -234,31 +233,31 @@
 
             function tagClick(event) {
 
+
                 let tagName = event.target.innerText;
                 let selected = event.target.classList.contains('scratch-tag-selected');
-
+                let notes = document.querySelectorAll(`.scratch-note`);
+                
                 if (selected) {
-
-                    let selectedTags = document.querySelectorAll(`.${tagName}.scratch-tag-selected`);
+                    //we are "unselecting" so remove all 
+                    notes.forEach(function (note) {
+                        note.classList.remove('scratch-tag-filtered');
+                    });
+                    
+                    let selectedTags = document.querySelectorAll(`.${tagName}.scratch-tag-selected`)
                     selectedTags.forEach(tag => {
                         tag.classList.remove('scratch-tag-selected');
                     });
 
-                    let filteredNotes = document.querySelectorAll(`.scratch-note.scratch-tag-filtered`);
-                    filteredNotes.forEach(function (note) {
-                        note.classList.remove('scratch-tag-filtered');
-                    })
                 }
                 else {
-
-
-                    let allNotes = document.querySelectorAll(`.scratch-note`);
-                    allNotes.forEach(note => {
-                        if (!note.classList.contains(tagName)) {
+                    // get all notes that have a child with class name of tag name.
+                    notes.forEach(note => {
+                        var tag = note.querySelectorAll(`.${tagName}`)
+                        if (tag.length === 0) {
                             note.classList.add('scratch-tag-filtered');
                         }
                     });
-
                     let targetTags = document.querySelectorAll(`.${tagName}.scratch-tag`);
                     targetTags.forEach(tag => {
                         tag.classList.add('scratch-tag-selected');
@@ -273,39 +272,11 @@
                 }
                 else {
                     let tag = this.value.replace(/[\W_]+/g, '').toLowerCase();
-                    event.target.parentNode.classList.add(tag);
+                    //event.target.parentNode.classList.add(tag);
                     event.target.parentNode.lastChild.classList.add(tag);
                 }
                 this.value = _addTagText;
             }
-            //document.body.focus();
-
-            // for (let div of divs){
-            //     div.addEventListener('contextmenu', handleContextMenu);               
-            // };
-
-            // function tagNote(event) {
-            //     let userInput = prompt("Tag Note", "");
-            //     event.target.parentNode.classList.add(userInput);
-            //     let tag = document.createElement('div');
-            //     tag.classList.add('tag');
-            //     tag.innerText = userInput;
-
-            //     let rgb = [Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)]
-            //     tag.style.backgroundColor = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-            //     if (rgb[0] + rgb[1] + rgb[2] > 255 * 3 / 2) {
-            //         tag.style.color = `rgb(${0},${0},${0})`
-            //     }
-            //     else {
-            //         tag.style.color = `rgb(${255},${255},${255})`
-            //     }
-
-            //     event.target.parentNode.appendChild(tag);
-            //     saveBody();
-
-
-            // }
-
         });
     </script>
 </head>
