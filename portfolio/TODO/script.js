@@ -132,9 +132,13 @@ function addTodo(text, id) {
     });
 
     deleteButton.addEventListener("click", () => {
+        
         let id = deleteButton.dataset.id;
-        todoList.removeChild(li);
-        deleteTodo(id);
+        let deleteItem = confirm("Are you sure you want to delete this item?");
+        if (deleteItem) {
+            todoList.removeChild(li);
+            deleteTodo(id);
+        }
     });
 }
 
