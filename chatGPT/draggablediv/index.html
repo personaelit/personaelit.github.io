@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #draggable-div {
+      width: 100px;
+      height: 100px;
+      background-color: red;
+      position:absolute;
+    }
+  </style>
+</head>
+<body>
+  <div id="draggable-div"></div>
+  <script>
+    // Get the draggable div
+    var draggableDiv = document.getElementById('draggable-div');
+
+    // Initialize the starting x and y coordinates of the div
+    var startingX;
+    var startingY;
+
+    // Flag to store whether the div is currently being dragged or not
+    var isDragging = false;
+
+    // Add event listeners to the div
+    draggableDiv.addEventListener('mousedown', startDragging);
+    draggableDiv.addEventListener('mousemove', drag);
+    draggableDiv.addEventListener('mouseup', stopDragging);
+
+    function startDragging(e) {
+      // Store the starting x and y coordinates of the div
+      startingX = e.clientX;
+      startingY = e.clientY;
+
+      // Set the isDragging flag to true
+      isDragging = true;
+    }
+
+    function drag(e) {
+      // Check if the div is being dragged
+      if (isDragging) {
+        // Calculate the distance that the cursor has moved since the mousedown event
+        var distanceX = e.clientX - startingX;
+        var distanceY = e.clientY - startingY;
+
+        // Update the position of the div by adding the distance that the cursor has moved to its current position
+        draggableDiv.style.left = (draggableDiv.offsetLeft + distanceX) + 'px';
+        draggableDiv.style.top = (draggableDiv.offsetTop + distanceY) + 'px';
+
+        // Update the starting x and y coordinates to be the current cursor coordinates
+        startingX = e.clientX;
+        startingY = e.clientY;
+      }
+    }
+
+    function stopDragging() {
+      // Set the isDragging flag to false
+      isDragging = false;
+    }
+  </script>
+</body>
+</html>

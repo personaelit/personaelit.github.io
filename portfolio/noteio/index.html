@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Note.io</title>
+  <meta name="description" content="Notes app.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* The CSS for the app */
+    #app {
+      font-family: sans-serif;
+    }
+
+    #notes-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      background-color: #eee;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin: 5px;
+      padding: 5px;
+      width: 300px;
+    }
+
+    .note-content {
+      min-height: 100px;
+      outline: none;
+    }
+
+    .note-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+
+    .note-tag-input {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      padding: 5px;
+      width: 150px;
+    }
+
+    .note-delete-button {
+      background-color: #f44336;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-size: 14px;
+      padding: 5px 10px;
+    }
+  </style>
+
+  <script>
+    // The JavaScript for the app
+
+    // The ID of the next note to be added
+    let nextNoteId = 1;
+
+    // The ID of the next tag to be added
+    let nextTagId = 1;
+
+    // A mapping of note IDs to arrays of tag IDs
+    let noteTags = {};
+
+    // A mapping of tag IDs to tag names
+    let tagNames = {};
+
+    // A mapping of note IDs to note contents
+    let noteContents = {};
+
+    // Initialize the app
+    function init() {
+      // Create the IndexedDB database if it doesn't exist
+      createIndexedDB();
+
+      // Load the notes from the database
+      loadNotes();
+
+      // Add event listeners
+      document.getElementById("new-note-button").addEventListener("click", onNewNoteButtonClick);
+      document.getElementById("notes-container").addEventListener("click", onNotesContainerClick);
+      document.getElementById("notes-container").addEventListener("keydown", onNotesContainerKeyUp);
+    }
+
+    // Create the IndexedDB database
+    function createIndexedDB() {
+      let request = window.indexedDB.open("NotesDatabase", 1);
+
+      request.onupgradeneeded = function (event) {
+        let db = event.target.result;
+
+        // Create the "Notes" object store
+        db.createObjectStore("Notes", { keyPath: "id" });
+
+        // Create the "Tags" object store
+        db.createObjectStore("Tags", { keyPath: "id" });
+      };
+
+      request.onsuccess = function (event) {
+        console.log("Successfully created IndexedDB!");
+      };
+
+      request.onerror = function (event) {
+        console.error("An error occurred while creating the IndexedDB:", event.target.error);
+      };
+    }
+
+    // Load the notes from the database
+    function loadNotes() {
+      let request = window.indexedDB.open("NotesDatabase", 1);
+
+      request.onsuccess = function (event) {
+        let db = event.target.result;
+
+        // Get the "Notes" object store
+        let objectStore = db.transaction("Notes").objectStore("Notes");
+
+        // Get all the notes from the object store
+        objectStore.openCursor().onsuccess = function (event) {
+          let cursor = event.target.result;
+
+          if (cursor) {
+            // Add the note to the UI
+            addNote(cursor.value.id, cursor.value.content);
+
+            // Add the tags for the note to the mapping of note IDs to tag IDs
+            noteTags[cursor.value.id] = cursor.value.tags;
+
+            // Update the next note ID to be one more than the current note ID
+            nextNoteId = Math.max(nextNoteId, cursor.value.id + 1);
+
+            cursor.continue();
+          }
+        };
+
+        // Get the "Tags" object store
+        objectStore = db.transaction("Tags").objectStore("Tags");
+
+        // Get all the tags from the object store
+        objectStore.openCursor().onsuccess = function (event) {
+          let cursor = event.target.result;
+
+          if (cursor) {
+            // Add the tag to the mapping of tag IDs to tag names
+            tagNames[cursor.value.id] = cursor.value.name;
+
+            // Update the next tag ID to be one more than the current tag ID
+            nextTagId = Math.max(nextTagId, cursor.value.id + 1);
+
+            cursor.continue();
+          }
+        };
+      };
+
+      request.onerror = function (event) {
+        console.error("An error occurred while opening the IndexedDB:", event.target.error);
+      };
+    }
+
+    // Add a note to the UI and the database
+    function addNote(id, content) {
+      // Create the note element
+      let note = document.createElement("div");
+      note.classList.add("note");
+      note.innerHTML = `
+      <div contenteditable="true" class="note-content">${content}</div>
+      <div class="note-actions">
+        <input type="text" class="note-tag-input" placeholder="Add a tag">
+        <button class="note-delete-button">Delete</button>
+      </div>
+    `;
+      note.setAttribute("data-note-id", id);
+
+      // Add the note to the UI
+      document.getElementById("notes-container").appendChild(note);
+
+      // Add the note to the database
+      let request = window.indexedDB.open("NotesDatabase", 1);
+
+      request.onsuccess = function (event) {
+        let db = event.target.result;
+
+        // Get the "Notes" object store
+        let objectStore = db.transaction("Notes", "readwrite").objectStore("Notes");
+
+        // Add the note to the object store
+        objectStore.add({ id: id, content: content, tags: [] });
+
+        // Add the note to the mapping of note IDs to contents
+        noteContents[id] = content;
+
+        // Initialize the mapping of note IDs to arrays of tag IDs for the note
+        noteTags[id] = [];
+      };
+
+      request.onerror = function (event) {
+        console.error("An error occurred while adding a note to the IndexedDB:", event.target.error);
+      };
+
+      // Rewire the event listeners for the new note
+      note.querySelector(".note-content").addEventListener("keyup", onNotesContainerKeyUp);
+      note.querySelector(".note-delete-button").addEventListener("click", onNotesContainerClick);
+      note.querySelector(".note-tag-input").addEventListener("keyup", onNotesContainerKeyUp);
+    }
+
+
+    // Handle clicks on the "New Note" button
+    function onNewNoteButtonClick() {
+      // Add a new note with the next available ID
+      addNote(nextNoteId++, "");
+    }
+
+    // Handle clicks on the notes container
+    function onNotesContainerClick(event) {
+      // Get the target element that was clicked
+      let target = event.target;
+
+      // If the target is a delete button, delete the corresponding note
+      if (target.classList.contains("note-delete-button")) {
+        deleteNote(target.parentNode.parentNode);
+      }
+    }
+
+    // Handle key presses in the notes container
+    function onNotesContainerKeyUp(event) {
+      // Get the target element that was clicked
+      let target = event.target;
+
+      // If the target is a tag input and the enter key was pressed, add the tag to the corresponding note
+      if (target.classList.contains("note-tag-input") && event.key === "Enter") {
+        addTag(target);
+      }
+
+      // If the target is a note content element and the enter key was pressed, add a new note after the current one
+      if (target.classList.contains("note-content")) {
+        //event.preventDefault(); // Prevent the enter key from inserting a new line in the content
+        // Get the note element and its ID
+        let noteElement = event.target.parentNode.parentNode;
+        let noteId = parseInt(noteElement.getAttribute("data-note-id")) || nextNoteId;
+
+        // Get the note's new content
+        let content = event.target.innerHTML;
+
+        // Update the note's content in the database
+        updateNoteContent(noteId, content);
+      }
+    }
+
+    // Add a tag to a note
+    function addTag(input) {
+
+      // Get the input element and its parent note element
+      let inputElement = input;
+      let noteElement = inputElement.parentNode.parentNode;
+
+      // Get the note ID and tag name
+      let noteId = parseInt(noteElement.getAttribute("data-note-id"));
+      let tagName = inputElement.value.trim();
+
+      if (tagName) {
+        // Add the tag to the database
+        let request = window.indexedDB.open("NotesDatabase", 1);
+
+        request.onsuccess = function (event) {
+          let db = event.target.result;
+
+          // Get the "Tags" object store
+          let objectStore = db.transaction("Tags", "readwrite").objectStore("Tags");
+
+          // Add the tag to the object store
+          objectStore.add({ id: nextTagId, name: tagName });
+
+          // Add the tag to the mapping of tag IDs to tag names
+          tagNames[nextTagId] = tagName;
+
+          // Add the tag ID to the mapping of note IDs to arrays of tag IDs for the note
+          noteTags[noteId].push(nextTagId);
+
+          // Increment the next tag ID
+          nextTagId++;
+
+          // Clear the input
+          inputElement.value = "";
+
+          // Display the tag inside of the note object
+          let tagElement = document.createElement("div");
+          tagElement.classList.add("note-tag");
+          tagElement.innerText = tagName;
+          noteElement.appendChild(tagElement);
+        };
+
+        request.onerror = function (event) {
+          console.error("An error occurred while adding a tag to the IndexedDB:", event.target.error);
+        };
+      }
+    }
+
+
+    // Delete a note
+    // Delete a note
+    function deleteNote(note) {
+      // Get the note element and its ID
+      let noteElement = note;
+      let noteId = parseInt(noteElement.getAttribute("data-note-id"));
+
+      // Delete the note from the database
+      let request = window.indexedDB.open("NotesDatabase", 1);
+
+      request.onsuccess = function (event) {
+        let db = event.target.result;
+
+        // Get the "Notes" object store
+        let objectStore = db.transaction("Notes", "readwrite").objectStore("Notes");
+
+        // Delete the note from the object store
+        objectStore.delete(noteId);
+
+        // Delete the note from the UI
+        noteElement.remove();
+
+        // Delete the note from the mapping of note IDs to contents
+        delete noteContents[noteId];
+
+        // Delete the note's tags from the database
+        if (noteTags[noteId]) {
+          objectStore = db.transaction("Tags", "readwrite").objectStore("Tags");
+          // Delete the tags for the note from the object store
+          for (let tagId of noteTags[noteId]) {
+            objectStore.delete(tagId);
+          }
+          // Delete the mapping of note IDs to arrays of tag IDs for the note
+          delete noteTags[noteId];
+        }
+      };
+
+      request.onerror = function (event) {
+        console.error("An error occurred while deleting a note from the IndexedDB:", event.target.error);
+      };
+    }
+
+
+    // Update the content of a note in the database
+    function updateNoteContent(noteId, content) {
+      let request = window.indexedDB.open("NotesDatabase", 1);
+
+      request.onsuccess = function (event) {
+        let db = event.target.result;
+
+        // Get the "Notes" object store
+        let objectStore = db.transaction("Notes", "readwrite").objectStore("Notes");
+
+        // Update the note in the object store
+        objectStore.put({ id: noteId, content: content, tags: noteTags[noteId] });
+
+        // Update the note in the mapping of note IDs to contents
+        noteContents[noteId] = content;
+      };
+
+      request.onerror = function (event) {
+        console.error("An error occurred while updating a note in the IndexedDB:", event.target.error);
+      };
+    }
+
+    // Initialize the app
+    window.addEventListener('DOMContentLoaded', (event) => {
+      init();
+    });
+
+  // window.addEventListener("load", function() {
+  //   loadNotes();
+  // });
+  </script>
+</head>
+
+<body>
+  <!-- The HTML for the app -->
+  <div id="app">
+    <!-- The "New Note" button -->
+    <button id="new-note-button">New Note</button>
+
+    <!-- The container for the notes -->
+    <div id="notes-container"></div>
+  </div>
+</body>
+
+</html>

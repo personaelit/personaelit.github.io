@@ -1,0 +1,117 @@
+<html>
+  <head>
+    <style>
+      /* Define the grid container */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(25, 20px);
+        grid-template-rows: repeat(25, 20px);
+        grid-gap: 1px;
+      }
+
+      /* Define the cells */
+      .cell {
+        background-color: #eee;
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Style the alive cells */
+      .alive {
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Create the grid container -->
+    <div class="grid" id="grid"></div>
+
+    <script>
+      // Create a 2D array to represent the grid
+      let grid = [];
+      for (let i = 0; i < 25; i++) {
+        grid[i] = new Array(25);
+      }
+
+      // Helper function to get the number of alive neighbors of a cell
+      function getAliveNeighbors(i, j) {
+        let count = 0;
+        for (let x = Math.max(0, i - 1); x <= Math.min(i + 1, grid.length - 1); x++) {
+          for (let y = Math.max(0, j - 1); y <= Math.min(j + 1, grid[i].length - 1); y++) {
+            if (grid[x][y] && !(x === i && y === j)) {
+              count++;
+            }
+          }
+        }
+        return count;
+      }
+
+      // Function to update the state of the grid
+      function update() {
+        // Create a new grid to hold the updated state
+        let newGrid = [];
+        for (let i = 0; i < 25; i++) {
+          newGrid[i] = new Array(25);
+        }
+
+        // Iterate over the grid and update each cell's state
+        for (let i = 0; i < grid.length; i++) {
+          for (let j = 0; j < grid[i].length; j++) {
+            let aliveNeighbors = getAliveNeighbors(i, j);
+
+            // A cell dies if it has less than two or more than three alive neighbors
+            if (grid[i][j] && (aliveNeighbors < 2 || aliveNeighbors > 3)) {
+              newGrid[i][j] = false;
+            }
+            // A cell becomes alive if it has exactly three alive neighbors
+            else if (!grid[i][j] && aliveNeighbors === 3) {
+              newGrid[i][j] = true;
+            }
+            // Otherwise, the cell remains in its current state
+            else {
+              newGrid[i][j] = grid[i][j];
+            }
+          }
+        }
+
+        // Update the grid with the new state
+        grid = newGrid;
+
+        // Update the display with the new state
+        let gridElement = document.getElementById("grid");
+        gridElement.innerHTML = "";
+        for (let i = 0; i < grid.length; i++) {
+          for (let j = 0; j < grid[i].length; j++) {
+      let cellElement = document.createElement("div");
+      cellElement.classList.add("cell");
+      if (grid[i][j]) {
+        cellElement.classList.add("alive");
+      }
+      gridElement.appendChild(cellElement);
+    }
+  }
+
+  // Call this function again after a short delay to create the animation
+  setTimeout(update, 100);
+}
+
+// Initialize the grid with some alive cells
+grid[10][10] = true;
+grid[10][11] = true;
+grid[10][12] = true;
+
+grid[9][11] = true;
+grid[9][12] = true;
+grid[9][13] = true;
+
+grid[4][11] = true;
+grid[4][12] = true;
+grid[5][12] = true;
+grid[4][13] = true;
+
+
+// Start the animation
+update();
+    </script>
+  </body>
+</html>

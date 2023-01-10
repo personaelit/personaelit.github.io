@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Note Taker App</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    #container {
+      margin: 0 auto;
+      width: 500px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    form {
+      margin-bottom: 25px;
+    }
+    #notes-display {
+      margin-top: 25px;
+    }
+    #notes-display div {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    #notes-display h2 {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Note Taker App</h1>
+  <div id="container">
+    <form id="note-form">
+      <label>Enter your note:</label>
+      <input type="text" id="note-input" />
+      <button type="submit">Submit Note</button>
+    </form>
+    <form id="tag-form">
+      <label>Enter tags for your note (separate by comma):</label>
+      <input type="text" id="tag-input" />
+      <button type="submit">Submit Tags</button>
+    </form>
+    <div id="notes-display"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

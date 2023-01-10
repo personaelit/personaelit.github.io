@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Playing With IndexedDB</title>
+    <meta name="description" content="Some experimentation with IndexedDB.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+
+    </style>
+    <script>
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            function createIndexedDB() {
+                // Open a connection to the IndexedDB database
+                let request = window.indexedDB.open("MyDatabase", 1);
+
+                // This event will be triggered if the database needs to be upgraded
+                request.onupgradeneeded = function (event) {
+                    let db = event.target.result;
+                    db.createObjectStore("MyObjectStore", { keyPath: "id" });
+                };
+
+                // This event will be triggered if the operation is successful
+                request.onsuccess = function (event) {
+                    if (request.readyState == "done") {
+                        console.log("Successfully accessed existing IndexedDB!");
+                    } else {
+                        console.log("Successfully created IndexedDB!");
+                    }
+                };
+
+                // This event will be triggered if there is an error
+                request.onerror = function (event) {
+                    console.error("An error occurred while creating the IndexedDB:", event.target.error);
+                };
+            }
+
+            function retrieveBody() {
+                // Open a connection to the IndexedDB database
+                let request = window.indexedDB.open("MyDatabase", 1);
+
+                request.onsuccess = function (event) {
+                    let db = event.target.result;
+
+                    // Start a transaction and get the object store
+                    let transaction = db.transaction(["MyObjectStore"], "readonly");
+                    let objectStore = transaction.objectStore("MyObjectStore");
+
+                    // Get the data from the object store
+                    let request = objectStore.get(1);
+
+                    request.onsuccess = function (event) {
+                        let result = event.target.result;
+                        document.body.innerHTML = result.data;
+                    };
+
+                    request.onerror = function (event) {
+                        console.error("An error occurred while getting data from the IndexedDB:", event.target.error);
+                    };
+                };
+
+                request.onerror = function (event) {
+                    console.error("An error occurred while opening the IndexedDB:", event.target.error);
+                };
+            }
+
+
+            function saveToIndexedDB(str) {
+                // Open a connection to the IndexedDB database
+                let request = window.indexedDB.open("MyDatabase", 1);
+
+                request.onsuccess = function (event) {
+                    let db = event.target.result;
+
+                    // Start a transaction and get the object store
+                    let transaction = db.transaction(["MyObjectStore"], "readwrite");
+                    let objectStore = transaction.objectStore("MyObjectStore");
+
+                    // Add the data to the object store
+                    let request = objectStore.put({ id: 1, data: str });
+
+                    request.onsuccess = function (event) {
+                        console.log("Successfully added data to the IndexedDB!");
+                    };
+
+                    request.onerror = function (event) {
+                        console.error("An error occurred while adding data to the IndexedDB:", event.target.error);
+                    };
+                };
+
+                request.onerror = function (event) {
+                    console.error("An error occurred while opening the IndexedDB:", event.target.error);
+                };
+            }
+
+            document.body.addEventListener("keyup", function (event) {
+                saveToIndexedDB(document.body.innerHTML);
+            });
+
+            createIndexedDB();
+            retrieveBody();
+        });
+
+    </script>
+</head>
+
+<body contenteditable="true">
+
+</body>
+
+</html>

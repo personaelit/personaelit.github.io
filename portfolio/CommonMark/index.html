@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Playing CommonMark JavaScript </title>
+        <meta name="description" content="Playing with JavaScript CommonMark.">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://unpkg.com/commonmark@0.29.3/dist/commonmark.js "></script>
+        <script>
+            window.addEventListener('DOMContentLoaded', (event) => {
+
+                var reader = new commonmark.Parser();
+                var writer = new commonmark.HtmlRenderer();
+    
+                let input = document.getElementById("input");
+                let output = document.getElementById("output");
+                
+                input.addEventListener("keyup", function() {
+                    var parsed = reader.parse(input.value);
+                    var result = writer.render(parsed);
+                    output.innerHTML = result;
+                });
+    
+                
+    
+                
+                
+                // var parsed = reader.parse("Hello *world*");
+                // var result = writer.render(parsed);
+                // document.body.innerHTML = result;
+
+
+            });
+
+
+
+        </script>
+    </head>
+    <body>  
+        <textarea id="input"></textarea>
+        <div id="output"></div>
+    </body>
+</html>

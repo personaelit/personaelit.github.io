@@ -1,0 +1,331 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Pong</title>
+    <style>
+      /* CSS styles for the page go here */
+    </style>
+  </head>
+  <body>
+    <canvas id="game-canvas" width="800" height="600"></canvas>
+    <div>
+      <button id="start-button">Start</button>
+      <button id="pause-button">Pause</button>
+    </div>
+    <script>
+
+const canvas = document.getElementById("game-canvas");
+const ctx = canvas.getContext("2d");
+
+const ballRadius = 10;
+const paddleHeight = 100;
+const paddleWidth = 10;
+
+let x = canvas.width / 2;
+let y = canvas.height / 2;
+let dx = 2;
+let dy = -2;
+
+let playerX = 0;
+let playerY = (canvas.height - paddleHeight) / 2;
+let computerX = canvas.width - paddleWidth;
+let computerY = (canvas.height - paddleHeight) / 2;
+
+let playerScore = 0;
+let computerScore = 0;
+
+let gamePaused = false;
+
+function drawBall() {
+  ctx.beginPath();
+  ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+  ctx.fillStyle = "#0095DD";
+  ctx.fill();
+  ctx.closePath();
+}
+
+function drawPlayerPaddle() {
+  ctx.beginPath();
+  ctx.rect(playerX, playerY, paddleWidth, paddleHeight);
+  ctx.fillStyle = "#0095DD";
+  ctx.fill();
+  ctx.closePath();
+}
+
+function drawComputerPaddle() {
+  ctx.beginPath();
+  ctx.rect(computerX, computerY, paddleWidth, paddleHeight);
+  ctx.fillStyle = "#0095DD";
+  ctx.fill();
+  ctx.closePath();
+}
+
+function drawScores() {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  ctx.fillText(`Player: ${playerScore}`, 8, 20);
+  ctx.fillText(`Computer: ${computerScore}`, canvas.width - 100, 20);
+}
+
+function draw() {
+  // Clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the ball, paddles, and scores
+  drawBall();
+  drawPlayerPaddle();
+  drawComputerPaddle();
+  drawScores();
+
+  // Update the ball position
+  x += dx;
+  y += dy;
+
+  // Check if the ball has collided with a wall and reverse its direction if necessary
+  if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+    dx = -dx;
+  }
+  if (y + dy > canvas.height - ballRadius || y + dy < ballRadius) {
+    dy = -dy;
+  }
+
+  // Check if the ball has collided with a paddle and reverse its direction if necessary
+  if (
+    x + dx > computerX &&
+    y > computerY &&
+    y < computerY + paddleHeight
+  ) {
+    dx = -dx;
+  }
+  if (
+    x + dx < playerX + paddleWidth &&
+    y > playerY &&
+    y < playerY + paddleHeight
+  ) {
+    dx = -dx;
+  }
+
+  // Check if the ball has gone off the screen and update the scores accordingly
+  if (x + dx > canvas.width) {
+    playerScore++;
+    x = canvas.width / 2;
+    y = canvas.height / 2;
+    dx = 2;
+    dy = -2;
+  }
+  if (x + dx < 0) {
+    computerScore++;
+    x = canvas.width / 2;
+    y = canvas.height / 2;
+    dx = -2;
+    dy = 2;
+  }
+}
+
+function handleKeyPress(event) {
+  const key = event.key;
+
+  if (key === "ArrowUp") {
+    playerY -= 10;
+  } else if (key === "ArrowDown") {
+    playerY += 10;
+  }
+
+  // Ensure that the paddle stays within the bounds of the canvas
+  playerY = Math.max(0, Math.min(canvas.height - paddleHeight, playerY));
+}
+
+document.addEventListener("keydown", handleKeyPress);
+
+const startButton = document.getElementById("start-button");
+const pauseButton = document.getElementById("pause-button");
+
+let gameInterval;
+
+startButton.addEventListener("click", () => {
+  if (!gameInterval) {
+    gameInterval = setInterval(draw, 10);
+  }
+});
+
+pauseButton.addEventListener("click", () => {
+  if (gameInterval) {
+    clearInterval(gameInterval);
+    gameInterval = null;
+  }
+});
+
+
+
+    </script>
+  </body>
+</html>
+
+
+
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+    <title>Pong</title>
+    <style>
+        /* CSS styles for the game canvas and elements */
+        #game-canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #player1-score,
+        #player2-score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="game-canvas" width="480" height="320"></canvas>
+    <div>
+        <span id="player1-score">0</span> : <span id="player2-score">0</span>
+    </div>
+    <script>
+        // JavaScript code for the game mechanics and logic
+
+        // Get a reference to the game canvas and its context
+        var canvas = document.getElementById('game-canvas');
+        var ctx = canvas.getContext('2d');
+
+        // Set the initial position and velocity of the ball
+        var x = canvas.width / 2;
+        var y = canvas.height / 2;
+        var dx = 2;
+        var dy = 2;
+
+        // Set the initial position of the player paddles
+        var p1y = canvas.height / 2 - 50;
+        var p2y = canvas.height / 2 - 50;
+
+        // Set the initial score for each player
+        var p1score = 0;
+        var p2score = 0;
+
+        // Define the game controls for each player
+        var keysDown = {};
+
+        // Listen for keydown events to move the player paddles
+        addEventListener('keydown', function (e) {
+            keysDown[e.keyCode] = true;
+        });
+
+        // Listen for keyup events to stop moving the player paddles
+        addEventListener('keyup', function (e) {
+            delete keysDown[e.keyCode];
+        });
+
+        // Draw the game elements on the canvas
+        function draw() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the ball
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#0095DD';
+            ctx.fill();
+            ctx.closePath();
+
+            // Draw the player paddles
+            ctx.fillStyle = '#0095DD';
+            ctx.fillRect(10, p1y, 10, 100);
+            ctx.fillRect(canvas.width - 20, p2y, 10, 100);
+
+            // Update the score for each player
+            document.getElementById('player1-score').innerHTML = p1score;
+            document.getElementById('player2-score').innerHTML = p2score;
+        }
+
+        // Update the position of the game elements
+        function update() {
+            // Update the position of the ball
+            x += dx;
+            y += dy;
+
+            // Check if the ball hits the left or right wall
+            if (x < 0 || x > canvas.width) {
+                // Reverse the direction of the ball
+                dx = -dx;
+
+                // Update the score for the appropriate player
+                if (x < 0) {
+                    p2score++;
+                } else {
+                    p1score++;
+                }
+
+                // Reset the ball to the center of the canvas
+                x = canvas.width / 2;
+                y = canvas.height / 2;
+            }
+
+            // Check if the ball hits the top or bottom wall
+            if (y < 0 || y > canvas.height) {
+                // Reverse the direction of the ball
+                dy = -dy;
+            }
+
+            // Check if the player paddles are being moved using the game controls
+            if (38 in keysDown) { // Player 1 is moving up
+                p1y -= 5;
+            }
+            if (40 in keysDown) { // Player 1 is moving down
+                p1y += 5;
+            }
+            if (87 in keysDown) { // Player 2 is moving up
+                p2y -= 5;
+            }
+            if (83 in keysDown) { // Player 2 is moving down
+                p2y += 5;
+            }
+
+            // Ensure that the player paddles stay within the bounds of the canvas
+            p1y = Math.max(Math.min(p1y, canvas.height - 100), 0);
+            p2y = Math.max(Math.min(p2y, canvas.height - 100), 0);
+        }
+
+
+        // Run the game loop
+        function gameLoop() {
+            update();
+            draw();
+
+            // Request the next frame of the game loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        function startGame() {
+            // Set the initial position and velocity of the ball
+            x = canvas.width / 2;
+            y = canvas.height / 2;
+            dx = 2;
+            dy = 2;
+
+            // Set the initial position of the player paddles
+            p1y = canvas.height / 2 - 50;
+            p2y = canvas.height / 2 - 50;
+
+            // Set the initial score for each player
+            p1score = 0;
+            p2score = 0;
+
+            // Start the game loop
+            gameLoop();
+        }
+
+        //startGame();
+
+    </script>
+</body>
+
+</html> -->

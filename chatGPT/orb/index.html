@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+/* Define the CSS for the pulsating orb */
+.pulsating-orb {
+  /* Set the orb to be a circle with a fixed size */
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  
+  /* Use a dynamic box-shadow with a random color */
+  box-shadow: 0 0 10px 5px var(--shadow-color);
+  
+  /* Set the initial color of the orb to be red */
+  background-color: red;
+  
+  /* Use the animation property to create a pulsating effect */
+  animation: pulsate 1s ease-in-out infinite;
+}
+
+/* Define the animation for the pulsating effect */
+@keyframes pulsate {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px 5px rgba(0,0,0,0.5);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px 10px rgba(0,0,0,0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px 5px rgba(0,0,0,0.5);
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Use the CSS class to create the pulsating orb in the HTML -->
+<div class="pulsating-orb"></div>
+
+<!-- Include the JavaScript code that will change the orb's color -->
+<script>
+// Get a reference to the pulsating orb element
+var orb = document.querySelector('.pulsating-orb');
+
+// Define an array of colors to cycle through
+var colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+
+// Define a function to change the orb's color
+function changeColor() {
+  // Get a random color from the array of colors
+  var color = colors[Math.floor(Math.random() * colors.length)];
+  
+  // Set the orb's background color to the selected color
+  orb.style.backgroundColor = color;
+
+    // Set the orb's box-shadow color to the selected color
+    orb.style.setProperty('--shadow-color', color);
+}
+
+// Call the changeColor function every second to change the orb's color
+setInterval(changeColor, 1000);
+</script>
+
+</body>
+</html>
+<!-- index.html
+
+<html>
+  <head>
+    <title>Pulsating Orb</title>
+    <style>
+      /* styles.css */
+
+      body {
+        background-color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .orb {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        animation: pulse 5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+        }
+        70% {
+          transform: scale(1.2);
+          box-shadow: 0 0 0 20px rgba(0, 0, 0, 0);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orb" id="orb"></div>
+    <script>
+      // script.js
+
+      // Select the orb element
+      const orb = document.getElementById("orb");
+
+      // Set the initial color of the orb
+      orb.style.backgroundColor = "#0088ff";
+
+      // Define an array of colors to cycle through
+      const colors = ["#0088ff", "#00ff88", "#ff0088", "#ffff00"];
+
+      let colorIndex = 0;
+
+      // Define a function to change the color of the orb
+      function changeColor() {
+        // Increment the color index and reset it if necessary
+        colorIndex = (colorIndex + 1) % colors.length;
+
+        // Set the new color of the orb
+        orb.style.backgroundColor = colors[colorIndex];
+      }
+
+      // Change the color of the orb every second
+      setInterval(changeColor, 1000);
+    </script>
+  </body>
+</html> -->
