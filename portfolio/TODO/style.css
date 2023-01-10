@@ -72,7 +72,7 @@ body, input, button {
     cursor: pointer;
   }
 
-  .strikethrough {
+  .completed {
     text-decoration: line-through;
   }
     
