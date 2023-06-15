@@ -1,6 +1,0 @@
-<h1>Setting up a new machine</h1>
-Must have programs
-Notepad2
-git
-VS Code
-VS 2022

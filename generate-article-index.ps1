@@ -3,7 +3,8 @@ $articles = Get-ChildItem -Path "articles" -Directory
 $links = "";
 foreach($article in $articles) {
     $name = $article.Name.Replace("-", " ");
-    $links += "`t`t`t<li><a href=""$article"">$name</a></li>`r`n";
+    $link = $article.Name;
+    $links += "`t`t`t<li><a href=""$link"">$name</a></li>`r`n";
 }
 
 $template = Get-Content .\articles\index.template
