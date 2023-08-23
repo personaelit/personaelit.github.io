@@ -1,43 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Playing CommonMark JavaScript </title>
-        <meta name="description" content="Playing with JavaScript CommonMark.">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://unpkg.com/commonmark@0.29.3/dist/commonmark.js "></script>
-        <script>
-            window.addEventListener('DOMContentLoaded', (event) => {
 
-                var reader = new commonmark.Parser();
-                var writer = new commonmark.HtmlRenderer();
-    
-                let input = document.getElementById("input");
-                let output = document.getElementById("output");
-                
-                input.addEventListener("keyup", function() {
-                    var parsed = reader.parse(input.value);
-                    var result = writer.render(parsed);
-                    output.innerHTML = result;
-                });
-    
-                
-    
-                
-                
-                // var parsed = reader.parse("Hello *world*");
-                // var result = writer.render(parsed);
-                // document.body.innerHTML = result;
+<head>
+    <title>Playing CommonMark JavaScript </title>
+    <meta name="description" content="Playing with JavaScript CommonMark.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/commonmark@0.29.3/dist/commonmark.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
 
+            document.body.focus();
 
+            //NOTE: click was causing blur which we don't want.
+            document.body.addEventListener('blur', function () {
+                document.body.focus();
             });
 
+            var reader = new commonmark.Parser();
+            var writer = new commonmark.HtmlRenderer();
 
+            let input = [];
 
-        </script>
-    </head>
-    <body>  
-        <textarea id="input"></textarea>
-        <div id="output"></div>
-    </body>
+            document.body.addEventListener("keyup", function (event) {
+                if (event.key === "Enter") {
+                    let innerTextArray = document.body.innerText.split('\n').filter(a => a !== '');
+
+                    document.body.innerText = '';
+
+                    let lastLine = innerTextArray[innerTextArray.length - 1];
+                    input.push(lastLine);
+
+                    console.log(input);
+
+                    let md = input.join('\n')
+
+                    var parsed = reader.parse(md);
+                    var result = writer.render(parsed);
+                    document.body.innerHTML = result;
+
+                    // input.forEach(element => {
+                        // var parsed = reader.parse(element);
+                        // var result = writer.render(parsed);
+                        // document.body.innerHTML += result;
+                    // });
+
+                    // Add a new line and move the cursor to the end of the body
+                    var br = document.createElement("br");
+                    document.body.appendChild(br);
+                    var range = document.createRange();
+                    range.setStartAfter(br);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            });
+
+        });
+    </script>
+</head>
+
+<body contenteditable="true"></body>
+</body>
+
 </html>

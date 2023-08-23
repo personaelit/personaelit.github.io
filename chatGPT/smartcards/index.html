@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Webpage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Smart Goals Tracker</h1>
+
+    <button id="add-button">+</button>
+
+    <form id="smartcard-form" style="display: none;">
+        <input type="text" id="goal" placeholder="Add your goal, be specific." required>
+        <input type="text" id="reason" placeholder="How will you measure it?" required>
+        <input type="date" id="deadline" required>
+        <input type="number" id="progress" placeholder="Progress" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script src="script.js"></script>
+</body>
+</html>

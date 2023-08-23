@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <title>Blocks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .none {
+      display: none;
+    }
+
+    .block {
+      position: absolute;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      width: 300px;
+      padding: 20px;
+      border: 1px solid black;
+      margin: 10px;
+      box-sizing: border-box;
+      cursor: move;
+      background-color: aliceblue;
+    }
+
+    .block-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      transition: .02s;
+      outline: none;
+      cursor: text;
+    }
+
+    .block-content {
+      margin-bottom: 10px;
+      transition: .02s;
+      outline: none;
+      cursor: text;
+    }
+
+    .block-date {
+      font-size: 14px;
+      color: gray;
+    }
+
+    .block-recycle {
+      font-size: 24px;
+      padding: 11px;
+      color: grey;
+      cursor: pointer;
+      transition: .02s;
+    }
+
+    .block-recycled {
+      color: green;
+    }
+
+    .block-favorite {
+      font-size: 24px;
+      padding: 11px 0 11px 0;
+      color: grey;
+      cursor: pointer;
+      transition: .02s;
+    }
+
+    .block-favorited {
+      color: yellow;
+      text-shadow: 0 0 3px #000;
+
+    }
+
+    #controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 69px;
+      background: rgb(39, 39, 39);
+      margin: 0;
+    }
+
+    #controls #createBlock {
+      order: 1;
+    }
+
+    #controls #icons-container {
+      display: flex;
+      order: 2;
+    }
+
+
+
+    #favorite-toggle {
+      font-size: 24px;
+      color: yellow;
+      /* text-shadow: 0 0 3px #fff; */
+      transition: .2s;
+      margin: 11px;
+      cursor: pointer;
+    }
+
+    #favorites-active,
+    #favorite-toggle:hover {
+      color: rgb(248, 248, 175);
+      text-shadow: 0 0 3px #fff;
+
+    }
+
+    #recycle-bin-toggle {
+      font-size: 24px;
+      cursor: pointer;
+      color: green;
+      /* text-shadow: 0 0 3px #fff; */
+      transition: .2s;
+      margin: 11px;
+    }
+
+
+    .recycle-bin-active,
+    #recycle-bin-toggle:hover {
+      color: rgb(20, 196, 20) !important;
+      text-shadow: 0 0 3px #fff;
+    }
+
+    #createBlock {
+      background-color: green;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin: 11px;
+      padding: 11px;
+      transition: .2s;
+      box-shadow: 0 0 1px #fff;
+      cursor: pointer;
+    }
+
+    #createBlock:hover {
+      background-color: rgb(20, 196, 20);
+      color: #000;
+
+    }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <button id="createBlock">Create Block</button>
+    <div id="icons-container">
+      <i id="recycle-bin-toggle" class="fas fa-recycle"></i>
+      <i id="favorite-toggle" class="fas fa-star"></i>
+    </div>
+  </div>
+  <script>
+    document.getElementById("createBlock").addEventListener("click", function () {
+      const currentDatetime = new Date();
+      const timestamp = currentDatetime.getTime();
+      const formattedDate = currentDatetime.toLocaleDateString();
+
+      const block = document.createElement("div");
+      block.classList.add("block");
+      block.id = timestamp;
+
+      const titleDefaultText = "Title..."
+      const blockTitle = document.createElement("div");
+      blockTitle.classList.add("block-title");
+      blockTitle.innerText = titleDefaultText;
+      blockTitle.setAttribute("contenteditable", "true");
+      block.appendChild(blockTitle);
+
+      const contentDefaultText = 'Content...';
+      const blockContent = document.createElement("div");
+      blockContent.classList.add("block-content");
+      blockContent.innerText = contentDefaultText;
+      blockContent.setAttribute("contenteditable", "true");
+      block.appendChild(blockContent);
+
+      const blockFavorite = document.createElement("i");
+      blockFavorite.classList.add("block-favorite");
+      blockFavorite.classList.add("fas");
+      blockFavorite.classList.add("fa-star");
+      blockFavorite.addEventListener('click', () => {
+        if (blockFavorite.classList.contains('block-favorited')) {
+          blockFavorite.classList.remove("block-favorited");
+        }
+        else {
+          blockFavorite.classList.add("block-favorited");
+        }
+      });
+      block.appendChild(blockFavorite);
+
+      const blockRecycled = document.createElement("i");
+      blockRecycled.classList.add("block-recycle");
+      blockRecycled.classList.add("fas");
+      blockRecycled.classList.add("fa-recycle");
+      blockRecycled.addEventListener('click', () => {
+        if (blockRecycled.classList.contains('block-recycled')) {
+          blockRecycled.classList.remove("block-recycled");
+          //Since we only ever call this with the recycle bin open, set it to none.
+          blockRecycled.parentElement.classList.add("none")
+        }
+        else {
+          blockRecycled.classList.add("block-recycled");
+          blockRecycled.parentElement.classList.add("none")
+        }
+      });
+      block.appendChild(blockRecycled);
+
+      const blockDate = document.createElement("div");
+      blockDate.classList.add("block-date");
+      blockDate.innerText = "Created on: " + formattedDate;
+      block.appendChild(blockDate);
+
+      document.body.appendChild(block);
+
+      // Generate the block within the viewport
+      const blockRect = block.getBoundingClientRect();
+      const x = Math.random() * (window.innerWidth - blockRect.width - blockRect.left * 2);
+      const y = Math.random() * (window.innerHeight - blockRect.height - blockRect.top * 2);
+      block.style.left = x + "px";
+      block.style.top = y + "px";
+
+      // Make the block draggable
+      block.onmousedown = dragMouseDown;
+
+      blockTitle.addEventListener('focus', () => {
+        block.onmousedown = null;
+        if (blockTitle.innerText === titleDefaultText) {
+          blockTitle.innerText = '';
+        }
+      });
+
+      blockTitle.addEventListener('blur', () => {
+        block.onmousedown = dragMouseDown;
+        if (blockTitle.innerText === '') {
+          blockTitle.innerText = titleDefaultText;
+        }
+      });
+
+      blockContent.addEventListener('focus', () => {
+        block.onmousedown = null;
+        if (blockContent.innerText === contentDefaultText) {
+          blockContent.innerText = '';
+        }
+      });
+
+      blockContent.addEventListener('blur', () => {
+        block.onmousedown = dragMouseDown;
+        if (blockContent.innerText === '') {
+          blockContent.innerText = contentDefaultText;
+        }
+      });
+
+      function dragMouseDown(e) {
+        if (e.target === blockTitle) return; // Ignore dragging when clicking on the title
+        if (e.target === blockContent) return;
+        if (e.target === blockFavorite) return;
+        if (e.target === blockRecycled) return;
+
+        e.preventDefault();
+
+        let offsetX = e.clientX - block.getBoundingClientRect().left;
+        let offsetY = e.clientY - block.getBoundingClientRect().top;
+
+        document.onmousemove = onMouseMove;
+        document.onmouseup = onMouseUp;
+
+        function onMouseMove(e) {
+          block.style.left = e.clientX - offsetX + "px";
+          block.style.top = e.clientY - offsetY + "px";
+        }
+
+        function onMouseUp() {
+          document.onmousemove = null;
+          document.onmouseup = null;
+        }
+      }
+    });
+
+    document.getElementById("recycle-bin-toggle").addEventListener("click", function () {
+      if (this.classList.contains("recycle-bin-active")) {
+        this.classList.remove("recycle-bin-active");
+        document.body.style.opacity = '100%';
+        console.log("deactivating recycle bin");
+        // Add the class none to all divs with a class name of "block".
+        const blocks = document.querySelectorAll(".block");
+        blocks.forEach(function (block) {
+          block.classList.remove("none");
+        });
+
+        // Select all the divs with a class name of "block" that have a child i with a class name of "block-recycled".
+        const recycledBlocks = document.querySelectorAll(".block i.block-recycled");
+        recycledBlocks.forEach(function (recycledBlock) {
+          recycledBlock.parentNode.classList.add("none");
+        });
+
+      }
+      else {
+        console.log("activating recycle bin");
+        this.classList.add("recycle-bin-active");
+        document.body.style.opacity = '80%';
+        // Remove the class name none from all divs with a class name of "block".
+        const blocks = document.querySelectorAll(".block");
+        blocks.forEach(function (block) {
+          block.classList.add("none");
+        });
+
+        // Add the class "none" to the divs that have a child i with a class name of 'block-recyled'
+        const recycledBlocks = document.querySelectorAll(".block i.block-recycled");
+        recycledBlocks.forEach(function (recycledBlock) {
+          recycledBlock.parentNode.classList.remove("none");
+        });
+      }
+    });
+
+
+    document.getElementById("favorite-toggle").addEventListener("click", function () {
+      if (this.classList.contains("favorites-active")) {
+        this.classList.remove("favorites-active");
+        document.body.style.opacity = '100%';
+        console.log("deactivating favorites");
+        // Add the class none to all divs with a class name of "block".
+        const blocks = document.querySelectorAll(".block");
+        blocks.forEach(function (block) {
+          block.classList.remove("none");
+        });
+
+        // Select all the divs with a class name of "block" that have a child i with a class name of "block-favorited".
+        const favoritedBlocks = document.querySelectorAll(".block i.block-favorited");
+        // favoritedBlocks.forEach(function (favoritedBlock) {
+        //   favoritedBlock.parentNode.classList.add("none");
+        // });
+
+      }
+      else {
+        console.log("activating favorites");
+        this.classList.add("favorites-active");
+        document.body.style.opacity = '80%';
+        // Remove the class name none from all divs with a class name of "block".
+        const blocks = document.querySelectorAll(".block");
+        blocks.forEach(function (block) {
+          block.classList.add("none");
+        });
+
+        // Add the class "none" to the divs that have a child i with a class name of 'block-favorited'
+        const favoritedBlocks = document.querySelectorAll(".block i.block-favorited");
+        favoritedBlocks.forEach(function (favoritedBlock) {
+          favoritedBlock.parentNode.classList.remove("none");
+        });
+      }
+    });
+
+
+
+    
+
+
+  </script>
+</body>
+
+</html>

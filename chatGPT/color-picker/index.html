@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h2>Color Picker</h2>
+        <p>Choose a color:</p>
+        
+        <input type="color" id="myColor" value="#ff0000">
+        
+        <p id="colorText">Color: #ff0000</p>
+
+        <script>
+            document.getElementById('myColor').onchange = function(){
+                document.getElementById('colorText').innerHTML = "Color: " + this.value;
+            }
+        </script>
+
+    </body>
+</html>

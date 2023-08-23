@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console</title>
+    <style>
+        #console {
+            height: 400px;
+            width: 600px;
+            border: 1px solid #000;
+            background-color: #000;
+            color: #0f0;
+            padding: 5px;
+            font-family: monospace;
+            overflow-y: auto;
+        }
+
+        .input-line {
+            display: flex;
+        }
+
+        #input {
+            background-color: #000;
+            color: #0f0;
+            border: none;
+            outline: none;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="console">
+        <div id="output"></div>
+        <div id="input-line" class="input-line">
+            <div>> </div>
+            <input id="input" autofocus />
+        </div>
+    </div>
+<script>
+    document.getElementById('input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var val = this.value;
+    this.value = '';
+
+    var output = document.createElement('div');
+    output.textContent = '> ' + val;
+    document.getElementById('output').appendChild(output);
+
+    // Process commands
+    if (val.trim() === 'help') {
+      var help = document.createElement('div');
+      help.textContent = 'Available commands: help, clear';
+      document.getElementById('output').appendChild(help);
+    } else if (val.trim() === 'clear') {
+      document.getElementById('output').innerHTML = '';
+    } else {
+      var error = document.createElement('div');
+      error.textContent = 'Unrecognized command: ' + val;
+      document.getElementById('output').appendChild(error);
+    }
+
+        // Scroll to bottom
+    document.getElementById('console').scrollTop = document.getElementById('console').scrollHeight;
+  }
+});
+
+
+</script>
+</body>
+
+</html>
