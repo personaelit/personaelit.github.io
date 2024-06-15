@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 
 function flagExternalLinks() {
-  // Select all anchor tags
+  console.log("Wave that flag.")
   const links = document.querySelectorAll("a");
 
   // Iterate through each link
@@ -15,10 +15,6 @@ function flagExternalLinks() {
     if (link.hostname !== window.location.hostname) {
       // Add a class to the external link
       link.classList.add("external");
-      // Add an emoji after the link text
-    //   const emoji = document.createElement("span");
-    //   emoji.textContent = "\u1F30E"; // You can change the emoji to anything you prefer
-    //   link.appendChild(emoji);
       
       // Optional: Add an attribute or other annotation
       link.setAttribute("rel", "noopener noreferrer");
