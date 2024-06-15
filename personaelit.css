@@ -53,6 +53,7 @@ code {
     max-width: 840px;
     background-color: rgb(255, 255, 255);
     transition: .1s;
+    color:#353535;
 }
 
 .card:hover {
@@ -74,3 +75,39 @@ blockquote {
         text-align: left;
     }
 } 
+
+
+:root {
+    --bg-color: rgb(0, 0, 0);
+    --text-color: #ffffff;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 1s linear, color 1s linear;
+}
+
+.last-updated {
+    display: block;
+    margin-top: 20px;
+}
+
+a {
+    display: inline-block;
+    background: #f0eeee;
+    padding: 10px 15px;
+    
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    color: #333;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+a:hover {
+    background: #f9f9f9;
+    box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.3);
+}
+
