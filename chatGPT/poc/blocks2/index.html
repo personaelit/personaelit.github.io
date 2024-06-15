@@ -156,33 +156,26 @@
     </div>
   </div>
   <script>
-    document.getElementById("createBlock").addEventListener("click", function () {
-      const currentDatetime = new Date();
-      const timestamp = currentDatetime.getTime();
-      const formattedDate = currentDatetime.toLocaleDateString();
 
-      const block = document.createElement("div");
-      block.classList.add("block");
-      block.id = timestamp;
-
-      const titleDefaultText = "Title..."
+    function createBlockTitle(defaultText) {
       const blockTitle = document.createElement("div");
       blockTitle.classList.add("block-title");
-      blockTitle.innerText = titleDefaultText;
+      blockTitle.innerText = defaultText;
       blockTitle.setAttribute("contenteditable", "true");
-      block.appendChild(blockTitle);
+      return blockTitle;
+    }
 
-      const contentDefaultText = 'Content...';
+    function createBlockContent(defaultText) {
       const blockContent = document.createElement("div");
       blockContent.classList.add("block-content");
-      blockContent.innerText = contentDefaultText;
+      blockContent.innerText = defaultText;
       blockContent.setAttribute("contenteditable", "true");
-      block.appendChild(blockContent);
+      return blockContent;
+    }
 
+    function createBlockFavorite() {
       const blockFavorite = document.createElement("i");
-      blockFavorite.classList.add("block-favorite");
-      blockFavorite.classList.add("fas");
-      blockFavorite.classList.add("fa-star");
+      blockFavorite.classList.add("block-favorite", "fas", "fa-star");
       blockFavorite.addEventListener('click', () => {
         if (blockFavorite.classList.contains('block-favorited')) {
           blockFavorite.classList.remove("block-favorited");
@@ -191,95 +184,118 @@
           blockFavorite.classList.add("block-favorited");
         }
       });
-      block.appendChild(blockFavorite);
+      return blockFavorite;
+    }
 
+    function createBlockRecycled() {
       const blockRecycled = document.createElement("i");
-      blockRecycled.classList.add("block-recycle");
-      blockRecycled.classList.add("fas");
-      blockRecycled.classList.add("fa-recycle");
+      blockRecycled.classList.add("block-recycle", "fas", "fa-recycle");
       blockRecycled.addEventListener('click', () => {
         if (blockRecycled.classList.contains('block-recycled')) {
           blockRecycled.classList.remove("block-recycled");
-          //Since we only ever call this with the recycle bin open, set it to none.
-          blockRecycled.parentElement.classList.add("none")
+          blockRecycled.parentElement.classList.add("none"); // Assuming you want to add "none" class
         }
         else {
           blockRecycled.classList.add("block-recycled");
-          blockRecycled.parentElement.classList.add("none")
+          blockRecycled.parentElement.classList.add("none"); // Assuming you want to add "none" class
         }
       });
-      block.appendChild(blockRecycled);
+      return blockRecycled;
+    }
 
+    function createFormattedDate() {
+      const currentDatetime = new Date();
+      return currentDatetime.toLocaleDateString();
+    }
+
+    function generateRandomPosition(element) {
+      const rect = element.getBoundingClientRect();
+      const x = Math.random() * (window.innerWidth - rect.width - rect.left * 2);
+      const y = Math.random() * (window.innerHeight - rect.height - rect.top * 2);
+      return { x, y };
+    }
+
+
+    function createBlockDate(formattedDate) {
       const blockDate = document.createElement("div");
       blockDate.classList.add("block-date");
       blockDate.innerText = "Created on: " + formattedDate;
-      block.appendChild(blockDate);
+      return blockDate;
+    }
 
-      document.body.appendChild(block);
-
-      // Generate the block within the viewport
-      const blockRect = block.getBoundingClientRect();
-      const x = Math.random() * (window.innerWidth - blockRect.width - blockRect.left * 2);
-      const y = Math.random() * (window.innerHeight - blockRect.height - blockRect.top * 2);
-      block.style.left = x + "px";
-      block.style.top = y + "px";
-
-      // Make the block draggable
-      block.onmousedown = dragMouseDown;
-
-      blockTitle.addEventListener('focus', () => {
-        block.onmousedown = null;
-        if (blockTitle.innerText === titleDefaultText) {
-          blockTitle.innerText = '';
-        }
-      });
-
-      blockTitle.addEventListener('blur', () => {
-        block.onmousedown = dragMouseDown;
-        if (blockTitle.innerText === '') {
-          blockTitle.innerText = titleDefaultText;
-        }
-      });
-
-      blockContent.addEventListener('focus', () => {
-        block.onmousedown = null;
-        if (blockContent.innerText === contentDefaultText) {
-          blockContent.innerText = '';
-        }
-      });
-
-      blockContent.addEventListener('blur', () => {
-        block.onmousedown = dragMouseDown;
-        if (blockContent.innerText === '') {
-          blockContent.innerText = contentDefaultText;
-        }
-      });
-
-      function dragMouseDown(e) {
-        if (e.target === blockTitle) return; // Ignore dragging when clicking on the title
-        if (e.target === blockContent) return;
-        if (e.target === blockFavorite) return;
-        if (e.target === blockRecycled) return;
+    function createDragHandlers(element, ignoreElements) {
+      element.onmousedown = function (e) {
+        if (ignoreElements.includes(e.target)) return;
 
         e.preventDefault();
 
-        let offsetX = e.clientX - block.getBoundingClientRect().left;
-        let offsetY = e.clientY - block.getBoundingClientRect().top;
+        let offsetX = e.clientX - element.getBoundingClientRect().left;
+        let offsetY = e.clientY - element.getBoundingClientRect().top;
 
-        document.onmousemove = onMouseMove;
-        document.onmouseup = onMouseUp;
+        document.onmousemove = function (e) {
+          element.style.left = e.clientX - offsetX + "px";
+          element.style.top = e.clientY - offsetY + "px";
+        };
 
-        function onMouseMove(e) {
-          block.style.left = e.clientX - offsetX + "px";
-          block.style.top = e.clientY - offsetY + "px";
-        }
-
-        function onMouseUp() {
+        document.onmouseup = function () {
           document.onmousemove = null;
           document.onmouseup = null;
+        };
+      };
+    }
+
+    function addFocusBlurHandlers(element, defaultText) {
+      element.addEventListener('focus', () => {
+        if (element.innerText === defaultText) {
+          element.innerText = '';
         }
-      }
+      });
+
+      element.addEventListener('blur', () => {
+        if (element.innerText === '') {
+          element.innerText = defaultText;
+        }
+      });
+    }
+
+    document.getElementById("createBlock").addEventListener("click", function () {
+      const currentDatetime = new Date();
+      const timestamp = currentDatetime.getTime(); // Restored the timestamp line
+
+      const block = document.createElement("div");
+      block.classList.add("block");
+      block.id = timestamp;
+
+      const titleDefaultText = "Title...";
+      const blockTitle = createBlockTitle(titleDefaultText);
+      block.appendChild(blockTitle);
+
+      const contentDefaultText = 'Content...';
+      const blockContent = createBlockContent(contentDefaultText);
+      block.appendChild(blockContent);
+
+      const blockFavorite = createBlockFavorite();
+      block.appendChild(blockFavorite);
+
+      const blockRecycled = createBlockRecycled();
+      block.appendChild(blockRecycled);
+
+      const formattedDate = createFormattedDate();
+      const blockDate = createBlockDate(formattedDate);
+      block.appendChild(blockDate);
+
+      const { x, y } = generateRandomPosition(block);
+      block.style.left = x + "px";
+      block.style.top = y + "px";
+
+      createDragHandlers(block, [blockTitle, blockContent, blockFavorite, blockRecycled]); // Passing elements to ignore for dragging
+
+      addFocusBlurHandlers(blockTitle, titleDefaultText); // Adding focus/blur handlers
+      addFocusBlurHandlers(blockContent, contentDefaultText); // Adding focus/blur handlers
+
+      document.body.appendChild(block);
     });
+
 
     document.getElementById("recycle-bin-toggle").addEventListener("click", function () {
       if (this.classList.contains("recycle-bin-active")) {
@@ -356,7 +372,7 @@
 
 
 
-    
+
 
 
   </script>

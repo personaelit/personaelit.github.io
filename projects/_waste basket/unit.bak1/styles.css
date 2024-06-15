@@ -1,0 +1,15 @@
+.unit-container {
+    border: 2px solid #00f;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+}
+
+h2 {
+    color: #007bff;
+}
+
+p {
+    color: #333;
+}

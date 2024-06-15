@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "projects", "projects", "{0164EEC4-2520-41D2-BA85-35310D1A29C0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_waste basket", "_waste basket", "{2B37591C-A993-4EDB-BF6B-21CF6516A1B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tasks", "tasks", "{31160609-BB70-4037-AAC2-42A62C714DAE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskAPi", "projects\_waste basket\tasks\core\TaskAPi.csproj", "{4E96D4B3-0B83-4B7E-BE11-870796EB3D15}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E96D4B3-0B83-4B7E-BE11-870796EB3D15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E96D4B3-0B83-4B7E-BE11-870796EB3D15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E96D4B3-0B83-4B7E-BE11-870796EB3D15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E96D4B3-0B83-4B7E-BE11-870796EB3D15}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2B37591C-A993-4EDB-BF6B-21CF6516A1B5} = {0164EEC4-2520-41D2-BA85-35310D1A29C0}
+		{31160609-BB70-4037-AAC2-42A62C714DAE} = {2B37591C-A993-4EDB-BF6B-21CF6516A1B5}
+		{4E96D4B3-0B83-4B7E-BE11-870796EB3D15} = {31160609-BB70-4037-AAC2-42A62C714DAE}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DE2E454B-4B8B-44D7-9A4A-C40A60F36C8E}
+	EndGlobalSection
+EndGlobal
