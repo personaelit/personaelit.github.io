@@ -2,7 +2,30 @@ window.addEventListener('DOMContentLoaded', (event) => {
     setLastUpdated();
     startColorTransition();
     stylizeLinks();
+    flagExternalLinks();
 });
+
+function flagExternalLinks() {
+  // Select all anchor tags
+  const links = document.querySelectorAll("a");
+
+  // Iterate through each link
+  links.forEach(link => {
+    // Check if the link is external
+    if (link.hostname !== window.location.hostname) {
+      // Add a class to the external link
+      link.classList.add("external");
+      // Add an emoji after the link text
+    //   const emoji = document.createElement("span");
+    //   emoji.textContent = "\u1F30E"; // You can change the emoji to anything you prefer
+    //   link.appendChild(emoji);
+      
+      // Optional: Add an attribute or other annotation
+      link.setAttribute("rel", "noopener noreferrer");
+      link.setAttribute("target", "_blank");
+    }
+  });
+}
 
 function stylizeLinks() {
     console.log("anchors away.")
