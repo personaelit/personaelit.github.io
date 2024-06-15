@@ -6,7 +6,7 @@ The thought that was the impetus for this text file - Google as a last resort.
 
 Let's break that down - 
 
-* I needed to know the entity code for a square bracket. Chat GPT told me in .02 seconds. But more importantly, I went their first - as an afterthought I posed the query to Google.
+* I needed to know the entity code for a square bracket. Chat GPT told me in .02 seconds. But more importantly, I went there first - as an afterthought I posed the query to Google.
 
 "is there an html entity for ]"
 
