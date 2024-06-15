@@ -124,6 +124,7 @@
                             &lt;pre&gt;
                                 
                             &lt;/pre&gt;
+                            &lt;span class="last-updated"&gt;&lt;/span&gt;
                     &lt;/main&gt;
 
                 &lt;/body&gt;
@@ -131,6 +132,7 @@
                 &lt;/html&gt;
 
             </pre>
+            <span class="last-updated"></span>
     </main>
 
 </body>

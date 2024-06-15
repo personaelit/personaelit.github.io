@@ -6,7 +6,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 
 function flagExternalLinks() {
-  console.log("Wave that flag.")
+  console.log("wave that flag.")
   const links = document.querySelectorAll("a");
 
   // Iterate through each link
@@ -56,7 +56,7 @@ function startColorTransition() {
         const textColor = getTextColor(hue);
         document.documentElement.style.setProperty('--bg-color', bgColor);
         document.documentElement.style.setProperty('--text-color', textColor);
-    }, 100); // Adjust the interval for smoothness
+    }, 200); // Adjust the interval for smoothness
 }
 
 function getTextColor(hue) {
