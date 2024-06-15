@@ -29,7 +29,8 @@ function setLastUpdated() {
 
 function startColorTransition() {
     console.log("transition init.")
-    let hue = 0;
+    let hue = Math.floor(Math.random() * 360); // Initialize with a random hue value between 0 and 359
+
     setInterval(() => {
         hue = (hue + 1) % 360; // Cycle through 0-359 for the hue value
         const bgColor = `hsl(${hue}, 100%, 50%)`;
