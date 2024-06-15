@@ -63,11 +63,14 @@ code {
     /* transform: rotate(-1deg); */
 }
 
+.article-nav, .article-last-updated, .article-header,.article {
+    max-width: 50%;
+    margin: 0 auto;
+}
+
 .article {
-    margin:0 auto;
     background-color: #f5f5f5;
     color: #353535;
-    max-width: 50%;
 }
 
 .article-header {
@@ -75,11 +78,11 @@ code {
     background: black;
     color: #d7d5d5;
     padding: 11px;
-    max-width: 50%;
-    margin: 0 auto;
     margin-top: 111px;
     
 }
+
+
 
 
 
