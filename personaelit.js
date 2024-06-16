@@ -3,7 +3,77 @@ window.addEventListener('DOMContentLoaded', (event) => {
     startColorTransition();
     stylizeLinks();
     flagExternalLinks();
+    activateInteractivity();
 });
+
+function activateInteractivity() {
+    console.log("activating interactivity.")
+    
+    const draggableItems = document.querySelectorAll("aside");
+
+    draggableItems.forEach(draggable => {
+        let offsetX, offsetY, isDragging = false;
+        
+        console.log(draggable)
+        
+        // Handle the start of dragging
+        function handleDragStart(event) {
+            console.log("what a drag.")
+            draggable.style.position = "absolute";
+            isDragging = true;
+            draggable.style.cursor = 'grabbing';
+
+            if (event.type === "touchstart") {
+                const touch = event.touches[0];
+                offsetX = touch.clientX - draggable.getBoundingClientRect().left;
+                offsetY = touch.clientY - draggable.getBoundingClientRect().top;
+            } else {
+                offsetX = event.offsetX;
+                offsetY = event.offsetY;
+            }
+
+            event.preventDefault();
+        }
+
+        // Handle dragging
+        function handleDrag(event) {
+            if (!isDragging) return;
+
+            let clientX, clientY;
+            if (event.type === "touchmove") {
+                const touch = event.touches[0];
+                clientX = touch.clientX;
+                clientY = touch.clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+
+            draggable.style.left = `${clientX - offsetX}px`;
+            draggable.style.top = `${clientY - offsetY}px`;
+
+            event.preventDefault();
+        }
+
+        // Handle end of dragging
+        function handleDragEnd() {
+            isDragging = false;
+            draggable.style.cursor = 'grab';
+        }
+
+        // Touch events
+        draggable.addEventListener("touchstart", handleDragStart);
+        draggable.addEventListener("touchmove", handleDrag);
+        draggable.addEventListener("touchend", handleDragEnd);
+        draggable.addEventListener("touchcancel", handleDragEnd);
+
+        // Mouse events
+        draggable.addEventListener("mousedown", handleDragStart);
+        document.addEventListener("mousemove", handleDrag);
+        document.addEventListener("mouseup", handleDragEnd);
+            });
+}
+
 
 function flagExternalLinks() {
   console.log("wave that flag.")
