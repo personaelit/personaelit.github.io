@@ -33,3 +33,17 @@
         margin-top: 2%;
     }
 }
+
+
+.clipped-image {
+    height: 320px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.clipped-image img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover; 
+    object-position: top;
+}

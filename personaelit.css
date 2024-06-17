@@ -96,7 +96,6 @@ a:not(.article a) {
     display: inline-block;
     background: #f0eeee;
     padding: 10px 15px;
-
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
     text-decoration: none;
     color: #333;
@@ -115,16 +114,3 @@ a:hover {
     margin-left: 4px;
 }
 
-
-.clipped-image {
-    height: 320px;
-    width: 100%;
-    overflow: hidden;
-}
-
-.clipped-image img {
-    height: 100%;
-    width: 100%;
-    object-fit: cover; 
-    object-position: top;
-}
