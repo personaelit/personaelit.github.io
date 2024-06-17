@@ -13,9 +13,10 @@ header {
     text-align: center;
     background: black;
     color: #d7d5d5;
-    padding: 11px;
+ 
 }
 
+header,
 main,
 .last-updated,
 nav,
@@ -47,7 +48,6 @@ code {
 
 .card {
     padding: 31px;
-    ;
     border: 1px solid #9e9e9e;
     border-radius: 5px;
     border-top: 0;
@@ -79,11 +79,6 @@ blockquote {
     header {
         text-align: left;
     }
-}
-
-:root {
-    --bg-color: rgb(0, 0, 0);
-    --text-color: #ffffff;
 }
 
 body {
