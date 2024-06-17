@@ -3,9 +3,11 @@
 
 <head>
     <title>Teh Text Fiels</title>
-    <meta name="description"
-        content="tEH tEXT fEILS ARE AS Advertised.">
+
+    <meta charset="UTF-8">
+    <meta name="description" content="tEH tEXT fEILS ARE AS Advertised.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <link rel="stylesheet" href="../personaelit.css">
     <script src="../personaelit.js"></script>
 </head>
@@ -132,9 +134,11 @@
                 &lt;/html&gt;
 
             </pre>
-            <span class="last-updated"></span>
     </main>
-
+    <span class="last-updated"></span>
+    <footer>
+        <!-- FOOTER -->
+    </footer>
 </body>
 
 </html>

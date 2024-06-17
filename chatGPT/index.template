@@ -3,9 +3,11 @@
 
 <head>
     <title>Stuff I Coerced out of ChatGPT</title>
-    <meta name="description"
-        content="ChatGPT is a pretty good pair programmer.">
+
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ChatGPT is a pretty good pair programmer.">
+    
     <link rel="stylesheet" href="../personaelit.css">
     <script src="../personaelit.js"></script>
 </head>
@@ -21,6 +23,6 @@
     <main id="content">
         <p>This is proof-of-concept type-stuff that I rapidly prototyped with ChatGPT.</p>
         [[LINKS]]
-        </main>
-        <span class="last-updated"></span>
+    </main>
+    <span class="last-updated"></span>
 </body>
