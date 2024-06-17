@@ -1,1 +1,1 @@
-- [ ] Retroactively fix portfolio pieces. (draggable)
+- [ ] Retroactively fix portfolio pieces. (draggable, mobile first)
