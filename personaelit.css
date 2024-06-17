@@ -72,28 +72,6 @@ code {
     /* transform: rotate(-1deg); */
 }
 
-.article-nav,
-.article-last-updated,
-.article-header,
-.article {
-    max-width: 50%;
-    margin: 0 auto;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.article {
-    background-color: #f5f5f5;
-    color: #353535;
-}
-
-.article-header {
-    text-align: center;
-    background: black;
-    color: #d7d5d5;
-    padding: 11px;
-    margin-top: 111px;
-}
-
 blockquote {
     margin-left: 33px;
     padding-left: 11px;
