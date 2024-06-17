@@ -13,6 +13,8 @@ function activateSlidableCards() {
 
             const patina = ['#f8f8f8', '#fafafa', '#f3f3f3'];
 
+            let top = 1;
+
             cards.forEach(card => {
                 let offsetX, offsetY, isDragging = false;
                 
@@ -33,9 +35,11 @@ function activateSlidableCards() {
                         return; // Allow default behavior for hyperlinks
                     }
 
+                    top += 1;
+
                     isDragging = true;
                     card.style.cursor = 'grabbing';
-                    card.style.zIndex = 1000; // Bring the card to the front while dragging
+                    card.style.zIndex = top; // Bring the card to the front while dragging
 
 
                     if (event.type === "touchstart") {
