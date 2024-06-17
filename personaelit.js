@@ -29,6 +29,10 @@ function activateSlidableCards() {
                 // Handle the start of dragging
                 function handleDragStart(event) {
                     
+                    if (event.target.tagName.toLowerCase() === 'a') {
+                        return; // Allow default behavior for hyperlinks
+                    }
+
                     isDragging = true;
                     card.style.cursor = 'grabbing';
                     card.style.zIndex = 1000; // Bring the card to the front while dragging
