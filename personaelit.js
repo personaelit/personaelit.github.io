@@ -3,7 +3,88 @@ window.addEventListener('DOMContentLoaded', (event) => {
     startColorTransition();
     stylizeLinks();
     flagExternalLinks();
+    activateSlidableCards();
 });
+
+function activateSlidableCards() {
+            const cards = document.querySelectorAll(".card");
+
+            console.log("keep your eye on the card.");
+
+            const patina = ['#f8f8f8', '#fafafa', '#f3f3f3'];
+
+            cards.forEach(card => {
+                let offsetX, offsetY, isDragging = false;
+                
+                card.style.position = 'absolute';
+                
+                const randomShade = patina[Math.floor(Math.random() * patina.length)];
+                card.style.backgroundColor = randomShade;
+                
+                //scatter the cards
+                card.style.left = `${Math.random() * (window.innerWidth - card.offsetWidth)}px`;
+                card.style.top = `${Math.random() * (window.innerHeight - card.offsetHeight)}px`
+
+
+                // Handle the start of dragging
+                function handleDragStart(event) {
+                    
+                    isDragging = true;
+                    card.style.cursor = 'grabbing';
+                    card.style.zIndex = 1000; // Bring the card to the front while dragging
+
+
+                    if (event.type === "touchstart") {
+                        const touch = event.touches[0];
+                        offsetX = touch.clientX - card.getBoundingClientRect().left;
+                        offsetY = touch.clientY - card.getBoundingClientRect().top;
+                    } else {
+                        offsetX = event.offsetX;
+                        offsetY = event.offsetY;
+                    }
+
+                    event.preventDefault();
+                }
+
+                // Handle dragging
+                function handleDrag(event) {
+                    if (!isDragging) return;
+
+                    let clientX, clientY;
+                    if (event.type === "touchmove") {
+                        const touch = event.touches[0];
+                        clientX = touch.clientX;
+                        clientY = touch.clientY;
+                    } else {
+                        clientX = event.clientX;
+                        clientY = event.clientY;
+                    }
+
+                    card.style.left = `${clientX - offsetX}px`;
+                    card.style.top = `${clientY - offsetY}px`;
+
+                    event.preventDefault();
+                }
+
+                // Handle end of dragging
+                function handleDragEnd() {
+                    isDragging = false;
+                    card.style.cursor = 'grab';
+                }
+
+                // Touch events
+                card.addEventListener("touchstart", handleDragStart);
+                card.addEventListener("touchmove", handleDrag);
+                card.addEventListener("touchend", handleDragEnd);
+                card.addEventListener("touchcancel", handleDragEnd);
+
+                // Mouse events
+                card.addEventListener("mousedown", handleDragStart);
+                document.addEventListener("mousemove", handleDrag);
+                document.addEventListener("mouseup", handleDragEnd);
+            });
+}
+
 
 function flagExternalLinks() {
   console.log("wave that flag.")
@@ -22,6 +103,9 @@ function flagExternalLinks() {
     }
   });
 }
+
+
+
 
 function stylizeLinks() {
     console.log("anchors away.")
