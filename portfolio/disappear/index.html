@@ -9,17 +9,22 @@
             window.addEventListener('DOMContentLoaded', (event) => {
                 let text = document.getElementById('text').innerText;
                 let words = text.split(" ");
-                let interval = Math.floor(Math.random() * 1000) + 1
-                setInterval(() => {
-                    words = words.slice(1, words.length);
-
+                let interval = Math.floor(Math.random() * 500) + 1;
+        
+                let zapWord = () => {
+                    if (words.length === 0) return;
+                    let randomIndex = Math.floor(Math.random() * words.length);
+                    words.splice(randomIndex, 1);
                     document.getElementById('text').innerText = words.join(" ");
-                }, interval);
-
-
-
+                    if (words.length > 0) {
+                        setTimeout(zapWord, interval);
+                    }
+                };
+        
+                setTimeout(zapWord, interval);
             });
         </script>
+        
         <style>
             #text {
                 display: block;
@@ -30,11 +35,30 @@
     </head>
     <body>
         <p id="text">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit tenetur, odit numquam praesentium cumque quos quis vel corrupti at amet similique in rem tempora aut aspernatur temporibus mollitia quia distinctio.
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. In libero ratione vitae qui commodi quas, sit culpa harum possimus. Maxime laboriosam ipsa saepe aperiam nam asperiores facere quibusdam! Natus, id!
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas voluptatibus provident excepturi unde doloremque, amet repellat quo eius perspiciatis accusantium eos officiis eligendi. Natus aliquid officia quod! Enim, eum aliquam!
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. A quas quae, saepe deleniti fugiat provident tempora? Voluptatem exercitationem delectus cumque minus, dolor officia, doloribus vel, consectetur rerum quos enim eius.
-            I hesitated before untying the bow that bound this book together.
+
+            In the labyrinthine depths of digital transmission, words conspire and scatter like furtive whispers in a secret assembly. Sentences, once whole and sturdy, now dangle precariously over an abyss of uncertainty, subject to the whimsical erasures of some spectral force. It’s as if the text has been thrust into a Pynchonian plot, where fragments and ellipses reign supreme. Snatches of phrases, stripped of their contexts, flit in and out of existence, leaving behind a breadcrumb trail of orphaned thoughts and half-finished ideas. Deletion occurs with a fickle rhythm, a syncopated dance of vanishing letters and evaporating prose. Entire paragraphs may dissolve in an instant, while elsewhere, a lone word succumbs to the void. The text mutates in waves, a capricious tide of entropy transforming the once orderly narrative into a bewildering mosaic of discontinuity. In this kaleidoscopic flux, the ephemeral nature of written words reveals itself, a testament to the chaotic forces that shape our most fleeting communications.
+            <br />
+            <br />
+            &lt;script&gt;
+            window.addEventListener('DOMContentLoaded', (event) =&gt; {
+                let text = document.getElementById('text').innerText;
+                let words = text.split(" ");
+                let interval = Math.floor(Math.random() * 1000) + 1;
+        
+                let zapWord = () =&gt; {
+                    if (words.length === 0) return;
+                    let randomIndex = Math.floor(Math.random() * words.length);
+                    words.splice(randomIndex, 1);
+                    document.getElementById('text').innerText = words.join(" ");
+                    if (words.length &gt; 0) {
+                        setTimeout(zapWord, interval);
+                    }
+                };
+        
+                setTimeout(zapWord, interval);
+            });
+        &lt;/script&gt;
+        
         </p>
 
     </body>
