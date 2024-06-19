@@ -11,7 +11,7 @@ $templateContent = Get-Content -Path $templatePath -Raw
 $links = @()
 
 # Loop through each .txt file in the directory
-Get-ChildItem -Filter *.txt | ForEach-Object {
+Get-ChildItem -Filter *.md | ForEach-Object {
     $fileName = $_.Name
     $createdDate = $_.CreationTime
     $lastModified = $_.LastWriteTime

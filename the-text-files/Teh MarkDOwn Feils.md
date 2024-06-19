@@ -1,0 +1,1 @@
+In order to manage these with Obsidian - they need to be .md.
