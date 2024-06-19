@@ -148,7 +148,7 @@ function startColorTransition() {
         const textColor = getTextColor(hue);
         document.body.style.setProperty('--bg-color', bgColor);
         document.body.style.setProperty('--text-color', textColor);
-    }, 1000); // Adjust the interval for smoothness
+    }, 300); // Adjust the interval for smoothness
 }
 
 function getTextColor(hue) {
