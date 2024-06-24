@@ -88,7 +88,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
         if (e.target.nodeType === Node.TEXT_NODE) {
             return false;
         }
-        draggedTask = e.target;
+        draggedTask = e.target.closest('.task');
     }
       
     function handleDragEnd(e) {
@@ -111,7 +111,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
         if (e.target.nodeType === Node.TEXT_NODE) {
             return false;
         }
-        draggedTask = e.target;
+        draggedTask = e.target.closest('.task');
     }
     
     function handleTouchMove(e) {
