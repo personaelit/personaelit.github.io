@@ -151,11 +151,11 @@ ul#imageList li:hover img.Polaroid {
     }
 
     #entry h1 {
-        font-size: 1.5rem;
+        font-size: 3.5rem;
     }
 
     #entry p {
-        font-size: 1rem;
+        font-size: 2rem;
     }
 }
 
@@ -166,9 +166,17 @@ ul#imageList li:hover img.Polaroid {
 		left:-225px;
 	}
 	#img2 {
-		position: absolute;
-		top:225px;
-		left:365px;
+		position: relative;
+		top:-225px;
+		left:55px;
+	}
+	#entry {
+		position: relative;
+		top: -225px
+	}
+	body{
+		background-position: bottom right 225px,top right 225px, top left;
+
 	}
 }
 
