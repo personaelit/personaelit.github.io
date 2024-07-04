@@ -1,87 +1,100 @@
 body {
-	/*background:  url(images/pen.png) bottom 950px no-repeat,url(images/greetingsfromnc1.png) 750px 15px no-repeat, url(images/wood-fence-background.jpg) top left repeat;*/
-	background:  url(images/pen.png),url(images/greetingsfromnc1.png), url(images/wood-fence-background.jpg);
-	background-position: bottom right,top right, top left;
-	background-repeat:no-repeat, no-repeat, repeat;
-	background-color:#cf6211;
-	font-family: 'Reenie Beanie', arial, serif;
-	}
-#container {	
-	width:1000px;	
-	margin:0 auto;	
-	padding-bottom:25px;	
-	}
-	
+    background:  url(images/pen.png),url(images/greetingsfromnc1.png), url(images/wood-fence-background.jpg);
+    background-position: bottom right,top right, top left;
+    background-repeat:no-repeat, no-repeat, repeat;
+    background-color:#cf6211;
+    font-family: 'Reenie Beanie', arial, serif;
+    margin: 0;
+    padding: 0;
+}
+
+#container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 25px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
 #header {
-	width:1000px;	
-	margin:0 auto;
-	height:100px; 
-	margin:0 auto;
-	padding:0;
-	margin-bottom:25px;
-	color:#f2f2f2;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);	
-	-moz-transform:rotate(-2deg);
-	-webkit-transform: rotate(-2deg);
-	-o-transform: rotate(-2deg);
-	transform: rotate(-2deg);	
-	}
-	
-#title { 
-	padding:0; 
-	margin:0;
-	font-size:48px;
-	font-weight:bold;
-	}
-#tagline { 
-	padding:0; 
-	margin:0; 
-	font-size:36px;
-	font-weight:bold;
-	}
-#images{
-	float:left;
-	width:326px;
-	margin:50px 0;	
-	}
-#entry{
-	float:left;
-	margin:150px auto;	
-	margin-left:20px;
-	width:560px;
-	border:1px solid #fff;
-	padding:15px 15px 15px 25px;
-	background-image: url(images/blue-rule-ground.png);
-	background-repeat:both;
-	min-height:288px;
-	font-family: 'Reenie Beanie', arial, serif;
-	font-size:30px;	
-	-moz-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
-	-webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.50);
-	box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
-	}
-#entry h1{
-	font-size:36px;
-	padding:0;
-	margin:0;
-	}
-#entry .time{
-		text-align:right;
-		}
-#entry p{
-	padding-top:11px;
-	margin-top:0;
-	}
-#footer{
-	clear:both;
-	text-align:center;	
-	}
-#footer a {color: #f2f2f2;	
-	font-size:24px;
-	}
-	
-#footer a:hover {color:#0a0a0a;}
-	
+    width: 100%;
+    height: auto;
+    text-align: center;
+    margin-bottom: 25px;
+    color: #f2f2f2;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
+	background-color:rgba(0, 0, 0, 0.50);
+    transform: rotate(-2deg);
+}
+
+#title {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+#tagline {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#images {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 50px 0;
+}
+
+#images img {
+    margin: 10px;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+}
+
+#entry {
+    margin: 50px auto;
+    width: 90%;
+    max-width: 560px;
+    border: 1px solid #fff;
+    padding: 15px 15px 15px 25px;
+    background-image: url(images/blue-rule-ground.png);
+    background-repeat: both;
+    min-height: 288px;
+    font-family: 'Reenie Beanie', arial, serif;
+    font-size: 1.25rem;
+    box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
+}
+
+#entry h1 {
+    font-size: 2rem;
+    padding: 0;
+    margin: 0;
+}
+
+#entry .time {
+    text-align: right;
+}
+
+#entry p {
+    padding-top: 11px;
+    margin-top: 0;
+}
+
+#footer {
+    clear: both;
+    text-align: center;
+}
+
+#footer a {
+    color: #f2f2f2;
+    font-size: 1.5rem;
+}
+
+#footer a:hover {
+    color: #0a0a0a;
+}
+
 #img1{
 	-moz-transform:rotate(35deg); 
 	-webkit-transform: rotate(35deg); 
@@ -101,26 +114,61 @@ body {
 	list-style-type:none;
 	}
 
-.Polaroid{	
-	width:300px;	
-	background-color:#f2f2f2; 
-	border: 1px solid #ccc; 
-	padding: 11px 11px 55px 11px;
-	-moz-box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
-	-webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.50);
-	box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
-	-webkit-transition: all 0.5s ease-in-out;
-	-moz-transition:all 0.5s ease-in-out;
-	-o-transition:all 0.5s ease-in-out;
-	transition:all 0.5s ease-in-out;
-	
-	}
-	
+.Polaroid {
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    padding: 11px 11px 55px 11px;
+    box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
+    transition: all 0.5s ease-in-out;
+}
 
-ul#imageList li:hover img.Polaroid{
-	-webkit-transform: scale(1.25);
-	-moz-transform: scale(1.25);  
-	-o-transform: scale(1.25); 
-	transform: scale(1.25);	
-	z-index:100;
-	}	
+ul#imageList li:hover img.Polaroid {
+    transform: scale(1.25);
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    #header {
+        
+    }
+
+    #title {
+        font-size: 3rem;
+    }
+
+    #tagline {
+        font-size: 2.25rem;
+    }
+
+    #images {
+        margin: 200px 0;
+    }
+
+    #entry {
+        width: 100%;
+        margin: 20px 0;
+        padding: 10px;
+    }
+
+    #entry h1 {
+        font-size: 1.5rem;
+    }
+
+    #entry p {
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    #img1 {
+		position: relative;
+		top:0;
+		left:-225px;
+	}
+	#img2 {
+		position: absolute;
+		top:225px;
+		left:365px;
+	}
+}
+
