@@ -128,9 +128,6 @@ ul#imageList li:hover img.Polaroid {
 }
 
 @media (max-width: 768px) {
-    #header {
-        
-    }
 
     #title {
         font-size: 3rem;
