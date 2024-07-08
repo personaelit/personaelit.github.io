@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time to RGB</title>
+    <style>
+        body {
+            transition: background-color 1s, color 1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            font-size: 3em;
+        }
+    </style>
+</head>
+<body>
+    <div id="timeDisplay"></div>
+    <script>
+        function timeToRGB(date) {
+            // Extract hour, minute, and second from the date object
+            const hour = date.getHours();
+            const minute = date.getMinutes();
+            const second = date.getSeconds();
+
+            // Normalize values to 0-255 range
+            const red = Math.floor((hour / 23) * 255);   // Hours range from 0-23
+            const green = Math.floor((minute / 59) * 255);  // Minutes range from 0-59
+            const blue = Math.floor((second / 59) * 255);  // Seconds range from 0-59
+
+            return `rgb(${red}, ${green}, ${blue})`;
+        }
+
+        function updateBackgroundColor() {
+            const date = new Date();
+            const rgb = timeToRGB(date);
+            document.body.style.backgroundColor = rgb;
+
+            // Update time display
+            const timeString = date.toLocaleTimeString();
+            const timeDisplay = document.getElementById('timeDisplay');
+            timeDisplay.textContent = timeString;
+
+            // Calculate brightness to set text color
+            const [r, g, b] = rgb.match(/\d+/g).map(Number);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            document.body.style.color = brightness > 128 ? 'black' : 'white';
+
+            console.log(`Date: ${date}`);
+            console.log(`RGB: ${rgb}`);
+        }
+
+        // Update the background color and time display every second
+        setInterval(updateBackgroundColor, 1000);
+
+        // Initial call to set the background color and time display immediately
+        updateBackgroundColor();
+    </script>
+</body>
+</html>
