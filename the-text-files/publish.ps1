@@ -15,7 +15,7 @@ Get-ChildItem -Filter *.md | ForEach-Object {
     $fileName = $_.Name
     $createdDate = $_.CreationTime
     $lastModified = $_.LastWriteTime
-    $link = "<li><a href=""$fileName"">$fileName</a> | Created: $createdDate, Last Modified: $lastModified</li>"
+    $link = "<li><a href=""$fileName"">$fileName</a> | Created: $createdDate, Last Modified: $lastModified</li>`r`n"
     $links += $link
 }
 
