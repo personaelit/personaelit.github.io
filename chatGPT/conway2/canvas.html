@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life</title>
+    <style>
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameOfLifeCanvas" width="500" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('gameOfLifeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const gridSize = 50;
+        const cellSize = canvas.width / gridSize;
+
+        // Initialize the grid with random cells
+        let grid = Array.from({ length: gridSize }, () => Array.from({ length: gridSize }, () => Math.random() > 0.9 ? 1 : 0));
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    ctx.fillStyle = grid[i][j] ? 'black' : 'white';
+                    ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+
+        function getNeighborCount(x, y) {
+            let count = 0;
+
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    if (i === 0 && j === 0) continue;
+                    const ni = (x + i + gridSize) % gridSize;
+                    const nj = (y + j + gridSize) % gridSize;
+                    count += grid[ni][nj];
+                }
+            }
+
+            return count;
+        }
+
+        function updateGrid() {
+            const newGrid = grid.map(arr => [...arr]);
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const neighbors = getNeighborCount(i, j);
+
+                    if (grid[i][j] === 1) {
+                        if (neighbors < 2 || neighbors > 3) {
+                            newGrid[i][j] = 0;
+                        }
+                    } else {
+                        if (neighbors === 3) {
+                            newGrid[i][j] = 1;
+                        }
+                    }
+                }
+            }
+
+            grid = newGrid;
+        }
+
+        function gameLoop() {
+            drawGrid();
+            updateGrid();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

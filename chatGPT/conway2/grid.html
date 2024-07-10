@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #eee;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(50, 1fr);
+            grid-template-rows: repeat(50, 1fr);
+            width: 100vmin;
+            height: 100vmin;
+        }
+        .cell {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .alive {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid"></div>
+    <script>
+        const gridSize = 50;
+        const gridElement = document.querySelector('.grid');
+
+        // Create the grid cells
+        let grid = Array.from({ length: gridSize }, () => Array.from({ length: gridSize }, () => Math.random() > 0.9 ? 1 : 0));
+        
+        function createGrid() {
+            gridElement.innerHTML = '';
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${grid[i][j] ? 'alive' : ''}`;
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function getNeighborCount(x, y) {
+            let count = 0;
+
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    if (i === 0 && j === 0) continue;
+                    const ni = (x + i + gridSize) % gridSize;
+                    const nj = (y + j + gridSize) % gridSize;
+                    count += grid[ni][nj];
+                }
+            }
+
+            return count;
+        }
+
+        function updateGrid() {
+            const newGrid = grid.map(arr => [...arr]);
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const neighbors = getNeighborCount(i, j);
+
+                    if (grid[i][j] === 1) {
+                        if (neighbors < 2 || neighbors > 3) {
+                            newGrid[i][j] = 0;
+                        }
+                    } else {
+                        if (neighbors === 3) {
+                            newGrid[i][j] = 1;
+                        }
+                    }
+                }
+            }
+
+            grid = newGrid;
+        }
+
+        function gameLoop() {
+            createGrid();
+            updateGrid();
+            setTimeout(gameLoop, 200);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
