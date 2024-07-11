@@ -41,6 +41,7 @@
         const gridSize = 50;
         const gridElement = document.querySelector('.grid');
         const colors = ['red', 'blue', 'yellow', 'black'];
+        let isDragging = false;
 
         // Create the grid cells
         let grid = Array.from({ length: gridSize }, () => Array.from({ length: gridSize }, () => Math.random() > 0.9 ? 1 : 0));
@@ -50,14 +51,29 @@
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
                     const cell = document.createElement('div');
-                    if (grid[i][j]) {
-                        const color = colors[Math.floor(Math.random() * colors.length)];
-                        cell.className = `cell alive ${color}`;
-                    } else {
-                        cell.className = 'cell';
-                    }
+                    cell.dataset.x = i;
+                    cell.dataset.y = j;
+                    cell.className = `cell ${grid[i][j] ? 'alive ' + colors[Math.floor(Math.random() * colors.length)] : ''}`;
+                    cell.addEventListener('mousedown', () => {
+                        isDragging = true;
+                        toggleCell(i, j, cell);
+                    });
+                    cell.addEventListener('mouseover', () => {
+                        if (isDragging) toggleCell(i, j, cell);
+                    });
                     gridElement.appendChild(cell);
                 }
+            }
+        }
+
+        function toggleCell(x, y, cell) {
+            if (grid[x][y]) {
+                grid[x][y] = 0;
+                cell.className = 'cell';
+            } else {
+                grid[x][y] = 1;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                cell.className = `cell alive ${color}`;
             }
         }
 
@@ -103,6 +119,9 @@
             updateGrid();
             setTimeout(gameLoop, 200);
         }
+
+        // Add event listener to stop dragging when mouse is released
+        document.addEventListener('mouseup', () => isDragging = false);
 
         gameLoop();
     </script>
