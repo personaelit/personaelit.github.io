@@ -11,13 +11,31 @@
             height: 40px; /* Adjust the size as needed */
             transition: transform 0.05s linear; /* Faster transition */
         }
+        #splat {
+            position: absolute;
+            display: none;
+            width: 100px; /* Adjust the size as needed */
+            height: 100px; /* Adjust the size as needed */
+        }
+        #resetButton {
+            display: none;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <img id="tot" src="flying-tot.png" alt="Flying Tater Tot">
+    <img id="splat" src="splat.png" alt="Splat">
+    <button id="resetButton">Reset</button>
 
     <script>
         const tot = document.getElementById('tot');
+        const splat = document.getElementById('splat');
+        const resetButton = document.getElementById('resetButton');
 
         let totPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
         let totVelocity = { x: 0, y: 0 };
@@ -76,7 +94,7 @@
         function randomMoveTot() {
             if (caught || !isMobile) return;
 
-            const jumpDistance = 180; // Increase this value for longer jumps
+            const jumpDistance = 120; // Increase this value for longer jumps
             totVelocity.x = (Math.random() - 0.5) * jumpDistance;
             totVelocity.y = (Math.random() - 0.5) * jumpDistance;
 
@@ -103,15 +121,29 @@
             caught = true;
             totVelocity.x = 0;
             totVelocity.y = 0;
+            splat.style.display = 'block';
+            splat.style.transform = tot.style.transform;
+            tot.style.display = 'none';
+            resetButton.style.display = 'block';
+        }
+
+        function resetGame() {
+            caught = false;
+            tot.style.display = 'block';
+            splat.style.display = 'none';
+            resetButton.style.display = 'none';
+            totPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+            tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
         }
 
         document.addEventListener('mousemove', moveTot);
         document.addEventListener('touchmove', moveTot);
         tot.addEventListener('click', catchTot);
         tot.addEventListener('touchstart', catchTot);
+        resetButton.addEventListener('click', resetGame);
 
         setInterval(randomSlowDown, 1000);
-        setInterval(randomMoveTot, 10); // Increase frequency of movement on mobile
+        setInterval(randomMoveTot, 200); // Increase frequency of movement on mobile
 
         tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
     </script>
