@@ -76,7 +76,7 @@
         function randomMoveTot() {
             if (caught || !isMobile) return;
 
-            const jumpDistance = 100; // Increase this value for longer jumps
+            const jumpDistance = 180; // Increase this value for longer jumps
             totVelocity.x = (Math.random() - 0.5) * jumpDistance;
             totVelocity.y = (Math.random() - 0.5) * jumpDistance;
 
@@ -111,7 +111,7 @@
         tot.addEventListener('touchstart', catchTot);
 
         setInterval(randomSlowDown, 1000);
-        setInterval(randomMoveTot, 200); // Increase frequency of movement on mobile
+        setInterval(randomMoveTot, 10); // Increase frequency of movement on mobile
 
         tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
     </script>
