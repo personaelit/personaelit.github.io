@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Flying Tater Tot</title>
+    <style>
+        #tot {
+            position: absolute;
+            width: 40px; /* Adjust the size as needed */
+            height: 40px; /* Adjust the size as needed */
+            transition: transform 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+    <img id="tot" src="flying-tot.png" alt="Flying Tater Tot">
+
+    <script>
+        const tot = document.getElementById('tot');
+
+        let totPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let totVelocity = { x: 0, y: 0 };
+        let slowingDown = false;
+
+        function moveTot(event) {
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+
+            const deltaX = totPosition.x - mouseX;
+            const deltaY = totPosition.y - mouseY;
+
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const maxSpeed = slowingDown ? 2 : 10;
+
+            if (distance < 100) {
+                const angle = Math.atan2(deltaY, deltaX);
+                totVelocity.x = maxSpeed * Math.cos(angle);
+                totVelocity.y = maxSpeed * Math.sin(angle);
+            } else {
+                totVelocity.x = 0;
+                totVelocity.y = 0;
+            }
+
+            totPosition.x += totVelocity.x;
+            totPosition.y += totVelocity.y;
+
+            // Correct boundary handling
+            if (totPosition.x < 0) {
+                totPosition.x = 0;
+                totVelocity.x *= -1;
+            } else if (totPosition.x > window.innerWidth - 40) {
+                totPosition.x = window.innerWidth - 40;
+                totVelocity.x *= -1;
+            }
+
+            if (totPosition.y < 0) {
+                totPosition.y = 0;
+                totVelocity.y *= -1;
+            } else if (totPosition.y > window.innerHeight - 40) {
+                totPosition.y = window.innerHeight - 40;
+                totVelocity.y *= -1;
+            }
+
+            tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+        }
+
+        function randomSlowDown() {
+            slowingDown = Math.random() < 0.3;
+        }
+
+        document.addEventListener('mousemove', moveTot);
+        setInterval(randomSlowDown, 1000);
+
+        tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+    </script>
+</body>
+</html>

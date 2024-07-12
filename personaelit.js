@@ -4,112 +4,139 @@ window.addEventListener('DOMContentLoaded', (event) => {
     stylizeLinks();
     flagExternalLinks();
     activateSlidableCards();
+    getRippled();
 });
 
+function getRippled() {
+
+    console.log("Ripple, on still water.")
+    const rippleContainer = document.querySelector('body');
+
+    document.addEventListener('click', (event) => {
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+
+        // Calculate the position based on scroll offset
+        const scrollX = window.scrollX || document.documentElement.scrollLeft;
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+
+        ripple.style.left = `${event.clientX - 10 + scrollX}px`;  // Adjust ripple position to center
+        ripple.style.top = `${event.clientY - 10 + scrollY}px`;   // Adjust ripple position to center
+
+        rippleContainer.appendChild(ripple);
+
+        ripple.addEventListener('animationend', () => {
+            ripple.remove();
+        });
+
+    });
+
+}
+
 function activateSlidableCards() {
-            const cards = document.querySelectorAll(".card");
+    const cards = document.querySelectorAll(".card");
 
-            console.log("keep your eye on the card.");
+    console.log("keep your eye on the card.");
 
-            const patina = ['#f8f8f8', '#fafafa', '#f3f3f3'];
+    const patina = ['#f8f8f8', '#fafafa', '#f3f3f3'];
 
-            let top = 1;
+    let top = 1;
 
-            cards.forEach(card => {
-                let offsetX, offsetY, isDragging = false;
-                
-                card.style.position = 'absolute';
-                
-                const randomShade = patina[Math.floor(Math.random() * patina.length)];
-                card.style.backgroundColor = randomShade;
-                
-                //scatter the cards
-                card.style.left = `${Math.random() * (window.innerWidth - card.offsetWidth)}px`;
-                card.style.top = `${Math.random() * (window.innerHeight - card.offsetHeight)}px`
+    cards.forEach(card => {
+        let offsetX, offsetY, isDragging = false;
 
+        card.style.position = 'absolute';
 
-                // Handle the start of dragging
-                function handleDragStart(event) {
-                    
-                    if (event.target.tagName.toLowerCase() === 'a') {
-                        return; // Allow default behavior for hyperlinks
-                    }
+        const randomShade = patina[Math.floor(Math.random() * patina.length)];
+        card.style.backgroundColor = randomShade;
 
-                    top += 1;
-
-                    isDragging = true;
-                    card.style.cursor = 'grabbing';
-                    card.style.zIndex = top; // Bring the card to the front while dragging
+        //scatter the cards
+        card.style.left = `${Math.random() * (window.innerWidth - card.offsetWidth)}px`;
+        card.style.top = `${Math.random() * (window.innerHeight - card.offsetHeight)}px`
 
 
-                    if (event.type === "touchstart") {
-                        const touch = event.touches[0];
-                        offsetX = touch.clientX - card.getBoundingClientRect().left;
-                        offsetY = touch.clientY - card.getBoundingClientRect().top;
-                    } else {
-                        offsetX = event.offsetX;
-                        offsetY = event.offsetY;
-                    }
+        // Handle the start of dragging
+        function handleDragStart(event) {
 
-                    event.preventDefault();
-                }
+            if (event.target.tagName.toLowerCase() === 'a') {
+                return; // Allow default behavior for hyperlinks
+            }
 
-                // Handle dragging
-                function handleDrag(event) {
-                    if (!isDragging) return;
+            top += 1;
 
-                    let clientX, clientY;
-                    if (event.type === "touchmove") {
-                        const touch = event.touches[0];
-                        clientX = touch.clientX;
-                        clientY = touch.clientY;
-                    } else {
-                        clientX = event.clientX;
-                        clientY = event.clientY;
-                    }
+            isDragging = true;
+            card.style.cursor = 'grabbing';
+            card.style.zIndex = top; // Bring the card to the front while dragging
 
-                    card.style.left = `${clientX - offsetX}px`;
-                    card.style.top = `${clientY - offsetY}px`;
 
-                    event.preventDefault();
-                }
+            if (event.type === "touchstart") {
+                const touch = event.touches[0];
+                offsetX = touch.clientX - card.getBoundingClientRect().left;
+                offsetY = touch.clientY - card.getBoundingClientRect().top;
+            } else {
+                offsetX = event.offsetX;
+                offsetY = event.offsetY;
+            }
 
-                // Handle end of dragging
-                function handleDragEnd() {
-                    isDragging = false;
-                    card.style.cursor = 'grab';
-                }
+            event.preventDefault();
+        }
 
-                // Touch events
-                card.addEventListener("touchstart", handleDragStart);
-                card.addEventListener("touchmove", handleDrag);
-                card.addEventListener("touchend", handleDragEnd);
-                card.addEventListener("touchcancel", handleDragEnd);
+        // Handle dragging
+        function handleDrag(event) {
+            if (!isDragging) return;
 
-                // Mouse events
-                card.addEventListener("mousedown", handleDragStart);
-                document.addEventListener("mousemove", handleDrag);
-                document.addEventListener("mouseup", handleDragEnd);
-            });
+            let clientX, clientY;
+            if (event.type === "touchmove") {
+                const touch = event.touches[0];
+                clientX = touch.clientX;
+                clientY = touch.clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+
+            card.style.left = `${clientX - offsetX}px`;
+            card.style.top = `${clientY - offsetY}px`;
+
+            event.preventDefault();
+        }
+
+        // Handle end of dragging
+        function handleDragEnd() {
+            isDragging = false;
+            card.style.cursor = 'grab';
+        }
+
+        // Touch events
+        card.addEventListener("touchstart", handleDragStart);
+        card.addEventListener("touchmove", handleDrag);
+        card.addEventListener("touchend", handleDragEnd);
+        card.addEventListener("touchcancel", handleDragEnd);
+
+        // Mouse events
+        card.addEventListener("mousedown", handleDragStart);
+        document.addEventListener("mousemove", handleDrag);
+        document.addEventListener("mouseup", handleDragEnd);
+    });
 }
 
 
 function flagExternalLinks() {
-  console.log("wave that flag.")
-  const links = document.querySelectorAll("a");
+    console.log("wave that flag.")
+    const links = document.querySelectorAll("a");
 
-  // Iterate through each link
-  links.forEach(link => {
-    // Check if the link is external
-    if (link.hostname !== window.location.hostname) {
-      // Add a class to the external link
-      link.classList.add("external");
-      
-      // Optional: Add an attribute or other annotation
-      link.setAttribute("rel", "noopener noreferrer");
-      link.setAttribute("target", "_blank");
-    }
-  });
+    // Iterate through each link
+    links.forEach(link => {
+        // Check if the link is external
+        if (link.hostname !== window.location.hostname) {
+            // Add a class to the external link
+            link.classList.add("external");
+
+            // Optional: Add an attribute or other annotation
+            link.setAttribute("rel", "noopener noreferrer");
+            link.setAttribute("target", "_blank");
+        }
+    });
 }
 
 
