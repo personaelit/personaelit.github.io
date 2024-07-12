@@ -114,7 +114,8 @@
         }
 
         function randomMoveTot() {
-            if (caught || !isMobile) return;
+            //if (caught || !isMobile) return;
+            if (caught) return;
 
             const jumpDistance = 100; // Increase this value for longer jumps
             totVelocity.x = (Math.random() - 0.5) * jumpDistance;
