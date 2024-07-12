@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        #balloon {
+            width: 50px;
+            height: 50px;
+            background-color: rgb(187, 84, 84);
+            border-radius: 50%;
+            margin-bottom: 20px;
+            transition: width 0.1s, height 0.1s, opacity 0.1s;
+            opacity: 1;
+        }
+        #inflate-button {
+            position: fixed;
+            bottom: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: rgb(45, 45, 179);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #message {
+            position: absolute;
+            font-size: 48px;
+            color: rgb(179, 68, 68);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="balloon"></div>
+    <div id="message"></div>
+    <button id="inflate-button" onclick="inflateBalloon()">Inflate</button>
+
+    <script>
+        let balloon = document.getElementById('balloon');
+        let message = document.getElementById('message');
+        let inflateButton = document.getElementById('inflate-button');
+        let size = 50;
+        let isClicked = false;
+        const MIN_DEFLATE_RATE = 5;
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function inflateBalloon() {
+            isClicked = true;
+            size += 10;
+            balloon.style.width = size + 'px';
+            balloon.style.height = size + 'px';
+            let newOpacity = Math.max(1 - (size - 50) / 200, 0); // Slower decrease in opacity
+            balloon.style.opacity = newOpacity;
+
+            if (newOpacity === 0) {
+                popBalloon();
+            }
+        }
+
+        function popBalloon() {
+            balloon.style.display = 'none';
+            message.textContent = 'POP!';
+            message.style.display = 'block';
+            setTimeout(resetBalloon, 2000); // Show the pop message for 2 seconds
+        }
+
+        function loseGame() {
+            balloon.style.display = 'none';
+            message.textContent = 'You Lose!';
+            message.style.display = 'block';
+            setTimeout(resetBalloon, 2000); // Show the pop message for 2 seconds
+        }
+
+        function resetBalloon() {
+            size = 50;
+            balloon.style.width = size + 'px';
+            balloon.style.height = size + 'px';
+            balloon.style.opacity = 1;
+            balloon.style.display = 'block';
+            balloon.style.backgroundColor = getRandomColor();
+            message.style.display = 'none';
+        }
+
+        setInterval(() => {
+            if (!isClicked && size > 0) {
+                size -= Math.max(MIN_DEFLATE_RATE, (size - 50) / 10); // Ensure a minimum deflate rate
+                if (size <= 0) {
+                    loseGame();
+                } else {
+                    balloon.style.width = size + 'px';
+                    balloon.style.height = size + 'px';
+                    let newOpacity = Math.max(1 - (size - 50) / 200, 0); // Adjust opacity as size changes
+                    balloon.style.opacity = newOpacity;
+
+                    if (newOpacity === 0) {
+                        popBalloon();
+                    }
+                }
+            }
+            isClicked = false;
+        }, 200); // Reduce interval time to make it more dynamic
+
+        // Initialize with a random balloon color and start deflating
+        balloon.style.backgroundColor = getRandomColor();
+        setTimeout(() => { isClicked = false; }, 0); // Start deflating on load
+    </script>
+</body>
+</html>
