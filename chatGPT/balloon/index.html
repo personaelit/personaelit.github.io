@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,7 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            
+
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -18,6 +19,7 @@
             margin: 0;
             touch-action: manipulation;
         }
+
         #balloon {
             width: 50px;
             height: 50px;
@@ -27,6 +29,7 @@
             transition: width 0.1s, height 0.1s, opacity 0.1s;
             opacity: 1;
         }
+
         #inflate-button {
             position: fixed;
             bottom: 20px;
@@ -42,14 +45,24 @@
             align-items: center;
             justify-content: center;
         }
+
         #message {
             position: absolute;
             font-size: 10em;
             color: #e74c3c;
             display: none;
         }
+
+        /* Media query for screens smaller than 600px */
+        @media (max-width: 600px) {
+            #message {
+                font-size: 5em;
+                /* Adjust the font size as needed */
+            }
+        }
     </style>
 </head>
+
 <body>
     <div id="balloon"></div>
     <div id="message"></div>
@@ -73,7 +86,7 @@
         }
 
         function inflateBalloon() {
-            if (inflateButton.textContent === 'Reset') {
+            if (inflateButton.textContent === 'GO!') {
                 resetBalloon();
                 return;
             }
@@ -100,7 +113,7 @@
             balloon.style.display = 'none';
             message.textContent = 'You Lose!';
             message.style.display = 'block';
-            inflateButton.textContent = 'Reset';
+            inflateButton.textContent = 'GO!';
         }
 
         function resetBalloon() {
@@ -138,4 +151,5 @@
         setTimeout(() => { isClicked = false; }, 0); // Start deflating on load
     </script>
 </body>
+
 </html>
