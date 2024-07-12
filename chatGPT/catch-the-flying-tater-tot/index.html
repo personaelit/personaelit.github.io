@@ -9,7 +9,7 @@
             position: absolute;
             width: 40px; /* Adjust the size as needed */
             height: 40px; /* Adjust the size as needed */
-            transition: transform 0.1s linear;
+            transition: transform 0.05s linear; /* Faster transition */
         }
     </style>
 </head>
@@ -22,10 +22,14 @@
         let totPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
         let totVelocity = { x: 0, y: 0 };
         let slowingDown = false;
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        let caught = false;
 
         function moveTot(event) {
-            const mouseX = event.clientX;
-            const mouseY = event.clientY;
+            if (caught) return;
+
+            const mouseX = event.clientX || event.touches[0].clientX;
+            const mouseY = event.clientY || event.touches[0].clientY;
 
             const deltaX = totPosition.x - mouseX;
             const deltaY = totPosition.y - mouseY;
@@ -69,8 +73,45 @@
             slowingDown = Math.random() < 0.3;
         }
 
+        function randomMoveTot() {
+            if (caught || !isMobile) return;
+
+            const jumpDistance = 100; // Increase this value for longer jumps
+            totVelocity.x = (Math.random() - 0.5) * jumpDistance;
+            totVelocity.y = (Math.random() - 0.5) * jumpDistance;
+
+            totPosition.x += totVelocity.x;
+            totPosition.y += totVelocity.y;
+
+            // Correct boundary handling
+            if (totPosition.x < 0) {
+                totPosition.x = 0;
+            } else if (totPosition.x > window.innerWidth - 40) {
+                totPosition.x = window.innerWidth - 40;
+            }
+
+            if (totPosition.y < 0) {
+                totPosition.y = 0;
+            } else if (totPosition.y > window.innerHeight - 40) {
+                totPosition.y = window.innerHeight - 40;
+            }
+
+            tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+        }
+
+        function catchTot() {
+            caught = true;
+            totVelocity.x = 0;
+            totVelocity.y = 0;
+        }
+
         document.addEventListener('mousemove', moveTot);
+        document.addEventListener('touchmove', moveTot);
+        tot.addEventListener('click', catchTot);
+        tot.addEventListener('touchstart', catchTot);
+
         setInterval(randomSlowDown, 1000);
+        setInterval(randomMoveTot, 200); // Increase frequency of movement on mobile
 
         tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
     </script>
