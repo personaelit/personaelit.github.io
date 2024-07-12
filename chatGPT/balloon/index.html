@@ -4,20 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Balloon Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
+            font-family: 'Roboto', sans-serif;
+            
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #f7f7f7;
             margin: 0;
         }
         #balloon {
             width: 50px;
             height: 50px;
-            background-color: rgb(187, 84, 84);
+            background-color: #8e44ad;
             border-radius: 50%;
             margin-bottom: 20px;
             transition: width 0.1s, height 0.1s, opacity 0.1s;
@@ -28,11 +31,11 @@
             bottom: 20px;
             width: 60px;
             height: 60px;
-            background-color: rgb(45, 45, 179);
+            background-color: #2c3e50;
             color: white;
             border: none;
             border-radius: 50%;
-            font-size: 16px;
+            font-size: 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -40,8 +43,8 @@
         }
         #message {
             position: absolute;
-            font-size: 48px;
-            color: rgb(179, 68, 68);
+            font-size: 10em;
+            color: #e74c3c;
             display: none;
         }
     </style>
@@ -49,7 +52,7 @@
 <body>
     <div id="balloon"></div>
     <div id="message"></div>
-    <button id="inflate-button" onclick="inflateBalloon()">Inflate</button>
+    <button id="inflate-button" onclick="inflateBalloon()">+</button>
 
     <script>
         let balloon = document.getElementById('balloon');
@@ -69,6 +72,10 @@
         }
 
         function inflateBalloon() {
+            if (inflateButton.textContent === 'Reset') {
+                resetBalloon();
+                return;
+            }
             isClicked = true;
             size += 10;
             balloon.style.width = size + 'px';
@@ -85,14 +92,14 @@
             balloon.style.display = 'none';
             message.textContent = 'POP!';
             message.style.display = 'block';
-            setTimeout(resetBalloon, 2000); // Show the pop message for 2 seconds
+            setTimeout(resetBalloon, 2000);
         }
 
         function loseGame() {
             balloon.style.display = 'none';
             message.textContent = 'You Lose!';
             message.style.display = 'block';
-            setTimeout(resetBalloon, 2000); // Show the pop message for 2 seconds
+            inflateButton.textContent = 'Reset';
         }
 
         function resetBalloon() {
@@ -103,6 +110,7 @@
             balloon.style.display = 'block';
             balloon.style.backgroundColor = getRandomColor();
             message.style.display = 'none';
+            inflateButton.textContent = '+';
         }
 
         setInterval(() => {
