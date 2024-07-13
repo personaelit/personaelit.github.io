@@ -43,10 +43,11 @@
       font-size: 24px;
     }
     #resetButton {
+      display: none;
       position: absolute;
-      bottom: 10px;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, 50%);
       font-size: 18px;
       padding: 10px 20px;
       cursor: pointer;
@@ -89,6 +90,7 @@
       ball.style.top = '50%';
       ball.style.transform = 'translate(-50%, -50%)';
       winMessage.style.display = 'none';
+      resetButton.style.display = 'none';
       startTimer();
     }
 
@@ -130,12 +132,20 @@
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchend', endDrag);
 
-    ball.addEventListener('click', () => {
+    function handleWinCondition(e) {
       if (!isDragging) {
         clearInterval(timerInterval);
         const endTime = (Date.now() - startTime) / 1000;
         winMessage.textContent = `You caught the dot in ${endTime.toFixed(2)} seconds!`;
         winMessage.style.display = 'block';
+        resetButton.style.display = 'block';
+      }
+    }
+
+    ball.addEventListener('click', handleWinCondition);
+    ball.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        handleWinCondition(e);
       }
     });
 

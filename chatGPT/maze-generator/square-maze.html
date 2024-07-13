@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Generator</title>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mazeCanvas"></canvas>
+    <script>
+        class MazeGenerator {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.maze = this.createGrid();
+                this.visited = this.createVisitedGrid();
+            }
+
+            createGrid() {
+                let grid = [];
+                for (let i = 0; i < this.height; i++) {
+                    let row = [];
+                    for (let j = 0; j < this.width; j++) {
+                        row.push(1); // 1 represents a wall
+                    }
+                    grid.push(row);
+                }
+                return grid;
+            }
+
+            createVisitedGrid() {
+                let grid = [];
+                for (let i = 0; i < this.height; i++) {
+                    let row = [];
+                    for (let j = 0; j < this.width; j++) {
+                        row.push(false); // false represents unvisited
+                    }
+                    grid.push(row);
+                }
+                return grid;
+            }
+
+            generateMaze(x, y) {
+                let directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+                this.shuffleArray(directions);
+
+                this.visited[x][y] = true;
+                this.maze[x][y] = 0; // 0 represents a path
+
+                for (let [dx, dy] of directions) {
+                    let nx = x + 2 * dx, ny = y + 2 * dy;
+
+                    if (this.isInBounds(nx, ny) && !this.visited[nx][ny]) {
+                        this.maze[x + dx][y + dy] = 0; // Carve path
+                        this.generateMaze(nx, ny);
+                    }
+                }
+            }
+
+            isInBounds(x, y) {
+                return x >= 0 && y >= 0 && x < this.height && y < this.width;
+            }
+
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            setEntranceAndExit() {
+                // Entrance at top-left corner
+                this.maze[1][0] = 0;
+                this.maze[1][1] = 0;
+
+                // Exit at bottom-right corner
+                this.maze[this.height - 2][this.width - 1] = 0;
+                this.maze[this.height - 2][this.width - 2] = 0;
+            }
+
+            drawMaze(canvasId) {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+                const cellSize = 20;
+
+                canvas.width = this.width * cellSize;
+                canvas.height = this.height * cellSize;
+
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        if (this.maze[y][x] === 1) {
+                            ctx.fillStyle = 'black';
+                        } else {
+                            ctx.fillStyle = 'white';
+                        }
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+
+                // Highlight entrance and exit
+                ctx.fillStyle = 'green';
+                ctx.fillRect(0, cellSize, cellSize, cellSize); // Entrance
+
+                ctx.fillStyle = 'red';
+                ctx.fillRect((this.width - 1) * cellSize, (this.height - 2) * cellSize, cellSize, cellSize); // Exit
+            }
+        }
+
+        let width = 21; // Odd number to ensure there are walls around paths
+        let height = 21; // Odd number to ensure there are walls around paths
+        let mazeGenerator = new MazeGenerator(width, height);
+        mazeGenerator.generateMaze(1, 1); // Start maze generation from (1, 1)
+        mazeGenerator.setEntranceAndExit(); // Set entrance and exit
+        mazeGenerator.drawMaze('mazeCanvas'); // Draw the maze
+    </script>
+</body>
+</html>

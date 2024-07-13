@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Generator</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+        }
+        #resetButton {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mazeCanvas"></canvas>
+    <button id="resetButton">Reset Maze</button>
+    <script>
+        class MazeGenerator {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.maze = this.createGrid();
+                this.visited = this.createVisitedGrid();
+            }
+
+            createGrid() {
+                let grid = [];
+                for (let i = 0; i < this.height; i++) {
+                    let row = [];
+                    for (let j = 0; j < this.width; j++) {
+                        row.push(1); // 1 represents a wall
+                    }
+                    grid.push(row);
+                }
+                return grid;
+            }
+
+            createVisitedGrid() {
+                let grid = [];
+                for (let i = 0; i < this.height; i++) {
+                    let row = [];
+                    for (let j = 0; j < this.width; j++) {
+                        row.push(false); // false represents unvisited
+                    }
+                    grid.push(row);
+                }
+                return grid;
+            }
+
+            generateMaze(x, y) {
+                let directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+                this.shuffleArray(directions);
+
+                this.visited[x][y] = true;
+                this.maze[x][y] = 0; // 0 represents a path
+
+                for (let [dx, dy] of directions) {
+                    let nx = x + 2 * dx, ny = y + 2 * dy;
+
+                    if (this.isInBounds(nx, ny) && !this.visited[nx][ny]) {
+                        this.maze[x + dx][y + dy] = 0; // Carve path
+                        this.generateMaze(nx, ny);
+                    }
+                }
+            }
+
+            isInBounds(x, y) {
+                return x >= 0 && y >= 0 && x < this.height && y < this.width;
+            }
+
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            setEntranceAndExit() {
+                // Entrance at top-left corner
+                this.maze[1][0] = 0;
+                this.maze[1][1] = 0;
+
+                // Exit at bottom-right corner
+                this.maze[this.height - 2][this.width - 1] = 0;
+                this.maze[this.height - 2][this.width - 2] = 0;
+            }
+
+            drawMaze(canvasId) {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+                const cellSize = Math.min(
+                    window.innerWidth / this.width,
+                    window.innerHeight / this.height
+                );
+
+                canvas.width = this.width * cellSize;
+                canvas.height = this.height * cellSize;
+
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
+                        if (this.maze[y][x] === 1) {
+                            ctx.fillStyle = 'black';
+                        } else {
+                            ctx.fillStyle = 'white';
+                        }
+                        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+
+                // Highlight entrance and exit
+                ctx.fillStyle = 'green';
+                ctx.fillRect(0, cellSize, cellSize, cellSize); // Entrance
+
+                ctx.fillStyle = 'red';
+                ctx.fillRect((this.width - 1) * cellSize, (this.height - 2) * cellSize, cellSize, cellSize); // Exit
+            }
+        }
+
+        class MazeGame {
+            constructor(mazeGenerator, canvasId) {
+                this.mazeGenerator = mazeGenerator;
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.cellSize = Math.min(
+                    window.innerWidth / mazeGenerator.width,
+                    window.innerHeight / mazeGenerator.height
+                );
+                this.isDrawing = false;
+                this.lastX = 0;
+                this.lastY = 0;
+
+                this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+                this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+                this.canvas.addEventListener('mouseup', () => this.stopDrawing());
+                this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+            }
+
+            startDrawing(event) {
+                const { offsetX, offsetY } = event;
+                const cellX = Math.floor(offsetX / this.cellSize);
+                const cellY = Math.floor(offsetY / this.cellSize);
+                
+                // Ensure starting point is the entrance
+                if (cellX === 0 && cellY === 1) {
+                    this.isDrawing = true;
+                    this.lastX = offsetX;
+                    this.lastY = offsetY;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.lastX, this.lastY);
+                }
+            }
+
+            draw(event) {
+                if (!this.isDrawing) return;
+
+                const { offsetX, offsetY } = event;
+                const cellX = Math.floor(offsetX / this.cellSize);
+                const cellY = Math.floor(offsetY / this.cellSize);
+
+                if (!this.isInBounds(cellX, cellY) || this.mazeGenerator.maze[cellY][cellX] === 1) {
+                    this.disintegrateMaze();
+                    return;
+                }
+
+                this.ctx.lineTo(offsetX, offsetY);
+                this.ctx.strokeStyle = 'blue';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                this.lastX = offsetX;
+                this.lastY = offsetY;
+
+                // Check if the exit is reached
+                if (cellX === this.mazeGenerator.width - 1 && cellY === this.mazeGenerator.height - 2) {
+                    alert('Congratulations! You reached the exit.');
+                    this.stopDrawing();
+                    return;
+                }
+            }
+
+            stopDrawing() {
+                this.isDrawing = false;
+                this.ctx.closePath();
+            }
+
+            isInBounds(x, y) {
+                return x >= 0 && y >= 0 && x < this.mazeGenerator.width && y < this.mazeGenerator.height;
+            }
+
+            disintegrateMaze() {
+                const cellSize = this.cellSize;
+                const maze = this.mazeGenerator.maze;
+                const ctx = this.ctx;
+                const canvas = this.canvas;
+                const rows = this.mazeGenerator.height;
+                const cols = this.mazeGenerator.width;
+                const centerX = this.mazeGenerator.width / 2 * cellSize;
+                const centerY = this.mazeGenerator.height / 2 * cellSize;
+
+                this.stopDrawing();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        if (maze[y][x] === 1) {
+                            this.animateExplodingBlock(x, y, cellSize, centerX, centerY);
+                        }
+                    }
+                }
+
+                document.getElementById('resetButton').style.display = 'block';
+            }
+
+            animateExplodingBlock(x, y, cellSize, centerX, centerY) {
+                const ctx = this.ctx;
+                const blockX = x * cellSize;
+                const blockY = y * cellSize;
+                const angle = Math.atan2(blockY - centerY, blockX - centerX);
+                const speed = Math.random() * 5 + 2;
+                let posX = blockX;
+                let posY = blockY;
+                const rotationSpeed = (Math.random() * 2 - 1) * 0.1;
+                let rotation = 0;
+
+                function drawBlock() {
+                    posX += speed * Math.cos(angle);
+                    posY += speed * Math.sin(angle);
+                    rotation += rotationSpeed;
+
+                    ctx.clearRect(posX, posY, cellSize, cellSize);
+                    ctx.save();
+                    ctx.translate(posX + cellSize / 2, posY + cellSize / 2);
+                    ctx.rotate(rotation);
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize);
+                    ctx.restore();
+
+                    if (posX < canvas.width && posX > -cellSize && posY < canvas.height && posY > -cellSize) {
+                        requestAnimationFrame(drawBlock);
+                    }
+                }
+
+                drawBlock();
+            }
+        }
+
+        function generateAndDrawMaze() {
+            let width = 21; // Odd number to ensure there are walls around paths
+            let height = 21; // Odd number to ensure there are walls around paths
+            let mazeGenerator = new MazeGenerator(width, height);
+            mazeGenerator.generateMaze(1, 1); // Start maze generation from (1, 1)
+            mazeGenerator.setEntranceAndExit(); // Set entrance and exit
+            mazeGenerator.drawMaze('mazeCanvas'); // Draw the maze
+
+            new MazeGame(mazeGenerator, 'mazeCanvas');
+            document.getElementById('resetButton').style.display = 'none';
+        }
+
+        document.getElementById('resetButton').addEventListener('click', generateAndDrawMaze);
+
+        window.addEventListener('resize', generateAndDrawMaze);
+        window.addEventListener('load', generateAndDrawMaze);
+    </script>
+</body>
+</html>

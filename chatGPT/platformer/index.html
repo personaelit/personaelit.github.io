@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landscape Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: lightblue;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 100vh;
+    }
+    #landscape {
+      display: flex;
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+    }
+    .landscape-part {
+      background: green;
+      width: 10%;
+    }
+  </style>
+</head>
+<body>
+  <div id="landscape"></div>
+
+  <script>
+    // Function to create the landscape
+    function createLandscape() {
+      const landscape = document.getElementById('landscape');
+      const parts = 10; // Number of landscape parts
+      for (let i = 0; i < parts; i++) {
+        const div = document.createElement('div');
+        div.classList.add('landscape-part');
+        div.style.height = `${Math.random() * 100 + 50}px`; // Random height between 50 and 150 pixels
+        landscape.appendChild(div);
+      }
+    }
+
+    // Initialize the landscape
+    createLandscape();
+  </script>
+</body>
+</html>
