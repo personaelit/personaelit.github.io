@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Catch the Dot Game</title>
   <style>
     body {
@@ -45,11 +45,11 @@
     #resetButton {
       display: none;
       position: absolute;
-      top: 50%;
+      top: 60%;
       left: 50%;
       transform: translate(-50%, 50%);
       font-size: 18px;
-      padding: 10px 20px;
+      padding: 10px 50px;
       cursor: pointer;
     }
   </style>
@@ -103,6 +103,7 @@
       ball.style.cursor = 'grabbing';
       velocityX = 0;
       velocityY = 0;
+      e.preventDefault();
     }
 
     function drag(e) {
@@ -111,6 +112,7 @@
         const clientY = e.clientY || e.touches[0].clientY;
         ball.style.left = `${clientX - offsetX}px`;
         ball.style.top = `${clientY - offsetY}px`;
+        e.preventDefault();
       }
     }
 
@@ -118,41 +120,39 @@
       if (isDragging) {
         isDragging = false;
         ball.style.cursor = 'grab';
-        const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
-        const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
-        velocityX = (clientX - offsetX - ball.offsetLeft) * 0.1;
-        velocityY = (clientY - offsetY - ball.offsetTop) * 0.1;
+        e.preventDefault();
       }
     }
 
-    ball.addEventListener('mousedown', startDrag);
-    ball.addEventListener('touchstart', startDrag);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('touchmove', drag);
-    document.addEventListener('mouseup', endDrag);
-    document.addEventListener('touchend', endDrag);
-
-    function handleWinCondition(e) {
-      if (!isDragging) {
-        clearInterval(timerInterval);
-        const endTime = (Date.now() - startTime) / 1000;
-        winMessage.textContent = `You caught the dot in ${endTime.toFixed(2)} seconds!`;
-        winMessage.style.display = 'block';
-        resetButton.style.display = 'block';
-      }
+    function handleWinCondition() {
+      clearInterval(timerInterval);
+      const endTime = (Date.now() - startTime) / 1000;
+      winMessage.textContent = `You caught the dot in ${endTime.toFixed(2)} seconds!`;
+      winMessage.style.display = 'block';
+      resetButton.style.display = 'block';
     }
 
-    ball.addEventListener('click', handleWinCondition);
+    ball.addEventListener('mousedown', startDrag, { passive: false });
     ball.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        handleWinCondition(e);
+      startDrag(e);
+      handleWinCondition();
+    }, { passive: false });
+    document.addEventListener('mousemove', drag, { passive: false });
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('mouseup', endDrag, { passive: false });
+    document.addEventListener('touchend', endDrag, { passive: false });
+
+    ball.addEventListener('click', handleWinCondition, { passive: false });
+    ball.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        handleWinCondition();
       }
-    });
+    }, { passive: false });
 
     resetButton.addEventListener('click', () => {
       clearInterval(timerInterval);
       initializeGame();
-    });
+    }, { passive: false });
 
     function applyPhysics() {
       if (!isDragging) {
@@ -222,7 +222,7 @@
     initializeGame();
 
     // Prevent double-tap to zoom
-    document.addEventListener('touchstart', function preventZoom(e) {
+    document.addEventListener('touchstart', (e) => {
       if (e.touches.length > 1) {
         e.preventDefault();
       }
