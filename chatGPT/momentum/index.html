@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Catch the Dot Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    #ball {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: red;
+      position: absolute;
+      cursor: grab;
+    }
+    #timer {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+    }
+    #winMessage {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 24px;
+    }
+    #resetButton {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="ball"></div>
+  <div id="timer">Time: 0s</div>
+  <div id="winMessage"></div>
+  <button id="resetButton">Reset</button>
+
+  <script>
+    const ball = document.getElementById('ball');
+    const timerDisplay = document.getElementById('timer');
+    const winMessage = document.getElementById('winMessage');
+    const resetButton = document.getElementById('resetButton');
+
+    let isDragging = false;
+    let offsetX, offsetY;
+    let velocityX = 5; // initial horizontal velocity
+    let velocityY = 5; // initial vertical velocity
+    let gravityX = 0;
+    let gravityY = 0.5;
+    const friction = 0.98;
+    const elasticity = 0.8; // controls the loss of momentum upon bouncing
+    const ballDiameter = 50;
+    const minSpeed = 5; // minimum speed for the ball
+    let startTime, timerInterval;
+
+    function initializeGame() {
+      isDragging = false;
+      offsetX = 0;
+      offsetY = 0;
+      velocityX = 5;
+      velocityY = 5;
+      gravityX = 0;
+      gravityY = 0.5;
+      ball.style.left = '50%';
+      ball.style.top = '50%';
+      ball.style.transform = 'translate(-50%, -50%)';
+      winMessage.style.display = 'none';
+      startTimer();
+    }
+
+    function startDrag(e) {
+      isDragging = true;
+      const clientX = e.clientX || e.touches[0].clientX;
+      const clientY = e.clientY || e.touches[0].clientY;
+      offsetX = clientX - ball.offsetLeft;
+      offsetY = clientY - ball.offsetTop;
+      ball.style.cursor = 'grabbing';
+      velocityX = 0;
+      velocityY = 0;
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        const clientX = e.clientX || e.touches[0].clientX;
+        const clientY = e.clientY || e.touches[0].clientY;
+        ball.style.left = `${clientX - offsetX}px`;
+        ball.style.top = `${clientY - offsetY}px`;
+      }
+    }
+
+    function endDrag(e) {
+      if (isDragging) {
+        isDragging = false;
+        ball.style.cursor = 'grab';
+        const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
+        const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
+        velocityX = (clientX - offsetX - ball.offsetLeft) * 0.1;
+        velocityY = (clientY - offsetY - ball.offsetTop) * 0.1;
+      }
+    }
+
+    ball.addEventListener('mousedown', startDrag);
+    ball.addEventListener('touchstart', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchmove', drag);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchend', endDrag);
+
+    ball.addEventListener('click', () => {
+      if (!isDragging) {
+        clearInterval(timerInterval);
+        const endTime = (Date.now() - startTime) / 1000;
+        winMessage.textContent = `You caught the dot in ${endTime.toFixed(2)} seconds!`;
+        winMessage.style.display = 'block';
+      }
+    });
+
+    resetButton.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      initializeGame();
+    });
+
+    function applyPhysics() {
+      if (!isDragging) {
+        velocityX += gravityX;
+        velocityY += gravityY;
+
+        // Ensure minimum speed
+        if (Math.abs(velocityX) < minSpeed) {
+          velocityX = Math.sign(velocityX) * minSpeed;
+        }
+        if (Math.abs(velocityY) < minSpeed) {
+          velocityY = Math.sign(velocityY) * minSpeed;
+        }
+
+        ball.style.left = `${ball.offsetLeft + velocityX}px`;
+        ball.style.top = `${ball.offsetTop + velocityY}px`;
+
+        // Collision with the floor
+        if (ball.offsetTop + ballDiameter > window.innerHeight) {
+          ball.style.top = `${window.innerHeight - ballDiameter}px`;
+          velocityY *= -elasticity;
+          velocityX *= friction;
+        }
+
+        // Collision with the ceiling
+        if (ball.offsetTop < 0) {
+          ball.style.top = '0px';
+          velocityY *= -elasticity;
+          velocityX *= friction;
+        }
+
+        // Collision with the right wall
+        if (ball.offsetLeft + ballDiameter > window.innerWidth) {
+          ball.style.left = `${window.innerWidth - ballDiameter}px`;
+          velocityX *= -elasticity;
+        }
+
+        // Collision with the left wall
+        if (ball.offsetLeft < 0) {
+          ball.style.left = '0px';
+          velocityX *= -elasticity;
+        }
+      }
+      requestAnimationFrame(applyPhysics);
+    }
+
+    function shiftGravity() {
+      // Randomly change the direction and magnitude of gravity
+      gravityX = (Math.random() - 0.5) * 1; // horizontal gravity component between -0.5 and 0.5
+      gravityY = (Math.random() - 0.5) * 1; // vertical gravity component between -0.5 and 0.5
+
+      // Schedule the next gravity shift
+      setTimeout(shiftGravity, 2000); // change gravity every 2 seconds
+    }
+
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsedTime = (Date.now() - startTime) / 1000;
+        timerDisplay.textContent = `Time: ${elapsedTime.toFixed(2)}s`;
+      }, 100);
+    }
+
+    // Start the game
+    applyPhysics();
+    shiftGravity();
+    initializeGame();
+
+    // Prevent double-tap to zoom
+    document.addEventListener('touchstart', function preventZoom(e) {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>
