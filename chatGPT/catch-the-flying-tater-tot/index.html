@@ -117,7 +117,7 @@
             //if (caught || !isMobile) return;
             if (caught) return;
 
-            const jumpDistance = 150; // Increase this value for longer jumps
+            const jumpDistance = 240; // Increase this value for longer jumps
             totVelocity.x = (Math.random() - 0.5) * jumpDistance;
             totVelocity.y = (Math.random() - 0.5) * jumpDistance;
 
@@ -170,7 +170,7 @@
         resetButton.addEventListener('click', resetGame);
 
         setInterval(randomSlowDown, 1000);
-        setInterval(randomMoveTot, 200); // Increase frequency of movement on mobile
+        setInterval(randomMoveTot, 150); // Increase frequency of movement on mobile
 
         tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
         startTimer();
