@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kokyu</title>
+    <style>
+        body {
+            background-color: purple;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        .logo-container {
+            margin-top: 20px;
+            text-align: center;
+            align-self: flex-start;
+        }
+        .logo-container img {
+            max-width: 100%;
+            height: auto;
+            animation: yoyo .5s ease-in-out;
+        }
+        .button-container {
+            margin-top: 20px;
+            animation: fadeIn 2s forwards;
+            opacity: 0;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #fff;
+            color: purple;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .links-container {
+            margin-top: auto;
+            padding-bottom: 20px;
+            animation: fadeIn 2s forwards;
+            opacity: 0;
+            display: flex;
+            gap: 20px;
+        }
+        .links-container a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        @keyframes yoyo {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(800px) rotate(360deg);
+            }
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="../logo.png" alt="Kokyu Logo">
+    </div>
+    <div class="button-container">
+        <button>Order Now</button>
+    </div>
+    <div class="links-container">
+        <a href="#">Careers</a>
+        <a href="#">Catering</a>
+        <a href="#">More</a>
+    </div>
+</body>
+</html>
