@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kokyu Restaurant</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .header {
+            background-color: #ff0055;
+            color: #fff;
+            padding: 20px 0;
+            position: relative;
+        }
+        .header img {
+            position: absolute;
+            display: block;
+            top: 10px;
+            left: 10px;
+
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .content {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 20px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .content p {
+            margin: 0;
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .button {
+            background-color: #ff9900;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            flex: 1 1 45%;
+            min-width: 120px;
+        }
+        .button:hover {
+            background-color: #cc7a00;
+        }
+        @media (max-width: 400px) {
+            .header img {
+                width: 40px;
+                height: 40px;
+            }
+            .header h1 {
+                font-size: 2em;
+            }
+            .button {
+                flex: 1 1 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="Kokyu Logo" class="object">
+            <h1>Kokyu</h1>
+        </div>
+        <div class="content">
+            <p>Inspired Street Foods and More</p>
+        </div>
+        <div class="buttons">
+            <button class="button">Order Online</button>
+            <button class="button">Catering</button>
+        </div>
+    </div>
+    <script>
+        class PhysicsObject {
+            constructor(element, options) {
+                this.element = element;
+                this.velocityX = options.initialVelocityX || 5;
+                this.velocityY = options.initialVelocityY || 5;
+                this.gravityX = options.gravityX || 0;
+                this.gravityY = options.gravityY || 0.5;
+                this.friction = options.friction || 0.98;
+                this.elasticity = options.elasticity || 0.8;
+                this.diameter = options.diameter || 50;
+                this.minSpeed = options.minSpeed || 5;
+                this.isDragging = false;
+                this.offsetX = 0;
+                this.offsetY = 0;
+
+                this.initialize();
+            }
+
+            initialize() {
+                this.element.style.position = 'absolute';
+                this.element.style.left = '50%';
+                this.element.style.top = '50%';
+                this.element.style.transform = 'translate(-50%, -50%)';
+
+                this.applyPhysics();
+                this.shiftGravity();
+            }
+
+            startDrag(e) {
+                this.isDragging = true;
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                this.offsetX = clientX - this.element.offsetLeft;
+                this.offsetY = clientY - this.element.offsetTop;
+                this.element.style.cursor = 'grabbing';
+                this.velocityX = 0;
+                this.velocityY = 0;
+                e.preventDefault();
+            }
+
+            drag(e) {
+                if (this.isDragging) {
+                    const clientX = e.clientX || e.touches[0].clientX;
+                    const clientY = e.clientY || e.touches[0].clientY;
+                    this.element.style.left = `${clientX - this.offsetX}px`;
+                    this.element.style.top = `${clientY - this.offsetY}px`;
+                    e.preventDefault();
+                }
+            }
+
+            endDrag(e) {
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    this.element.style.cursor = 'grab';
+                    e.preventDefault();
+                }
+            }
+
+            applyPhysics() {
+                if (!this.isDragging) {
+                    this.velocityX += this.gravityX;
+                    this.velocityY += this.gravityY;
+
+                    // Ensure minimum speed
+                    if (Math.abs(this.velocityX) < this.minSpeed) {
+                        this.velocityX = Math.sign(this.velocityX) * this.minSpeed;
+                    }
+                    if (Math.abs(this.velocityY) < this.minSpeed) {
+                        this.velocityY = Math.sign(this.velocityY) * this.minSpeed;
+                    }
+
+                    let newX = this.element.offsetLeft + this.velocityX;
+                    let newY = this.element.offsetTop + this.velocityY;
+
+                    // Collision with the floor
+                    if (newY + this.diameter > window.innerHeight) {
+                        newY = window.innerHeight - this.diameter;
+                        this.velocityY *= -this.elasticity;
+                        this.velocityX *= this.friction;
+                    }
+
+                    // Collision with the ceiling
+                    if (newY < 0) {
+                        newY = 0;
+                        this.velocityY *= -this.elasticity;
+                        this.velocityX *= this.friction;
+                    }
+
+                    // Collision with the right wall
+                    if (newX + this.diameter > window.innerWidth) {
+                        newX = window.innerWidth - this.diameter;
+                        this.velocityX *= -this.elasticity;
+                    }
+
+                    // Collision with the left wall
+                    if (newX < 0) {
+                        newX = 0;
+                        this.velocityX *= -this.elasticity;
+                    }
+
+                    this.element.style.left = `${newX}px`;
+                    this.element.style.top = `${newY}px`;
+                }
+                requestAnimationFrame(this.applyPhysics.bind(this));
+            }
+
+            shiftGravity() {
+                this.gravityX = (Math.random() - 0.5) * 1;
+                this.gravityY = (Math.random() - 0.5) * 1;
+
+                setTimeout(this.shiftGravity.bind(this), 2000);
+            }
+        }
+
+        function setupDraggable(element) {
+            element.addEventListener('mousedown', (e) => element.physics.startDrag(e), { passive: false });
+            element.addEventListener('touchstart', (e) => element.physics.startDrag(e), { passive: false });
+            document.addEventListener('mousemove', (e) => element.physics.drag(e), { passive: false });
+            document.addEventListener('touchmove', (e) => element.physics.drag(e), { passive: false });
+            document.addEventListener('mouseup', (e) => element.physics.endDrag(e), { passive: false });
+            document.addEventListener('touchend', (e) => element.physics.endDrag(e), { passive: false });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const objects = document.getElementsByClassName('object');
+            for (let i = 0; i < objects.length; i++) {
+                const element = objects[i];
+                const options = element.classList.contains('box') 
+                    ? { initialVelocityX: 3, initialVelocityY: 3, diameter: 50 } 
+                    : { initialVelocityX: 5, initialVelocityY: 5, diameter: 50 };
+
+                element.physics = new PhysicsObject(element, options);
+                setupDraggable(element);
+            }
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        });
+    </script>
+</body>
+</html>
