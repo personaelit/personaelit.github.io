@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Drawer</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid black;
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="fractalCanvas" width="800" height="800"></canvas>
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('fractalCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const maxIterations = 1000;
+            const zoom = 200;
+            const panX = 2;
+            const panY = 1.5;
+
+            const fractalType = Math.random() > 0.5 ? 'mandelbrot' : 'julia';
+
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    let m;
+                    if (fractalType === 'mandelbrot') {
+                        m = mandelbrot(
+                            (x / zoom) - panX,
+                            (y / zoom) - panY,
+                            maxIterations
+                        );
+                    } else {
+                        m = julia(
+                            (x / zoom) - panX,
+                            (y / zoom) - panY,
+                            maxIterations,
+                            -0.7,
+                            0.27015
+                        );
+                    }
+                    let color = (m / maxIterations) * 255;
+                    ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+        };
+
+        function mandelbrot(real, imag, maxIterations) {
+            let r = real;
+            let i = imag;
+            let n = 0;
+
+            while (n < maxIterations) {
+                let r2 = r * r;
+                let i2 = i * i;
+
+                if (r2 + i2 > 4) {
+                    break;
+                }
+
+                i = 2 * r * i + imag;
+                r = r2 - i2 + real;
+                n++;
+            }
+
+            return n;
+        }
+
+        function julia(real, imag, maxIterations, cRe, cIm) {
+            let r = real;
+            let i = imag;
+            let n = 0;
+
+            while (n < maxIterations) {
+                let r2 = r * r;
+                let i2 = i * i;
+
+                if (r2 + i2 > 4) {
+                    break;
+                }
+
+                i = 2 * r * i + cIm;
+                r = r2 - i2 + cRe;
+                n++;
+            }
+
+            return n;
+        }
+    </script>
+</body>
+</html>
