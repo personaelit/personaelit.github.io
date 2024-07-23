@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yo-Yo Kokyu</title>
+    <title>Kokyu</title>
     <style>
         body {
             background-color: purple;
@@ -54,6 +54,9 @@
             text-decoration: none;
             font-size: 2em;
         }
+        .takeoff {
+            animation: takeoff 0.2s ease-out forwards;
+        }
         @keyframes yoyo {
             0%, 100% {
                 transform: translateY(0) rotate(0deg);
@@ -67,6 +70,15 @@
                 opacity: 1;
             }
         }
+        @keyframes takeoff {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(100vw);
+            }
+        }
+
         @media (max-width: 600px) {
             .links-container a {
                 font-size: 1.5em;
@@ -76,15 +88,28 @@
 </head>
 <body>
     <div class="logo-container">
-        <img src="../logo.png" alt="Kokyu Logo">
+        <img src="../logo.png" alt="Kokyu Logo" id="logo">
     </div>
     <div class="button-container">
-        <button>Order Now</button>
+        <button id="orderNowBtn">Order Now</button>
     </div>
     <div class="links-container">
         <a href="#">Careers</a>
         <a href="#">Catering</a>
         <a href="#">More</a>
     </div>
+    <script>
+        document.getElementById('orderNowBtn').addEventListener('click', function() {
+            var logo = document.getElementsByClassName('logo-container')[0];
+            // Remove the yoyo animation class
+            logo.classList.remove('takeoff');
+            logo.style.animation = 'none';
+            // Force reflow
+            void logo.offsetWidth;
+            // Add the takeoff class to apply the new animation
+            logo.style.animation = ''; // Reset the inline animation style
+            logo.classList.add('takeoff');
+        });
+    </script>
 </body>
 </html>
