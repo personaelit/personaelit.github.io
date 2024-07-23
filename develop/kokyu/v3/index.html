@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kokyu Game of Life</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: purple;
+        }
+
+        .gameboard-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .gameboard {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            grid-template-columns: repeat(20, 1fr);
+            grid-auto-rows: 1fr;
+            gap: 0;
+        }
+
+        .cell {
+            border: 1px solid purple;
+            background-color: purple;
+        }
+
+        .alive {
+            background-color: #dda0dd; /* lighter shade of purple */
+        }
+
+        .logo {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            pointer-events: none; /* Ensures the logo doesn't interfere with the gameboard */
+        }
+
+        .order-button {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="gameboard-container">
+        <div class="gameboard">
+            <!-- JS will fill this up with cells -->
+        </div>
+        <img src="../logo.png" alt="Logo" class="logo">
+        <button class="order-button">Order Now</button>
+    </div>
+
+    <script>
+        const gameboard = document.querySelector('.gameboard');
+        const columns = 20;
+        const rows = Math.ceil(window.innerHeight / (window.innerWidth / columns));
+        let cells = [];
+
+        // Create the gameboard grid
+        for (let i = 0; i < rows * columns; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            if (Math.random() > 0.5) {
+                cell.classList.add('alive');
+            }
+            gameboard.appendChild(cell);
+            cells.push(cell);
+        }
+
+        // Get the index of a cell in the grid
+        const getIndex = (row, col) => row * columns + col;
+
+        // Count alive neighbors
+        const countAliveNeighbors = (row, col) => {
+            let count = 0;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    if (i === 0 && j === 0) continue;
+                    const newRow = row + i;
+                    const newCol = col + j;
+                    if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
+                        if (cells[getIndex(newRow, newCol)].classList.contains('alive')) {
+                            count++;
+                        }
+                    }
+                }
+            }
+            return count;
+        };
+
+        // Update the game state
+        const updateGameState = () => {
+            const newCells = cells.map((cell, index) => {
+                const row = Math.floor(index / columns);
+                const col = index % columns;
+                const aliveNeighbors = countAliveNeighbors(row, col);
+                const newCell = cell.cloneNode(false);
+
+                if (cell.classList.contains('alive')) {
+                    if (aliveNeighbors < 2 || aliveNeighbors > 3) {
+                        newCell.classList.remove('alive');
+                    } else {
+                        newCell.classList.add('alive');
+                    }
+                } else {
+                    if (aliveNeighbors === 3) {
+                        newCell.classList.add('alive');
+                    }
+                }
+
+                return newCell;
+            });
+
+            cells.forEach((cell, index) => {
+                cell.replaceWith(newCells[index]);
+                cells[index] = newCells[index];
+            });
+        };
+
+        // Start the game
+        const startGame = () => {
+            setInterval(updateGameState, 500); // Update every 500 milliseconds
+        };
+
+        // Initialize the game on load
+        window.onload = startGame;
+    </script>
+</body>
+</html>
