@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Centered</title>
+    <style>
+        body {
+            background-color: black;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            animation: zoomIn 2s ease-out forwards;
+        }
+        button {
+            background-color: orange;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            margin-top: 20px;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeIn 3s 2s forwards;
+        }
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0) translateX(-100%);
+            }
+            100% {
+                transform: scale(1) translateX(0);
+            }
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="../logo.png" alt="Logo">
+    <button>Order Now</button>
+</body>
+</html>
