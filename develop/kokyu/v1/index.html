@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logo Centered</title>
+    <title>Kokyu</title>
     <style>
         body {
             background-color: black;
@@ -18,7 +18,7 @@
         img {
             max-width: 100%;
             height: auto;
-            animation: zoomIn 2s ease-out forwards;
+            animation: zoomIn 1s ease-out forwards;
         }
         button {
             background-color: orange;
@@ -29,7 +29,20 @@
             margin-top: 20px;
             cursor: pointer;
             opacity: 0;
-            animation: fadeIn 3s 2s forwards;
+            animation: fadeIn 2s 1s forwards;
+        }
+        .links {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        .links a {
+            color: orange;
+            text-decoration: none;
+            font-size: 1em;
+            opacity: 0;
+            animation: fadeIn 3s 3s forwards;
         }
         @keyframes zoomIn {
             0% {
@@ -49,5 +62,10 @@
 <body>
     <img src="../logo.png" alt="Logo">
     <button>Order Now</button>
+    <div class="links">
+        <a href="#">CAREERS</a>
+        <a href="#">CATERING</a>
+        <a href="#">MORE</a>
+    </div>
 </body>
 </html>
