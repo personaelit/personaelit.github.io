@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Circle with Trail, Speed Control, and Color Cycling</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background-color: black;
+        }
+        .circle {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: background-color 0.1s;
+        }
+        .trail {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="circle"></div>
+    <script>
+        const circle = document.querySelector('.circle');
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const circleDiameter = circle.offsetWidth;
+
+        let x = Math.random() * (viewportWidth - circleDiameter);
+        let y = Math.random() * (viewportHeight - circleDiameter);
+        let dx = 10;
+        let dy = 10;
+        const maxSpeed = 50;
+
+        let r = Math.floor(Math.random() * 256);
+        let g = Math.floor(Math.random() * 256);
+        let b = Math.floor(Math.random() * 256);
+        let dr = 1;
+        let dg = 1;
+        let db = 1;
+
+        function animate() {
+            x += dx;
+            y += dy;
+
+            if (x + circleDiameter > viewportWidth || x < 0) {
+                dx = -dx * 1.1;  // Reverse and increase speed
+            }
+            if (y + circleDiameter > viewportHeight || y < 0) {
+                dy = -dy * 1.1;  // Reverse and increase speed
+            }
+
+            circle.style.left = x + 'px';
+            circle.style.top = y + 'px';
+
+            // Cycle through colors
+            r += dr;
+            g += dg;
+            b += db;
+
+            if (r >= 255 || r <= 0) dr = -dr;
+            if (g >= 255 || g <= 0) dg = -dg;
+            if (b >= 255 || b <= 0) db = -db;
+
+            circle.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+            // Create a trail
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = x + 'px';
+            trail.style.top = y + 'px';
+            trail.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            document.body.appendChild(trail);
+
+            // Remove the trail after 1 second
+            setTimeout(() => {
+                trail.style.opacity = 0;
+                setTimeout(() => {
+                    document.body.removeChild(trail);
+                }, 1000);
+            }, 0);
+
+            // Check if speed exceeds maxSpeed
+            if (Math.abs(dx) > maxSpeed) {
+                dx *= 0.9;  // Slow down
+            }
+            if (Math.abs(dy) > maxSpeed) {
+                dy *= 0.9;  // Slow down
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

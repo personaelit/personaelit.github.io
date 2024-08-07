@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Virus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            height: 90vh;
+        }
+
+        .cell {
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 2s;
+        }
+
+        .spin {
+            animation: spin 2s infinite linear;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        #game-over, #you-win {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .reset-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .reset-button:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-board"></div>
+    <div id="game-over">
+        <h1>You Lose!</h1>
+        <button class="reset-button" onclick="resetGame()">Try Again</button>
+    </div>
+    <div id="you-win">
+        <h1>You Win!</h1>
+        <button class="reset-button" onclick="resetGame()">Play Again</button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameBoard = document.getElementById('game-board');
+            const columns = 20;
+            const cellSize = window.innerWidth / columns;
+            const rows = Math.floor(window.innerHeight / cellSize);
+            const colors = [
+                '#D8BFD8', '#DDA0DD', '#DA70D6', '#EE82EE', '#9932CC',
+                '#9400D3', '#8A2BE2', '#800080', '#BA55D3', '#9370DB',
+                '#7B68EE', '#6A5ACD', '#483D8B', '#663399', '#4B0082',
+                '#D8BFD8', '#DDA0DD', '#DA70D6', '#EE82EE', '#9932CC',
+                '#9400D3', '#8A2BE2', '#800080', '#BA55D3', '#9370DB',
+                '#7B68EE', '#6A5ACD', '#483D8B', '#663399', '#4B0082'
+            ];
+            let keyColor = colors[Math.floor(Math.random() * colors.length)];
+            let initialClick = true;
+
+            function getRandomColor() {
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            function rgbToHex(rgb) {
+                const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(rgb);
+                return result ? "#" + ((1 << 24) + (parseInt(result[1]) << 16) + (parseInt(result[2]) << 8) + parseInt(result[3])).toString(16).slice(1).toUpperCase() : rgb;
+            }
+
+            function createCell(row, col) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cell.dataset.infected = "false";
+                cell.style.backgroundColor = getRandomColor();
+                cell.addEventListener('click', handleCellClick);
+                return cell;
+            }
+
+            function handleCellClick(event) {
+                const cell = event.target;
+                const color = rgbToHex(cell.style.backgroundColor);
+                if (color === keyColor) {
+                    solvePuzzle(cell);
+                } else {
+                    infect(cell, color);
+                    shuffleNonInfectedCells();
+                }
+                if (!initialClick) {
+                    checkGameOver();
+                }
+                initialClick = false;
+            }
+
+            function solvePuzzle(cell) {
+                const queue = [cell];
+                const visited = new Set();
+                visited.add(cell);
+
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    current.style.backgroundColor = keyColor;
+                    current.dataset.infected = "true";
+                    const neighbors = getNeighbors(current);
+
+                    neighbors.forEach(neighbor => {
+                        if (!visited.has(neighbor)) {
+                            visited.add(neighbor);
+                            queue.push(neighbor);
+                        }
+                    });
+                }
+
+                document.getElementById('you-win').style.display = 'block';
+                animateCells();
+            }
+
+            function infect(cell, color) {
+                const neighbors = getNeighbors(cell);
+                cell.dataset.infected = "true";
+
+                neighbors.forEach(neighbor => {
+                    neighbor.style.backgroundColor = color;
+                    neighbor.dataset.infected = "true";
+                });
+            }
+
+            function getNeighbors(cell) {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const neighbors = [];
+
+                if (row > 0) neighbors.push(getCell(row - 1, col));
+                if (row < rows - 1) neighbors.push(getCell(row + 1, col));
+                if (col > 0) neighbors.push(getCell(row, col - 1));
+                if (col < columns - 1) neighbors.push(getCell(row, col + 1));
+
+                return neighbors.filter(neighbor => neighbor !== null);
+            }
+
+            function getCell(row, col) {
+                return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+            }
+
+            function shuffleNonInfectedCells() {
+                const cells = Array.from(document.querySelectorAll('.cell'));
+                const nonInfectedCells = cells.filter(cell => cell.dataset.infected === 'false');
+                const nonInfectedColors = nonInfectedCells.map(cell => cell.style.backgroundColor);
+                for (let i = nonInfectedColors.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [nonInfectedColors[i], nonInfectedColors[j]] = [nonInfectedColors[j], nonInfectedColors[i]];
+                }
+                nonInfectedCells.forEach((cell, index) => {
+                    cell.style.backgroundColor = nonInfectedColors[index];
+                });
+            }
+
+            function checkGameOver() {
+                const cells = document.querySelectorAll('.cell');
+                let keyColorCount = 0;
+
+                cells.forEach(cell => {
+                    if (rgbToHex(cell.style.backgroundColor) === keyColor && cell.dataset.infected === 'false') {
+                        keyColorCount++;
+                    }
+                });
+
+                if (keyColorCount === 0) {
+                    document.getElementById('game-over').style.display = 'block';
+                    animateCells();
+                }
+            }
+
+            function animateCells() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach(cell => {
+                    cell.classList.add('spin');
+                });
+            }
+
+            window.resetGame = function() {
+                document.getElementById('game-over').style.display = 'none';
+                document.getElementById('you-win').style.display = 'none';
+                gameBoard.innerHTML = '';
+                keyColor = colors[Math.floor(Math.random() * colors.length)];
+                initialClick = true;
+                initializeBoard();
+            }
+
+            function initializeBoard() {
+                let keyColorPlaced = false;
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < columns; col++) {
+                        const cell = createCell(row, col);
+                        if (!keyColorPlaced && Math.random() < 0.1) {
+                            cell.style.backgroundColor = keyColor;
+                            keyColorPlaced = true;
+                        }
+                        gameBoard.appendChild(cell);
+                    }
+                }
+                if (!keyColorPlaced) {
+                    // Ensure key color is placed at least once
+                    const randomCell = getCell(Math.floor(Math.random() * rows), Math.floor(Math.random() * columns));
+                    randomCell.style.backgroundColor = keyColor;
+                }
+            }
+
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
