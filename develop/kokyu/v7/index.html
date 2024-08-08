@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Just Another Sunny Day at Kokyu</title>
+    <title>Sunny Day at Kokyu</title>
     <style>
         body {
             margin: 0;
@@ -58,13 +58,13 @@
         canvas.height = window.innerHeight;
 
         const sun = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
+            x: 100, // Position the sun 100px from the left
+            y: 100, // Position the sun 100px from the top
             radius: 50,
             color: '#FFD700'
         };
 
-        let angleOffset = 0; // Angle offset for rotation
+        let rayRotation = 0; // Variable to control the rotation of the rays
 
         function drawBackground() {
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -84,13 +84,13 @@
 
         function drawRays() {
             const numRays = 50; // Adjust for more or fewer rays
-            const rayLength = Math.max(canvas.width, canvas.height);
+            const rayLength = Math.max(canvas.width, canvas.height) * 1.5; // Ensure rays cover the viewport
 
             ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)'; // Yellowish color for rays
             ctx.lineWidth = 2;
 
             for (let i = 0; i < numRays; i++) {
-                const angle = (Math.PI * 2 / numRays) * i + angleOffset;
+                const angle = (Math.PI * 2 / numRays) * i + rayRotation; // Add rotation to the rays
 
                 const x = sun.x + Math.cos(angle) * rayLength;
                 const y = sun.y + Math.sin(angle) * rayLength;
@@ -108,7 +108,7 @@
             drawRays();
             drawSun();
 
-            angleOffset += 0.01; // Control the speed of rotation
+            rayRotation += 0.004; // Adjust the speed of rotation
 
             requestAnimationFrame(animate);
         }
@@ -118,8 +118,6 @@
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            sun.x = canvas.width / 2;
-            sun.y = canvas.height / 2;
         });
     </script>
 </body>
