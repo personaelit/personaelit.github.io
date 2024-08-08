@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunny Day Effect with Logo and Button</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB, #FFF);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+            z-index: -1;
+        }
+
+        #logo {
+            margin-bottom: 20px;
+        }
+
+        #orderNowButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            color: white;
+            background-color: purple;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #orderNowButton:hover {
+            background-color: #FF6347;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="sunnyCanvas"></canvas>
+    
+    <img id="logo" src="../logo.png" alt="Logo">
+    <button id="orderNowButton">Order Now</button>
+    
+    <script>
+        const canvas = document.getElementById('sunnyCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const sun = {
+            x: 100,
+            y: 100,
+            radius: 50,
+            color: '#FFD700'
+        };
+
+        const particles = [];
+
+        function createParticle() {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 4;
+            const particle = {
+                x: sun.x,
+                y: sun.y,
+                angle: angle,
+                speed: speed,
+                radius: 2 + Math.random() * 2,
+                color: `rgba(255, 215, 0, ${Math.random() * 0.7 + 0.3})`,
+                life: 0,
+                maxLife: 200 + Math.random() * 100
+            };
+            particles.push(particle);
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += Math.cos(p.angle) * p.speed;
+                p.y += Math.sin(p.angle) * p.speed;
+                p.life++;
+
+                if (p.life > p.maxLife) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function drawSun() {
+            ctx.beginPath();
+            ctx.arc(sun.x, sun.y, sun.radius, 0, Math.PI * 2);
+            ctx.fillStyle = sun.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawSun();
+            drawParticles();
+            updateParticles();
+
+            // Continuously create new particles
+            for (let i = 0; i < 5; i++) {
+                createParticle();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
