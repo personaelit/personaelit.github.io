@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
         body {
             margin: 0;
             overflow: hidden;
-            background: linear-gradient(to top, #87CEEB, #FFFFFF); /* Sky blue background */
+            background: linear-gradient(to top, #87CEEB, #FFFFFF);
+            /* Sky blue background */
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -29,9 +31,11 @@
             position: absolute;
             background: #FFF;
             border-radius: 50%;
-            filter: blur(15px); /* Blur effect to make clouds more "cloudish" */
+            filter: blur(15px);
+            /* Blur effect to make clouds more "cloudish" */
             opacity: 0.8;
-            box-shadow: 0px 0px 50px 30px rgba(255, 255, 255, 0.7); /* Glow effect */
+            box-shadow: 0px 0px 50px 30px rgba(255, 255, 255, 0.7);
+            /* Glow effect */
         }
 
         #cloud1 {
@@ -81,6 +85,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="clouds">
         <div class="cloud" id="cloud1"></div>
@@ -98,22 +103,22 @@
 
         function animateClouds() {
             const clouds = document.querySelectorAll('.cloud');
-            
+
             clouds.forEach((cloud, index) => {
                 let cloudSpeed = 0.5 + Math.random(); // Random speed for each cloud
                 let cloudPosition = -cloud.clientWidth;
-                
+
                 function moveCloud() {
                     cloudPosition += cloudSpeed;
                     cloud.style.left = cloudPosition + 'px';
-                    
+
                     if (cloudPosition > window.innerWidth) {
                         cloudPosition = -cloud.clientWidth;
                     }
-                    
+
                     requestAnimationFrame(moveCloud);
                 }
-                
+
                 moveCloud();
             });
         }
@@ -169,12 +174,12 @@
 
             function flyInFigureEight() {
                 let angle = 0;
-                const radius = 100;
+                const radius = 150;
 
                 function moveInFigureEight() {
                     angle += 0.05; // Adjust speed of the rotation
-                    const x = centerX + radius * Math.sin(angle) * Math.cos(angle);
-                    const y = centerY + radius * Math.sin(angle) * Math.sin(angle);
+                    const x = centerX + radius * Math.sin(angle) * Math.cos(2 * angle);
+                    const y = centerY + radius * Math.sin(angle) * Math.sin(2 * angle); // sin(2 * angle) for figure-eight
 
                     spaceship.style.left = `${x}px`;
                     spaceship.style.top = `${y}px`;
@@ -194,4 +199,5 @@
         };
     </script>
 </body>
+
 </html>
