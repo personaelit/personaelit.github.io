@@ -67,7 +67,7 @@
                 this.y = y;
                 this.length = length;
                 this.speed = speed;
-                this.angle = angle; // New property for diagonal direction
+                this.angle = angle;
             }
 
             draw() {
@@ -81,12 +81,10 @@
             }
 
             update() {
-                this.x += this.speed * Math.cos(this.angle); // Move in x direction
-                this.y += this.speed * Math.sin(this.angle); // Move in y direction
+                this.x += this.speed * Math.cos(this.angle);
+                this.y += this.speed * Math.sin(this.angle);
 
-                // Reset raindrop when it goes off-screen
                 if (this.y > canvas.height || this.x > canvas.width) {
-                    // Reset to random position above or to the left of the screen
                     if (Math.random() > 0.5) {
                         this.x = Math.random() * canvas.width;
                         this.y = -this.length;
@@ -98,14 +96,46 @@
             }
         }
 
+        // Lightning class
+        class Lightning {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = 0;
+                this.zigZags = [];
+                this.generateZigZags();
+            }
+
+            generateZigZags() {
+                let x = this.x;
+                let y = this.y;
+                let length = 10 + Math.random() * 20;
+                while (y < canvas.height) {
+                    x += Math.random() * 60 - 30; // Random zig-zag effect
+                    y += length;
+                    this.zigZags.push({ x, y });
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                for (let i = 0; i < this.zigZags.length; i++) {
+                    ctx.lineTo(this.zigZags[i].x, this.zigZags[i].y);
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 2 + Math.random(); // Random thickness
+                ctx.stroke();
+            }
+        }
+
         // Initialize raindrops
         const raindrops = [];
         for (let i = 0; i < 500; i++) {
             const x = Math.random() * canvas.width;
             const y = Math.random() * canvas.height;
             const length = Math.random() * 20 + 10;
-            const speed = Math.random() * 6 + 10; // Increased speed for faster rain
-            const angle = Math.PI / 4; // 45 degrees for diagonal rain
+            const speed = Math.random() * 6 + 10;
+            const angle = Math.PI / 4;
             raindrops.push(new Raindrop(x, y, length, speed, angle));
         }
 
@@ -116,6 +146,14 @@
                 raindrop.draw();
                 raindrop.update();
             });
+
+            // Randomly create lightning
+            if (Math.random() > 0.99) {
+                const lightning = new Lightning();
+                lightning.draw();
+                setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 100); // Short flash effect
+            }
+
             requestAnimationFrame(animate);
         }
 
