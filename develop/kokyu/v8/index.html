@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kokyu Clouds</title>
+    <title>Cloud Space With</title>
     <style>
         body {
             margin: 0;
@@ -55,13 +55,12 @@
             left: -250px;
         }
 
-
         .order-button {
-            margin-top: 20px;
+            margin-top: -100px;
             padding: 10px 20px;
             background-color: orange;
             color: white;
-            border: none;
+            border: 3px solid purple;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
@@ -70,6 +69,15 @@
 
         .order-button:hover {
             background-color: darkorange;
+        }
+
+        .spaceship {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: purple;
+            border-radius: 50%;
+            transition: all 0.5s ease-out;
         }
     </style>
 </head>
@@ -80,10 +88,14 @@
         <div class="cloud" id="cloud3"></div>
     </div>
 
-    <img src="../logo.png" alt="Logo" class="logo">
+    <img src="../logo.png" alt="Logo" class="logo" id="logo">
     <button class="order-button">Order Now</button>
 
+    <div class="spaceship" id="spaceship"></div>
+
     <script>
+        let flyCount = 0;
+
         function animateClouds() {
             const clouds = document.querySelectorAll('.cloud');
             
@@ -106,7 +118,80 @@
             });
         }
 
-        window.onload = animateClouds;
+        function getRandomPosition(isOutside = true) {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+
+            if (isOutside) {
+                // Move position outside the viewport
+                const outsideDirection = Math.random();
+                if (outsideDirection < 0.25) return { x: -50, y };
+                if (outsideDirection < 0.5) return { x: window.innerWidth + 50, y };
+                if (outsideDirection < 0.75) return { x, y: -50 };
+                return { x, y: window.innerHeight + 50 };
+            }
+
+            return { x, y };
+        }
+
+        function animateSpaceship() {
+            const spaceship = document.getElementById('spaceship');
+            const logo = document.getElementById('logo');
+            const logoRect = logo.getBoundingClientRect();
+            const centerX = logoRect.left + logoRect.width / 2;
+            const centerY = logoRect.top + logoRect.height / 2;
+
+            function flyInAndOut() {
+                if (flyCount < 3) { // Random flying for 5 iterations
+                    const startPosition = getRandomPosition(true);
+                    const endPosition = getRandomPosition(true);
+                    const centerPosition = getRandomPosition(false);
+
+                    spaceship.style.left = `${startPosition.x}px`;
+                    spaceship.style.top = `${startPosition.y}px`;
+
+                    setTimeout(() => {
+                        spaceship.style.left = `${centerPosition.x}px`;
+                        spaceship.style.top = `${centerPosition.y}px`;
+                    }, 100);
+
+                    setTimeout(() => {
+                        spaceship.style.left = `${endPosition.x}px`;
+                        spaceship.style.top = `${endPosition.y}px`;
+                    }, 2000);
+
+                    flyCount++;
+                } else {
+                    clearInterval(flyInterval);
+                    flyInFigureEight();
+                }
+            }
+
+            function flyInFigureEight() {
+                let angle = 0;
+                const radius = 100;
+
+                function moveInFigureEight() {
+                    angle += 0.05; // Adjust speed of the rotation
+                    const x = centerX + radius * Math.sin(angle) * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle) * Math.sin(angle);
+
+                    spaceship.style.left = `${x}px`;
+                    spaceship.style.top = `${y}px`;
+
+                    requestAnimationFrame(moveInFigureEight);
+                }
+
+                moveInFigureEight();
+            }
+
+            const flyInterval = setInterval(flyInAndOut, 5000);
+        }
+
+        window.onload = () => {
+            animateClouds();
+            animateSpaceship();
+        };
     </script>
 </body>
 </html>
