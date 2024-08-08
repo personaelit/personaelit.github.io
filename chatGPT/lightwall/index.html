@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid of Squares with Circles</title>
+    <style>
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .square {
+            width: 5%;
+            padding-top: 5%; /* to maintain the aspect ratio */
+            position: relative;
+            box-sizing: border-box;
+            background-color: black;
+        }
+        .circle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const numColumns = 20;
+        const numSquares = numColumns * Math.ceil(window.innerHeight / (window.innerWidth / numColumns));
+        
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        for (let i = 0; i < numSquares; i++) {
+            const square = document.createElement('div');
+            square.classList.add('square');
+            const circle = document.createElement('div');
+            circle.classList.add('circle');
+            circle.style.backgroundColor = getRandomColor();
+            square.appendChild(circle);
+            document.body.appendChild(square);
+        }
+
+        setInterval(() => {
+            document.querySelectorAll('.circle').forEach(circle => {
+                circle.style.backgroundColor = getRandomColor();
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
