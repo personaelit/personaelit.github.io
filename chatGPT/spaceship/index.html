@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixelated Spaceship</title>
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            image-rendering: pixelated; /* Ensures that the image stays pixelated */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="spaceshipCanvas" width="64" height="64"></canvas>
+
+    <script>
+        const canvas = document.getElementById('spaceshipCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Define the spaceship colors
+        const purple = '#800080';
+        const white = '#FFFFFF';
+
+        // Define the pixel size
+        const pixelSize = 4;
+
+        // Spaceship pattern as a 2D array
+        const spaceship = [
+            [0, 0, 0, 1, 1, 0, 0, 0],
+            [0, 0, 0, 2, 2, 0, 0, 0],
+            [0, 0, 2, 2, 2, 2, 0, 0],
+            [1, 2, 2, 2, 2, 2, 2, 1],
+            [1, 2, 2, 2, 2, 2, 2, 1],
+            [0, 1, 2, 2, 2, 2, 1, 0],
+            [0, 0, 1, 1, 1, 1, 0, 0],
+            [0, 0, 0, 1, 1, 0, 0, 0]
+        ];
+
+        // Draw the spaceship
+        for (let y = 0; y < spaceship.length; y++) {
+            for (let x = 0; x < spaceship[y].length; x++) {
+                if (spaceship[y][x] === 1) {
+                    ctx.fillStyle = white;
+                } else if (spaceship[y][x] === 2) {
+                    ctx.fillStyle = purple;
+                } else {
+                    continue; // Skip empty pixels
+                }
+                ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    </script>
+</body>
+</html>
