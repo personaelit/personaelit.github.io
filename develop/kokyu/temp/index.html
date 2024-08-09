@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Space With</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to top, #87CEEB, #FFFFFF);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .logo {
+            position: relative;
+            z-index: 2;
+            margin-top: -150px; /* Move the logo higher on the page */
+        }
+
+        .order-button {
+            margin-top: -80px;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            border: 3px solid purple;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            z-index: 2;
+            position: relative;
+        }
+
+        .order-button:hover {
+            background-color: darkorange;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <img src="../logo.png" alt="Logo" class="logo" id="logo">
+    <button class="order-button">Order Now</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const clouds = [
+            { x: -200, y: window.innerHeight * 0.2, width: 200, height: 100, speed: 0.5 + Math.random() },
+            { x: -300, y: window.innerHeight * 0.4, width: 300, height: 150, speed: 0.5 + Math.random() },
+            { x: -250, y: window.innerHeight * 0.6, width: 250, height: 125, speed: 0.5 + Math.random() }
+        ];
+
+        let flyCount = 0;
+        let spaceship = { x: 0, y: 0, size: 20, targetX: 0, targetY: 0 };
+
+        function drawCloud(cloud) {
+            ctx.beginPath();
+            ctx.ellipse(cloud.x, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+            ctx.shadowBlur = 50;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawSpaceship() {
+            ctx.beginPath();
+            ctx.arc(spaceship.x, spaceship.y, spaceship.size / 2, 0, 2 * Math.PI);
+            ctx.fillStyle = 'purple';
+            ctx.fill();
+        }
+
+        function animateClouds() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            clouds.forEach(cloud => {
+                cloud.x += cloud.speed;
+                if (cloud.x > canvas.width) {
+                    cloud.x = -cloud.width;
+                }
+                drawCloud(cloud);
+            });
+
+            drawSpaceship();
+            requestAnimationFrame(animateClouds);
+        }
+
+        function getRandomPosition(isOutside = true) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+
+            if (isOutside) {
+                const outsideDirection = Math.random();
+                if (outsideDirection < 0.25) return { x: -50, y };
+                if (outsideDirection < 0.5) return { x: canvas.width + 50, y };
+                if (outsideDirection < 0.75) return { x, y: -50 };
+                return { x, y: canvas.height + 50 };
+            }
+
+            return { x, y };
+        }
+
+        function animateSpaceship() {
+            const logo = document.getElementById('logo');
+            const logoRect = logo.getBoundingClientRect();
+            const centerX = logoRect.left + logoRect.width / 2;
+            const centerY = logoRect.top + logoRect.height / 2;
+
+            function flyInAndOut() {
+                if (flyCount < 3) {
+                    const startPosition = getRandomPosition(true);
+                    const endPosition = getRandomPosition(true);
+                    const centerPosition = getRandomPosition(false);
+
+                    spaceship.x = startPosition.x;
+                    spaceship.y = startPosition.y;
+
+                    setTimeout(() => {
+                        spaceship.targetX = centerPosition.x;
+                        spaceship.targetY = centerPosition.y;
+                    }, 100);
+
+                    setTimeout(() => {
+                        spaceship.targetX = endPosition.x;
+                        spaceship.targetY = endPosition.y;
+                    }, 2000);
+
+                    flyCount++;
+                } else {
+                    clearInterval(flyInterval);
+                    flyInFigureEight();
+                }
+            }
+
+            function flyInFigureEight() {
+                let angle = 0;
+                const radius = 150;
+
+                function moveInFigureEight() {
+                    angle += 0.05;
+                    spaceship.x = centerX + radius * Math.sin(angle) * Math.cos(2 * angle);
+                    spaceship.y = centerY + 50 + radius * Math.sin(angle) * Math.sin(2 * angle);
+
+                    requestAnimationFrame(moveInFigureEight);
+                }
+
+                moveInFigureEight();
+            }
+
+            flyInAndOut();
+            const flyInterval = setInterval(flyInAndOut, 5000);
+        }
+
+        function moveSpaceship() {
+            const dx = spaceship.targetX - spaceship.x;
+            const dy = spaceship.targetY - spaceship.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 1) {
+                spaceship.x += dx / distance * 5;
+                spaceship.y += dy / distance * 5;
+            }
+
+            requestAnimationFrame(moveSpaceship);
+        }
+
+        window.onload = () => {
+            animateClouds();
+            animateSpaceship();
+            moveSpaceship();
+        };
+
+        window.onresize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+    </script>
+</body>
+
+</html>
