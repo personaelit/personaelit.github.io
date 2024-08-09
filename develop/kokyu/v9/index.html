@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kokyu Past Particle</title>
+    <style>
+        body, html {
+            margin: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        #content {
+            text-align: center;
+            z-index: 10;
+            display: block;
+        }
+        #logo {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        #orderNow {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            font-size: 20px;
+            border: 3px solid purple;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="skyCanvas"></canvas>
+    <div id="content">
+        <img id="logo" src="../logo.png" alt="Logo">
+        <button id="orderNow">Order Now</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('skyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function drawGradientSky() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB'); // Sky blue
+            gradient.addColorStop(1, '#FFFFFF'); // Lighter towards the horizon
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        const clouds = [];
+        const cloudCount = 10;
+        const blinkInterval = 100; // Adjust for blink speed
+
+        function createClouds() {
+            for (let i = 0; i < cloudCount; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.5,
+                    width: 100 + Math.random() * 100,
+                    height: 60 + Math.random() * 20,
+                    speed: 0.5 + Math.random() * 1.5,
+                    originalHeight: 60 + Math.random() * 20,
+                    blinkState: 1, // 1 = open, -1 = closing
+                    blinkTimer: Math.random() * 3000 + 1000 // Random blink start
+                });
+            }
+        }
+
+        function drawCloud(cloud) {
+            const { x, y, width, height } = cloud;
+
+            // Draw the cloud with blinking effect
+            ctx.beginPath();
+            ctx.arc(x, y, width * 0.4, 0, Math.PI * 2, false);
+            ctx.arc(x + width * 0.3, y - height * 0.2, width * 0.5, 0, Math.PI * 2, false);
+            ctx.arc(x + width * 0.6, y, width * 0.4, 0, Math.PI * 2, false);
+            ctx.arc(x + width * 0.3, y + height * 0.2, width * 0.5, 0, Math.PI * 2, false);
+            ctx.closePath();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fill();
+        }
+
+        function updateClouds() {
+            for (let i = 0; i < clouds.length; i++) {
+                clouds[i].x += clouds[i].speed;
+                
+                // Reset cloud position if it moves off-screen
+                if (clouds[i].x - clouds[i].width > canvas.width) {
+                    clouds[i].x = -clouds[i].width;
+                    clouds[i].y = Math.random() * canvas.height * 0.5;
+                }
+
+                // Handle blinking effect
+                clouds[i].blinkTimer -= blinkInterval;
+                if (clouds[i].blinkTimer <= 0) {
+                    clouds[i].height += clouds[i].blinkState * 2; // Adjust blink speed
+                    if (clouds[i].height <= 0) {
+                        clouds[i].blinkState = 1; // Start opening
+                    } else if (clouds[i].height >= clouds[i].originalHeight) {
+                        clouds[i].blinkState = -1; // Start closing
+                        clouds[i].blinkTimer = Math.random() * 3000 + 1000; // Random delay before next blink
+                    }
+                }
+            }
+        }
+
+        const spaceships = [];
+        const spaceshipCount = 420;
+
+        function createSpaceships() {
+            for (let i = 0; i < spaceshipCount; i++) {
+                spaceships.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 2 + Math.random() * 3, // Varying size for more variation
+                    speed: .1 + Math.random() * 5, // Speed variation
+                    zoomDirection: 1, // 1 = zoom in, -1 = zoom out
+                    zoomTarget: { x: Math.random() * canvas.width, y: Math.random() * canvas.height }, // Random initial target
+                    minDistance: 10 // Minimum distance from target before switching direction
+                });
+            }
+        }
+
+        function drawSpaceships() {
+            for (let i = 0; i < spaceships.length; i++) {
+                const spaceship = spaceships[i];
+                ctx.beginPath();
+                ctx.arc(spaceship.x, spaceship.y, spaceship.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = 'purple';
+                ctx.fill();
+            }
+        }
+
+        function updateSpaceships() {
+            for (let i = 0; i < spaceships.length; i++) {
+                const spaceship = spaceships[i];
+
+                // Calculate the direction towards the zoom target (random point or button)
+                const directionX = spaceship.zoomTarget.x - spaceship.x;
+                const directionY = spaceship.zoomTarget.y - spaceship.y;
+                const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+
+                // Normalize direction
+                const normX = directionX / distance;
+                const normY = directionY / distance;
+
+                // Move spaceship
+                spaceship.x += normX * spaceship.speed * spaceship.zoomDirection;
+                spaceship.y += normY * spaceship.speed * spaceship.zoomDirection;
+
+                // Switch direction when it gets close to the target
+                if (distance < spaceship.minDistance && spaceship.zoomDirection === 1) {
+                    spaceship.zoomDirection = -1; // Start zooming out
+                }
+
+                // Reset spaceship position after zooming out and choose a new target
+                if ((spaceship.x < 0 || spaceship.x > canvas.width || spaceship.y < 0 || spaceship.y > canvas.height) && spaceship.zoomDirection === -1) {
+                    spaceship.zoomDirection = 1; // Start zooming in
+                    spaceship.x = Math.random() * canvas.width;
+                    spaceship.y = Math.random() * canvas.height;
+                    spaceship.zoomTarget = coalesce ? { x: buttonCenterX, y: buttonCenterY } : { x: Math.random() * canvas.width, y: Math.random() * canvas.height }; // New random target or button
+                }
+            }
+        }
+
+        let coalesce = false;
+        let buttonCenterX, buttonCenterY;
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGradientSky();
+            for (let i = 0; i < clouds.length; i++) {
+                drawCloud(clouds[i]);
+            }
+            drawSpaceships();
+            updateClouds();
+            updateSpaceships();
+            requestAnimationFrame(animate);
+        }
+
+        // Get the button position once the DOM is fully loaded
+        window.addEventListener('load', () => {
+            const button = document.getElementById('orderNow');
+            const buttonRect = button.getBoundingClientRect();
+            buttonCenterX = buttonRect.left + buttonRect.width / 2;
+            buttonCenterY = buttonRect.top + buttonRect.height / 2;
+        });
+
+        // Toggle coalesce state every 3 seconds
+        setInterval(() => {
+            coalesce = !coalesce;
+            // Update all spaceships to target the button or a random point
+            for (let i = 0; i < spaceships.length; i++) {
+                spaceships[i].zoomTarget = coalesce ? { x: buttonCenterX, y: buttonCenterY } : { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
+            }
+        }, 3000);
+
+        createClouds();
+        createSpaceships();
+        animate();
+    </script>
+</body>
+</html>
