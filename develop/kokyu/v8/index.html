@@ -18,6 +18,10 @@
             flex-direction: column;
         }
 
+        .logo {
+            /* margin */
+        }
+
         .clouds {
             position: absolute;
             top: 0;
@@ -178,8 +182,8 @@
 
                 function moveInFigureEight() {
                     angle += 0.05; // Adjust speed of the rotation
-                    const x = centerX + radius * Math.sin(angle) * Math.cos(2 * angle);
-                    const y = centerY + radius * Math.sin(angle) * Math.sin(2 * angle); // sin(2 * angle) for figure-eight
+                    const x = centerX + radius * Math.sin(angle) * Math.cos(2 *angle);
+                    const y = centerY + 50 + radius * Math.sin(angle) * Math.sin(2 * angle); // sin(2 * angle) for figure-eight
 
                     spaceship.style.left = `${x}px`;
                     spaceship.style.top = `${y}px`;
