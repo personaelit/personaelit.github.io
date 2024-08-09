@@ -151,7 +151,7 @@
             const centerY = logoRect.top + logoRect.height / 2;
 
             function flyInAndOut() {
-                if (flyCount < 3) { // Random flying for 5 iterations
+                if (flyCount < 3) { // Random flying for 3 iterations
                     const startPosition = getRandomPosition(true);
                     const endPosition = getRandomPosition(true);
                     const centerPosition = getRandomPosition(false);
@@ -194,6 +194,8 @@
                 moveInFigureEight();
             }
 
+            // Start immediately
+            flyInAndOut();
             const flyInterval = setInterval(flyInAndOut, 5000);
         }
 
