@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flying Spaceship</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set the canvas dimensions to match the window
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const purple = '#800080';
+        const white = '#FFFFFF';
+
+        // Define the pixel size
+        const pixelSize = 8;
+
+        // Spaceship pattern as a 2D array
+        const spaceship = [
+            [0, 0, 0, 1, 1, 0, 0, 0],
+            [0, 0, 1, 2, 2, 1, 0, 0],
+            [0, 1, 2, 2, 2, 2, 1, 0],
+            [1, 2, 2, 2, 2, 2, 2, 1],
+            [1, 2, 2, 2, 2, 2, 2, 1],
+            [0, 1, 2, 2, 2, 2, 1, 0],
+            [0, 0, 1, 1, 1, 1, 0, 0],
+            [0, 0, 0, 1, 1, 0, 0, 0]
+        ];
+
+        // Spaceship dimensions
+        const spaceshipWidth = spaceship[0].length * pixelSize;
+        const spaceshipHeight = spaceship.length * pixelSize;
+
+        let x = canvas.width / 2;
+        let y = canvas.height / 2;
+        let startX, startY; // Variables to store the last known coordinates
+        let speed = 15;
+        let targetX = getRandomCoordinateOutside(canvas.width);
+        let targetY = getRandomCoordinateOutside(canvas.height);
+        let pauseDuration =  1000; // Short pause duration (in milliseconds)
+        let moving = true;
+        let startTime = Date.now();
+        let figure8Start = false;
+
+        // Function to get a random coordinate far outside the canvas bounds
+        function getRandomCoordinateOutside(max) {
+            const farOutsideOffset = 150; // How far out of the viewport the spaceship can go
+            return Math.random() > 0.5
+                ? Math.random() * max + farOutsideOffset // Far outside the viewport on the positive side
+                : Math.random() * max - farOutsideOffset; // Far outside the viewport on the negative side
+        }
+
+        // Function to update the spaceship's position
+        function updatePosition() {
+            const elapsedTime = Date.now() - startTime;
+
+            if (elapsedTime < 5000) {
+                // Random flying around
+                if (!moving) return;
+
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > speed) {
+                    x += (dx / distance) * speed;
+                    y += (dy / distance) * speed;
+                } else {
+                    // Spaceship has reached the target
+                    if (isInViewPort(x, y)) {
+                        // Pause if the spaceship is inside the viewport
+                        moving = false;
+                        setTimeout(() => {
+                            targetX = getRandomCoordinateOutside(canvas.width);
+                            targetY = getRandomCoordinateOutside(canvas.height);
+                            moving = true;
+                        }, pauseDuration);
+                    } else {
+                        // Immediately set a new target if outside the viewport
+                        targetX = getRandomCoordinateOutside(canvas.width);
+                        targetY = getRandomCoordinateOutside(canvas.height);
+                    }
+                }
+                startX = x; // Store the last known coordinates before starting figure 8
+                startY = y;
+            } else {
+                // Start the figure 8 motion from the last known coordinates
+                if (!figure8Start) {
+                    figure8Start = true;
+                    startTime = Date.now(); // Reset the timer for the figure 8
+                }
+                const figure8Time = (Date.now() - startTime) / 1000; // Figure 8 time
+                const radius = 120; // Smaller radius for a tighter figure 8
+                x = startX + Math.sin(figure8Time * 2) * radius;
+                y = startY + Math.sin(figure8Time * 4) * radius * Math.cos(figure8Time * 2);
+            }
+        }
+
+        // Function to draw the spaceship
+        function drawSpaceship() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let row = 0; row < spaceship.length; row++) {
+                for (let col = 0; col < spaceship[row].length; col++) {
+                    if (spaceship[row][col] === 1) {
+                        ctx.fillStyle = white;
+                    } else if (spaceship[row][col] === 2) {
+                        ctx.fillStyle = purple;
+                    } else {
+                        continue; // Skip empty pixels
+                    }
+                    ctx.fillRect(x + col * pixelSize, y + row * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+
+        // Main animation loop
+        function animate() {
+            updatePosition();
+            drawSpaceship();
+            requestAnimationFrame(animate);
+        }
+
+        // Function to check if the spaceship is within the viewport
+        function isInViewPort(x, y) {
+            return x + spaceshipWidth >= 0 && x <= canvas.width &&
+                   y + spaceshipHeight >= 0 && y <= canvas.height;
+        }
+
+        animate();
+    </script>
+</body>
+</html>
