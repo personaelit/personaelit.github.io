@@ -1,5 +1,4 @@
 window.addEventListener('DOMContentLoaded', (event) => {
-    setLastUpdated();
     startColorTransition();
     stylizeLinks();
     flagExternalLinks();
@@ -154,15 +153,6 @@ function stylizeLinks() {
         anchor.style.transform = `rotate(${randomAngle}deg)`;
         anchor.classList.add('rotated');
     });
-}
-
-function setLastUpdated() {
-    let lastUpdated = document.getElementsByClassName("last-updated")[0];
-    if (lastUpdated != null) {
-        lastUpdated.innerHTML = "Last updated: " + document.lastModified;
-        lastUpdated.setAttribute('datetime', document.lastModified);
-    }
-    console.log("updated updated.")
 }
 
 function startColorTransition() {
