@@ -1,1 +1,0 @@
-With ChatGPT and LLMs the age of instant examples is upon us.

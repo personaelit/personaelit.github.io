@@ -1,1 +1,0 @@
-With regards to writing code, I can do in minutes what would take me weeks before.

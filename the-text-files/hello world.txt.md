@@ -1,1 +1,0 @@
-Who could resist a hello world file to test out the script?

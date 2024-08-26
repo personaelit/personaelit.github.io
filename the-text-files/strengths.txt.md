@@ -1,2 +1,0 @@
-* creativity above all
-
