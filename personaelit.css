@@ -128,8 +128,9 @@ a:hover {
     border-radius: 50%;
     background: rgba(0, 150, 255, 0.5);
     transform: scale(0);
-    animation: ripple-animation 0.6s linear;
+    animation: ripple-animation 0.2s linear;
     pointer-events: none;
+    z-index: 1000;
 }
 
 @keyframes ripple-animation {
