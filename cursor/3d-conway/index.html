@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game of Life Dome Walk-through with Pan</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        #gameCanvas {
+            display: block;
+            cursor: grab;
+        }
+        #gameCanvas:active {
+            cursor: grabbing;
+        }
+        #toggleButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <button id="toggleButton">Toggle Temporary Death</button>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const toggleButton = document.getElementById('toggleButton');
+
+        let width, height, cols, rows;
+        let cellSize = 10;
+        let grid;
+        let deathTime;
+        let isTemporaryDeathEnabled = false;
+        let zOffset = 0;
+        const moveSpeed = 0.001;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let viewAngleX = 0;
+        let viewAngleY = 0;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+
+        function setup() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            cols = Math.floor(width / cellSize);
+            rows = Math.floor(height / cellSize);
+
+            grid = new Array(cols).fill(null)
+                .map(() => new Array(rows).fill(null)
+                    .map(() => Math.random() > 0.7));
+            
+            deathTime = new Array(cols).fill(null)
+                .map(() => new Array(rows).fill(0));
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            const radius = Math.min(width, height) * 0.4;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const rotationAngle = Date.now() * 0.0005;
+
+            zOffset += moveSpeed;
+            if (zOffset > 1) zOffset -= 1;
+
+            const timeOffset = Date.now() * 0.001; // For color cycling
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    if (grid[i][j]) {
+                        let x = (i / cols - 0.5) * 2;
+                        let y = (j / rows - 0.5) * 2;
+                        let z = Math.sqrt(1 - x*x - y*y);
+                        
+                        // Apply rotation and view angle
+                        let rotatedX = x * Math.cos(rotationAngle) - y * Math.sin(rotationAngle);
+                        let rotatedY = x * Math.sin(rotationAngle) + y * Math.cos(rotationAngle);
+                        let rotatedZ = z;
+                        
+                        // Apply view angle
+                        const cosX = Math.cos(viewAngleX);
+                        const sinX = Math.sin(viewAngleX);
+                        const cosY = Math.cos(viewAngleY);
+                        const sinY = Math.sin(viewAngleY);
+                        
+                        const tempY = rotatedY;
+                        rotatedY = tempY * cosX - rotatedZ * sinX;
+                        rotatedZ = tempY * sinX + rotatedZ * cosX;
+                        
+                        const tempX = rotatedX;
+                        rotatedX = tempX * cosY + rotatedZ * sinY;
+                        rotatedZ = -tempX * sinY + rotatedZ * cosY;
+
+                        // Apply z-offset
+                        rotatedZ = (rotatedZ + zOffset) % 1;
+
+                        // Project onto 2D
+                        const scale = 1 / (1 - rotatedZ);
+                        const projectedX = rotatedX * scale;
+                        const projectedY = rotatedY * scale;
+
+                        const size = cellSize * scale * 2;
+                        const alpha = Math.min(1, rotatedZ * 2);
+
+                        // Calculate hue based on position and time
+                        const hue = (i / cols + j / rows + timeOffset) % 1;
+                        const [r, g, b] = hslToRgb(hue, 1, 0.5);
+
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                        ctx.fillRect(
+                            centerX + projectedX * radius,
+                            centerY + projectedY * radius,
+                            size, size
+                        );
+                    }
+                }
+            }
+        }
+
+        function countNeighbors(grid, x, y) {
+            let sum = 0;
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    let col = (x + i + cols) % cols;
+                    let row = (y + j + rows) % rows;
+                    sum += grid[col][row];
+                }
+            }
+            sum -= grid[x][y];
+            return sum;
+        }
+
+        function update() {
+            let next = grid.map(arr => [...arr]);
+            let currentTime = Date.now();
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    let state = grid[i][j];
+                    let neighbors = countNeighbors(grid, i, j);
+
+                    if (state == 1 && (neighbors < 2 || neighbors > 3)) {
+                        next[i][j] = 0;
+                        deathTime[i][j] = currentTime;
+                    } else if (state == 0 && neighbors == 3) {
+                        if (!isTemporaryDeathEnabled || currentTime - deathTime[i][j] >= 3000) {
+                            next[i][j] = 1;
+                        }
+                    } else {
+                        next[i][j] = state;
+                    }
+                }
+            }
+
+            grid = next;
+        }
+
+        let fps = 60; // Frames per second, adjust this value to control speed
+
+        function animate() {
+            draw();
+            update();
+            setTimeout(() => requestAnimationFrame(animate), 1000 / fps);
+        }
+
+        toggleButton.addEventListener('click', () => {
+            isTemporaryDeathEnabled = !isTemporaryDeathEnabled;
+            toggleButton.textContent = isTemporaryDeathEnabled ? 
+                "Disable Temporary Death" : "Enable Temporary Death";
+        });
+
+        setup();
+        animate();
+
+        window.addEventListener('resize', setup);
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+                viewAngleX += deltaY * 0.005;
+                viewAngleY += deltaX * 0.005;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const deltaX = e.touches[0].clientX - lastTouchX;
+                const deltaY = e.touches[0].clientY - lastTouchY;
+                viewAngleX += deltaY * 0.005;
+                viewAngleY += deltaX * 0.005;
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+                e.preventDefault(); // Prevent scrolling
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('touchcancel', () => {
+            isDragging = false;
+        });
+    </script>
+</body>
+</html>
+
+
