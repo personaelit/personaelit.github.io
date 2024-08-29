@@ -1,0 +1,282 @@
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.App {
+  text-align: center;
+  padding: 20px;
+}
+
+.App-header {
+  /* background-color: #fff; */
+  padding: 20px;
+  /* border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+}
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* New styles for the Todo App */
+input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: calc(100% - 22px); /* Full width minus padding and border */
+  max-width: 400px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  max-width: 400px;
+  margin: 20px auto 0;
+}
+
+li {
+  background-color: #fff;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+li span {
+  flex-grow: 1;
+  padding-right: 10px;
+}
+
+li button {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: white;
+  background-color: #dc3545;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+li button:hover {
+  background-color: #c82333;
+}
+
+.todo-card {
+  /* background-color: #fff; */
+  margin: 10px 0;
+  padding: 15px;
+  /* border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Ensure space between elements */
+  align-items: flex-start;
+  cursor: grab;
+  width: 100%; /* Ensure the card takes the full width of the container */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  perspective: 1000px; /* Add perspective for 3D effect */
+  position: relative; /* Ensure the front and back faces are positioned correctly */
+  height: 260px; /* Set a fixed height for the card */
+}
+
+.todo-card:active {
+  cursor: grabbing;
+}
+
+.todo-card input[type="text"] {
+  width: calc(100% - 20px); /* Full width minus padding */
+  margin-bottom: 10px;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.button-group {
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  align-self: flex-end;
+  margin-top: 10px; /* Add some margin to separate from other elements */
+}
+
+.done-button {
+  background-color: #28a745;
+}
+
+.done-button:hover {
+  background-color: #218838;
+}
+
+.delete-button {
+  background-color: #dc3545;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+.timestamp {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 10px;
+  align-self: flex-end;
+  margin-top: auto; /* Push the timestamp to the bottom */
+}
+
+.todo-card.done {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.todo-card.done input[type="text"] {
+  text-decoration: line-through;
+  color: #155724;
+}
+
+.select-category, .select-priority {
+  margin: 5px 0;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  font-size: 14px;
+}
+
+.select-category:focus, .select-priority:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.kanban-board {
+  display: flex;
+  justify-content: space-around;
+}
+
+.kanban-column {
+  width: 30%;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 5px;
+  position: relative; /* Ensure the column is positioned relative to handle drop events */
+  min-height: 400px; /* Ensure columns have a minimum height */
+}
+
+.kanban-column.highlighted {
+  background-color: rgba(0, 0, 255, 0.1); /* Light blue background */
+  border: 2px dashed blue; /* Dashed border */
+  min-height: 100%; /* Ensure the column takes the full height */
+}
+
+.eisenhower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+}
+
+.eisenhower-cell {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.todo-card-front, .todo-card-back {
+  backface-visibility: hidden;
+  transition: transform 0.6s;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 15px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.todo-card-front {
+  transform: rotateY(0deg);
+  background-color: #fff;
+}
+
+.todo-card-back {
+  transform: rotateY(180deg);
+  background-color: #fff;
+  display: flex;
+  flex-direction: column; /* Ensure elements are stacked vertically */
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.todo-card-back h3 {
+  margin-bottom: 10px; /* Add some space below the title */
+}
+
+.todo-card.flipped .todo-card-front {
+  transform: rotateY(-180deg);
+}
+
+.todo-card.flipped .todo-card-back {
+  transform: rotateY(0deg);
+}
+
+.category, .priority {
+  margin-top: 10px; /* Add some margin to separate from other elements */
+  width: 100%; /* Ensure full width */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category select, .priority select {
+  width: 60%; /* Adjust width of the select box */
+}
+
+.kanban-column.highlighted {
+  background-color: rgba(0, 0, 255, 0.1); /* Light blue background */
+  border: 2px dashed blue; /* Dashed border */
+  min-height: 100%;
+}
+
+.todo-card-back .notes-textarea {
+  width: 100%;
+  height: 90%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: none;
+  box-sizing: border-box;
+}
