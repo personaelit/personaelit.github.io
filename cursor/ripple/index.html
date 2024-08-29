@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lake Ripple Effect</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="rippleCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('rippleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let ripples = [];
+        const lakeColor = '#1e3f5a'; // Deeper blue-green color
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.fillStyle = lakeColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createRipple(x, y) {
+            ripples.push({ x, y, radius: 0, opacity: 1 });
+        }
+
+        canvas.addEventListener('click', (e) => {
+            createRipple(e.clientX, e.clientY);
+        });
+
+        function createRaindrop() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            createRipple(x, y);
+        }
+
+        function startRain() {
+            setInterval(createRaindrop, 100); // Create a raindrop every 100ms
+        }
+
+        // Create initial raindrops
+        for (let i = 0; i < 50; i++) {
+            createRaindrop();
+        }
+
+        startRain();
+
+        function drawRipples() {
+            ctx.fillStyle = lakeColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ripples.forEach((ripple, index) => {
+                ctx.beginPath();
+                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${ripple.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const speed = 1 + ripple.radius / 100; // Increased speed
+                ripple.radius += speed;
+                ripple.opacity = Math.max(0, ripple.opacity - 0.008); // Slightly decreased opacity decrease
+
+                // Remove ripple when it reaches a certain size or becomes invisible
+                if (ripple.radius > 150 || ripple.opacity <= 0) {
+                    ripples.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(drawRipples);
+        }
+
+        drawRipples();
+    </script>
+</body>
+</html>
