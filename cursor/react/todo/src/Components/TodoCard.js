@@ -5,7 +5,7 @@ const ItemTypes = {
   TODO: 'todo',
 };
 
-const TodoCard = ({ todo, index, todos, updateTodo, toggleDone, deleteTodo }) => {
+const TodoCard = ({ todo, index, todos, updateTodo, toggleDone, deleteTodo, onCardClick }) => {
   const uniqueIndex = todos.findIndex((t) => t === todo);
 
   // Hooks must be called unconditionally
@@ -43,6 +43,7 @@ const TodoCard = ({ todo, index, todos, updateTodo, toggleDone, deleteTodo }) =>
       ref={drag}
       className={`todo-card ${isValidTodo && todo.done ? 'done' : ''}`}
       style={{ opacity: isDragging ? 0.5 : 1 }}
+      onClick={() => onCardClick(todo)}
     >
       {isValidTodo ? (
         <>

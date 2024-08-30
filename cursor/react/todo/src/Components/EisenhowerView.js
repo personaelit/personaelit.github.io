@@ -7,7 +7,7 @@ const ItemTypes = {
   TODO: 'todo',
 };
 
-const EisenhowerView = ({ todos, updateCategory, updatePriority, updateTodo, toggleDone, deleteTodo }) => {
+const EisenhowerView = ({ todos, updateCategory, updatePriority, updateTodo, toggleDone, deleteTodo, onCardClick }) => {
   const [flipped, setFlipped] = useState(Array(todos.length).fill(false));
 
   const toggleFlip = (index) => {
@@ -62,6 +62,7 @@ const EisenhowerView = ({ todos, updateCategory, updatePriority, updateTodo, tog
                 deleteTodo={deleteTodo}
                 toggleFlip={toggleFlip}
                 flipped={flipped}
+                onCardClick={onCardClick}
               />
             ))}
           </PriorityCell>

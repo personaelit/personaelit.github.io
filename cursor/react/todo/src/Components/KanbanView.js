@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'; // Add useEffect import
+import React, { useState, useRef, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import TodoCard from './TodoCard';
@@ -7,7 +7,7 @@ const ItemTypes = {
   TODO: 'todo',
 };
 
-const KanbanView = ({ todos, updateCategory, updatePriority, updateTodo, toggleDone, deleteTodo }) => {
+const KanbanView = ({ todos, updateCategory, updatePriority, updateTodo, toggleDone, deleteTodo, onCardClick }) => {
   const [flipped, setFlipped] = useState(Array(todos.length).fill(false));
   const [highlightedColumn, setHighlightedColumn] = useState(null);
   const columnRefs = useRef([]);
@@ -59,6 +59,7 @@ const KanbanView = ({ todos, updateCategory, updatePriority, updateTodo, toggleD
                 deleteTodo={deleteTodo}
                 toggleFlip={toggleFlip}
                 flipped={flipped}
+                onCardClick={onCardClick}
               />
             ))}
           </Column>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import KanbanView from './Components/KanbanView';
 import EisenhowerView from './Components/EisenhowerView';
+import Modal from './Components/Modal';
 import './App.css';
 
 function App() {
@@ -10,6 +11,9 @@ function App() {
   });
   const [input, setInput] = useState('');
   const [view, setView] = useState('kanban');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTodo, setSelectedTodo] = useState(null);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos));
@@ -22,7 +26,8 @@ function App() {
         timestamp: new Date().toLocaleString(),
         done: false,
         category: 'To Do',
-        priority: 'Urgent & Important'
+        priority: 'Urgent & Important',
+        notes: ''
       };
       setTodos([...todos, newTodo]);
       setInput('');
@@ -49,6 +54,11 @@ function App() {
     setTodos(newTodos);
   };
 
+  const updateNotes = (index, newNotes) => {
+    const newTodos = todos.map((todo, i) => (i === index ? { ...todo, notes: newNotes } : todo));
+    setTodos(newTodos);
+  };
+
   const toggleDone = (index) => {
     const newTodos = todos.map((todo, i) => (i === index ? { ...todo, done: !todo.done } : todo));
     setTodos(newTodos);
@@ -58,6 +68,21 @@ function App() {
     if (e.key === 'Enter') {
       addTodo();
     }
+  };
+
+  const handleCardClick = (todo) => {
+    setSelectedTodo(todo);
+    setNotes(todo.notes || '');
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (selectedTodo) {
+      const index = todos.findIndex(todo => todo === selectedTodo);
+      updateNotes(index, notes);
+    }
+    setIsModalOpen(false);
+    setSelectedTodo(null);
   };
 
   return (
@@ -84,6 +109,7 @@ function App() {
             updateTodo={updateTodo}
             toggleDone={toggleDone}
             deleteTodo={deleteTodo}
+            onCardClick={handleCardClick}
           />
         ) : (
           <EisenhowerView
@@ -93,9 +119,24 @@ function App() {
             updateTodo={updateTodo}
             toggleDone={toggleDone}
             deleteTodo={deleteTodo}
+            onCardClick={handleCardClick}
           />
         )}
       </header>
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        {selectedTodo && (
+          <div>
+            <h2>{selectedTodo.text}</h2>
+            <p>{selectedTodo.timestamp}</p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add notes here..."
+              className="notes-textarea"
+            />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
