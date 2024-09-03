@@ -70,6 +70,7 @@ li button.delete {
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
+    text-decoration: none;
 }
 
 li button.delete:hover {
