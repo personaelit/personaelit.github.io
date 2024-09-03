@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const percentageDisplay = document.getElementById('percentage-display');
     const progressBar = document.getElementById('progress-bar');
     const streakDisplay = document.getElementById('streak-display');
-    const historyList = document.getElementById('history-list');
+    const historyGrid = document.getElementById('history-grid');
 
     // Display today's date
     const today = new Date().toLocaleDateString();
@@ -83,10 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadHistory() {
         const history = JSON.parse(localStorage.getItem('history')) || [];
+        const maxTasksCompleted = Math.max(...history.map(entry => entry.tasksCompleted), 1);
         history.forEach(entry => {
-            const li = document.createElement('li');
-            li.textContent = `${entry.date}: ${entry.tasksCompleted} tasks completed`;
-            historyList.appendChild(li);
+            const cell = document.createElement('div');
+            cell.classList.add('history-cell');
+            const level = Math.ceil((entry.tasksCompleted / maxTasksCompleted) * 4);
+            cell.classList.add(`level-${level}`);
+            historyGrid.appendChild(cell);
         });
     }
 

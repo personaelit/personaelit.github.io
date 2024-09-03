@@ -78,3 +78,33 @@ li input[type="checkbox"] {
     width: 0;
     transition: width 0.3s;
 }
+
+#history-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 20px);
+    grid-gap: 5px;
+    margin-top: 20px;
+}
+
+.history-cell {
+    width: 20px;
+    height: 20px;
+    background-color: #ebedf0;
+    border-radius: 3px;
+}
+
+.history-cell.level-1 {
+    background-color: #c6e48b;
+}
+
+.history-cell.level-2 {
+    background-color: #7bc96f;
+}
+
+.history-cell.level-3 {
+    background-color: #239a3b;
+}
+
+.history-cell.level-4 {
+    background-color: #196127;
+}
