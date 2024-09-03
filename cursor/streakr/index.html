@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+</head>
+<body>
+    <h1>Task Tracker</h1>
+    <div id="date-display"></div>
+    <div id="streak-display"></div>
+    <form id="task-form">
+        <input type="text" id="task-input" placeholder="Enter a new task">
+        <button type="submit">Add Task</button>
+    </form>
+    <ul id="task-list"></ul>
+    <div id="percentage-display"></div>
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+    <h2>Task History</h2>
+    <ul id="history-list"></ul>
+    <script src="script.js"></script>
+</body>
+</html>
