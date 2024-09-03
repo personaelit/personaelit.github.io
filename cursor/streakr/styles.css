@@ -63,6 +63,19 @@ li input[type="checkbox"] {
     margin-right: 10px;
 }
 
+li button.delete {
+    background-color: #dc3545;
+    border: none;
+    padding: 5px 10px;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+li button.delete:hover {
+    background-color: #c82333;
+}
+
 #progress-container {
     width: 100%;
     background-color: #ccc;

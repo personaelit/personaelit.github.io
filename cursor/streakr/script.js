@@ -20,10 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     taskForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        addTask(taskInput.value);
-        taskInput.value = '';
-        saveTasks();
-        updatePercentage();
+        const taskText = taskInput.value.trim();
+        if (taskText) {
+            addTask(taskText);
+            taskInput.value = '';
+            saveTasks();
+            updatePercentage();
+        }
     });
 
     function addTask(task, completed = false) {
@@ -43,11 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePercentage();
         });
 
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('delete');
+        deleteButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this task?')) { // Added confirmation prompt
+                taskList.removeChild(li);
+                saveTasks();
+                updatePercentage();
+            }
+        });
+
         if (completed) {
             li.classList.add('completed');
         }
 
         li.prepend(checkbox);
+        li.appendChild(deleteButton);
         taskList.appendChild(li);
     }
 
@@ -55,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasks = [];
         taskList.querySelectorAll('li').forEach(li => {
             const task = {
-                text: li.textContent,
+                text: li.childNodes[1].textContent,
                 completed: li.querySelector('input[type="checkbox"]').checked
             };
             tasks.push(task);
