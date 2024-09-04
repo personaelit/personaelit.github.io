@@ -19,6 +19,8 @@
   max-width: 800px; /* Set a maximum width */
   height: 80%; /* Increase the height */
   max-height: 600px; /* Set a maximum height */
+  display: flex;
+  flex-direction: column; /* Ensure elements are stacked vertically */
   overflow-y: auto; /* Add scroll if content overflows */
 }
 

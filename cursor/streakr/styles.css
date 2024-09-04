@@ -100,4 +100,8 @@ h1, h2 {
     #task-form button {
         padding: 10px;
     }
+
+    #task-list {
+        padding: 30px; /* Add padding to task list on mobile screens */
+    }
 }

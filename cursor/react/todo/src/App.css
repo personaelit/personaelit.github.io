@@ -271,8 +271,8 @@ li button:hover {
 }
 
 .todo-card-back .notes-textarea {
+  flex-grow: 1; /* Allow the text area to grow and fill available space */
   width: 100%;
-  height: calc(100% - 60px); /* Adjust height to fill modal */
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
