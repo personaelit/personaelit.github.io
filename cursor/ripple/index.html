@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lake Ripple Effect</title>
     <style>
-        body, html {
+        html, body {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -21,9 +21,8 @@
     <script>
         const canvas = document.getElementById('rippleCanvas');
         const ctx = canvas.getContext('2d');
-
-        let ripples = [];
-        const lakeColor = '#1e3f5a'; // Deeper blue-green color
+        const ripples = [];
+        const lakeColor = '#87CEEB';
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -36,7 +35,7 @@
         resizeCanvas();
 
         function createRipple(x, y) {
-            ripples.push({ x, y, radius: 0, opacity: 1 });
+            ripples.push({ x, y, radius: 0, alpha: 1 });
         }
 
         canvas.addEventListener('click', (e) => {
@@ -50,41 +49,32 @@
         }
 
         function startRain() {
-            setInterval(createRaindrop, 100); // Create a raindrop every 100ms
+            setInterval(createRaindrop, 100);
         }
 
-        // Create initial raindrops
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 10; i++) {
             createRaindrop();
         }
-
-        startRain();
 
         function drawRipples() {
             ctx.fillStyle = lakeColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ripples.forEach((ripple, index) => {
+            for (const ripple of ripples) {
                 ctx.beginPath();
-                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(255, 255, 255, ${ripple.opacity})`;
-                ctx.lineWidth = 2;
+                ctx.arc(ripple.x, ripple.y, ripple.radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${ripple.alpha})`;
                 ctx.stroke();
-
-                const speed = 1 + ripple.radius / 100; // Increased speed
-                ripple.radius += speed;
-                ripple.opacity = Math.max(0, ripple.opacity - 0.008); // Slightly decreased opacity decrease
-
-                // Remove ripple when it reaches a certain size or becomes invisible
-                if (ripple.radius > 150 || ripple.opacity <= 0) {
-                    ripples.splice(index, 1);
-                }
-            });
+                ripple.radius += 1;
+                ripple.alpha -= 0.005;
+                if (ripple.alpha < 0) ripple.alpha = 0; // Prevent alpha from going negative
+            }
 
             requestAnimationFrame(drawRipples);
         }
 
         drawRipples();
+        startRain();
     </script>
 </body>
 </html>
