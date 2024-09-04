@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Check for the 'clear' query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('clear') === '1') {
+        localStorage.clear();
+        location.href = window.location.pathname; // Reload the page without query parameters
+    }
+
     const taskForm = document.getElementById('task-form');
     const taskInput = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
@@ -7,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('progress-bar');
     const streakDisplay = document.getElementById('streak-display');
     const historyGrid = document.getElementById('history-grid');
+    const countdownDisplay = document.getElementById('countdown-display');
+    const historyChartCtx = document.getElementById('history-chart').getContext('2d');
+    let historyChart;
 
     // Display today's date
     const today = new Date().toLocaleDateString();
@@ -31,16 +41,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addTask(task, completed = false) {
         const li = document.createElement('li');
-        li.textContent = task;
+
+        const taskText = document.createElement('span');
+        taskText.textContent = task;
+        taskText.classList.add('task-text');
+        if (completed) {
+            taskText.classList.add('completed');
+        }
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = completed;
         checkbox.addEventListener('change', () => {
             if (checkbox.checked) {
-                li.classList.add('completed');
+                taskText.classList.add('completed');
             } else {
-                li.classList.remove('completed');
+                taskText.classList.remove('completed');
             }
             saveTasks();
             updatePercentage();
@@ -50,18 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteButton.textContent = 'Delete';
         deleteButton.classList.add('delete');
         deleteButton.addEventListener('click', () => {
-            if (confirm('Are you sure you want to delete this task?')) { // Added confirmation prompt
+            if (confirm('Are you sure you want to delete this task?')) {
                 taskList.removeChild(li);
                 saveTasks();
                 updatePercentage();
             }
         });
 
-        if (completed) {
-            li.classList.add('completed');
-        }
-
         li.prepend(checkbox);
+        li.appendChild(taskText);
         li.appendChild(deleteButton);
         taskList.appendChild(li);
     }
@@ -70,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tasks = [];
         taskList.querySelectorAll('li').forEach(li => {
             const task = {
-                text: li.childNodes[1].textContent,
+                text: li.querySelector('.task-text').textContent,
                 completed: li.querySelector('input[type="checkbox"]').checked
             };
             tasks.push(task);
@@ -85,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePercentage() {
         const tasks = taskList.querySelectorAll('li');
-        const completedTasks = taskList.querySelectorAll('li.completed');
+        const completedTasks = taskList.querySelectorAll('li .task-text.completed');
         const percentage = tasks.length ? (completedTasks.length / tasks.length) * 100 : 0;
         percentageDisplay.textContent = `Tasks Completed: ${percentage.toFixed(2)}%`;
         progressBar.style.width = `${percentage}%`;
@@ -98,13 +111,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadHistory() {
         const history = JSON.parse(localStorage.getItem('history')) || [];
-        const maxTasksCompleted = Math.max(...history.map(entry => entry.tasksCompleted), 1);
-        history.forEach(entry => {
-            const cell = document.createElement('div');
-            cell.classList.add('history-cell');
-            const level = Math.ceil((entry.tasksCompleted / maxTasksCompleted) * 4);
-            cell.classList.add(`level-${level}`);
-            historyGrid.appendChild(cell);
+        const dates = history.map(entry => entry.date);
+        const tasksCompleted = history.map(entry => entry.tasksCompleted);
+
+        if (historyChart) {
+            historyChart.destroy();
+        }
+
+        historyChart = new Chart(historyChartCtx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Tasks Completed',
+                    data: tasksCompleted,
+                    borderColor: '#00bfa5',
+                    backgroundColor: 'rgba(0, 191, 165, 0.2)',
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Tasks Completed'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
         });
     }
 
@@ -120,17 +163,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date().toISOString().split('T')[0];
 
         if (lastReset !== today) {
-            const streak = localStorage.getItem('streak') || 0;
+            const streak = parseInt(localStorage.getItem('streak')) || 0;
             const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            const allCompleted = tasks.every(task => task.completed);
+            const completedTasksCount = tasks.filter(task => task.completed).length;
 
-            if (allCompleted) {
-                localStorage.setItem('streak', parseInt(streak) + 1);
+            if (completedTasksCount > 0 && lastReset) {
+                localStorage.setItem('streak', streak + 1);
             } else {
                 localStorage.setItem('streak', 0);
             }
 
-            saveHistory(lastReset, tasks.filter(task => task.completed).length);
+            saveHistory(lastReset, completedTasksCount);
 
             localStorage.setItem('tasks', JSON.stringify([]));
             localStorage.setItem('lastReset', today);
@@ -140,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resetTasksDaily();
+    loadHistory(); // Ensure history is loaded after resetTasksDaily
 
     // Initialize SortableJS
     new Sortable(taskList, {
@@ -148,4 +192,21 @@ document.addEventListener('DOMContentLoaded', () => {
             saveTasks();
         }
     });
+
+    function updateCountdown() {
+        const now = new Date();
+        const midnight = new Date();
+        midnight.setHours(24, 0, 0, 0); // Set to midnight
+        const timeRemaining = midnight - now;
+
+        const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+        countdownDisplay.textContent = `Time Remaining: ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    setInterval(updateCountdown, 1000);
+
+    updateCountdown(); // Initial call to display immediately
 });
