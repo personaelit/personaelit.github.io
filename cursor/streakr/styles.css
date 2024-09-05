@@ -11,7 +11,7 @@ h1, h2 {
     text-align: center;
 }
 
-#date-display, #streak-display, #percentage-display, #countdown-display, #reset-time-container {
+#date-display, #streak-display, #percentage-display, #countdown-display {
     text-align: center;
     margin: 10px 0;
 }

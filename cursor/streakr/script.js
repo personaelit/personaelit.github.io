@@ -182,25 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reset tasks every day
-    const resetTimeInput = document.getElementById('reset-time-input');
-
-    // Add this near the top of the DOMContentLoaded event listener
-    let resetTime = localStorage.getItem(`${STORAGE_PREFIX}resetTime`) || '00:00';
-    resetTimeInput.value = resetTime;
-
-    resetTimeInput.addEventListener('change', () => {
-        resetTime = resetTimeInput.value;
-        localStorage.setItem(`${STORAGE_PREFIX}resetTime`, resetTime);
-    });
-
     function resetTasksDaily() {
         const lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
         const now = new Date();
         const today = getTodayDate();
-        const [resetHour, resetMinute] = resetTime.split(':').map(Number);
-        const resetDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour, resetMinute);
 
-        if (lastReset !== today && now >= resetDateTime) {
+        if (lastReset !== today && now.getHours() === 0 && now.getMinutes() === 0) {
             const streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
             const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
             const completedTasksCount = tasks.filter(task => task.completed).length;
@@ -235,12 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCountdown() {
         const now = new Date();
-        const [resetHour, resetMinute] = resetTime.split(':').map(Number);
-        let nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour, resetMinute);
-        
-        if (now >= nextReset) {
-            nextReset.setDate(nextReset.getDate() + 1);
-        }
+        const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        nextReset.setHours(0, 0, 0, 0);
 
         const timeRemaining = nextReset - now;
 
