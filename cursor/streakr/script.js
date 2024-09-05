@@ -1,8 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const STORAGE_PREFIX = 'streakr_';
+
     // Check for the 'clear' query parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('clear') === '1') {
-        localStorage.clear();
+        // Clear only Streakr-related items
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith(STORAGE_PREFIX)) {
+                localStorage.removeItem(key);
+            }
+        });
         location.href = window.location.pathname; // Reload the page without query parameters
     }
 
@@ -88,11 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             tasks.push(task);
         });
-        localStorage.setItem('tasks', JSON.stringify(tasks));
+        localStorage.setItem(`${STORAGE_PREFIX}tasks`, JSON.stringify(tasks));
     }
 
     function loadTasks() {
-        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
         tasks.forEach(task => addTask(task.text, task.completed));
     }
 
@@ -105,14 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateStreak() {
-        const streak = localStorage.getItem('streak') || 0;
+        const streak = localStorage.getItem(`${STORAGE_PREFIX}streak`) || 0;
         streakDisplay.textContent = `Current Streak: ${streak} days`;
     }
 
     function loadHistory() {
-        const history = JSON.parse(localStorage.getItem('history')) || [];
+        let history = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}history`));
+        if (!history) {
+            // Initialize history with today's date if not set
+            history = [{ date: getTodayDate(), tasksCompleted: 0, totalTasks: 0 }];
+            localStorage.setItem(`${STORAGE_PREFIX}history`, JSON.stringify(history));
+        }
+        
         const dates = history.map(entry => entry.date);
         const tasksCompleted = history.map(entry => entry.tasksCompleted);
+        const totalTasks = history.map(entry => entry.totalTasks);
 
         if (historyChart) {
             historyChart.destroy();
@@ -128,6 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: '#00bfa5',
                     backgroundColor: 'rgba(0, 191, 165, 0.2)',
                     fill: true,
+                }, {
+                    label: 'Total Tasks',
+                    data: totalTasks,
+                    borderColor: '#ff5722',
+                    backgroundColor: 'rgba(255, 87, 34, 0.2)',
+                    fill: true,
                 }]
             },
             options: {
@@ -142,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     y: {
                         title: {
                             display: true,
-                            text: 'Tasks Completed'
+                            text: 'Number of Tasks'
                         },
                         beginAtZero: true
                     }
@@ -151,34 +171,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function saveHistory(date, tasksCompleted) {
-        const history = JSON.parse(localStorage.getItem('history')) || [];
-        history.push({ date, tasksCompleted });
-        localStorage.setItem('history', JSON.stringify(history));
+    function saveHistory(date, tasksCompleted, totalTasks) {
+        const history = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}history`));
+        history.push({ date, tasksCompleted, totalTasks });
+        localStorage.setItem(`${STORAGE_PREFIX}history`, JSON.stringify(history));
+    }
+
+    function getTodayDate() {
+        return new Date().toISOString().split('T')[0];
     }
 
     // Reset tasks every day
     function resetTasksDaily() {
-        const lastReset = localStorage.getItem('lastReset');
-        const today = new Date().toISOString().split('T')[0];
+        const lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
+        const today = getTodayDate();
 
         if (lastReset !== today) {
-            const streak = parseInt(localStorage.getItem('streak')) || 0;
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
+            const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
             const completedTasksCount = tasks.filter(task => task.completed).length;
+            const totalTasksCount = tasks.length;
 
             if (completedTasksCount > 0 && lastReset) {
-                localStorage.setItem('streak', streak + 1);
+                localStorage.setItem(`${STORAGE_PREFIX}streak`, streak + 1);
             } else {
-                localStorage.setItem('streak', 0);
+                localStorage.setItem(`${STORAGE_PREFIX}streak`, 0);
             }
 
-            saveHistory(lastReset, completedTasksCount);
+            saveHistory(lastReset, completedTasksCount, totalTasksCount);
 
-            localStorage.setItem('tasks', JSON.stringify([]));
-            localStorage.setItem('lastReset', today);
+            localStorage.setItem(`${STORAGE_PREFIX}tasks`, JSON.stringify([]));
+            localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
             taskList.innerHTML = '';
             updateStreak();
+            loadHistory(); // Reload history after updating
         }
     }
 
