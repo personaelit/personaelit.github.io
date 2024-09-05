@@ -182,12 +182,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reset tasks every day
-    function resetTasksDaily() {
-        const lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
+    function resetTasksDaily(forceReset = false) {
+        let lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
         const now = new Date();
         const today = getTodayDate();
 
-        if (lastReset !== today && now.getHours() === 0 && now.getMinutes() === 0) {
+        if (forceReset) {
+            // Bump the last reset date by one day for testing
+            const lastResetDate = new Date(lastReset);
+            lastResetDate.setDate(lastResetDate.getDate() + 1);
+            lastReset = lastResetDate.toISOString().split('T')[0];
+        }
+
+        if (lastReset !== today && (forceReset || (now.getHours() === 0 && now.getMinutes() === 0))) {
             const streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
             const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
             const completedTasksCount = tasks.filter(task => task.completed).length;
@@ -201,15 +208,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             saveHistory(lastReset, completedTasksCount, totalTasksCount);
 
-            localStorage.setItem(`${STORAGE_PREFIX}tasks`, JSON.stringify([]));
+            // Re-add yesterday's tasks as incomplete
+            localStorage.setItem(`${STORAGE_PREFIX}tasks`, JSON.stringify(tasks.map(task => ({ ...task, completed: false }))));
             localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
             taskList.innerHTML = '';
+            loadTasks(); // Reload tasks after resetting
             updateStreak();
             loadHistory(); // Reload history after updating
         }
     }
 
-    resetTasksDaily();
+    resetTasksDaily(); // Pass true to force reset for testing
     loadHistory(); // Ensure history is loaded after resetTasksDaily
 
     // Initialize SortableJS
