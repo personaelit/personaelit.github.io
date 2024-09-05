@@ -1,3 +1,8 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 body {
     font-family: Arial, sans-serif;
     background-color: #1a1a1a;
@@ -6,14 +11,20 @@ body {
     padding: 0;
 }
 
-h1, h2 {
+h1, h2, sub {
     color: #00bfa5;
     text-align: center;
 }
 
-#date-display, #streak-display, #percentage-display, #countdown-display {
+sub {display: block;}
+
+#date-display, #streak-display, #percentage-display, #countdown-display, #about {
     text-align: center;
     margin: 10px 0;
+}
+
+#about p {
+    padding: 10px;
 }
 
 #task-form {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
 </head>
+
 <body>
     <h1>Streakr</h1>
+    <sub>How high can you go?</sub>
+
     <div id="date-display"></div>
     <div id="countdown-display"></div>
     <div id="streak-display"></div>
@@ -25,6 +29,13 @@
     </div>
     <h2>Task History</h2>
     <canvas id="history-chart"></canvas> <!-- Add canvas for chart -->
+    <details id="about">
+        <summary>About</summary>
+        <p>Streakr is a simple web app that helps you build good habits and break bad ones.</p>
+        <p>It's based on the idea of a streak, which is a sequence of days in a row that you complete a task.</p>
+        <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
+    </details>
     <script src="script.js"></script>
 </body>
+
 </html>
