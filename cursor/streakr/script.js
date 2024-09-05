@@ -182,11 +182,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reset tasks every day
+    const resetTimeInput = document.getElementById('reset-time-input');
+
+    // Add this near the top of the DOMContentLoaded event listener
+    let resetTime = localStorage.getItem(`${STORAGE_PREFIX}resetTime`) || '00:00';
+    resetTimeInput.value = resetTime;
+
+    resetTimeInput.addEventListener('change', () => {
+        resetTime = resetTimeInput.value;
+        localStorage.setItem(`${STORAGE_PREFIX}resetTime`, resetTime);
+    });
+
     function resetTasksDaily() {
         const lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
+        const now = new Date();
         const today = getTodayDate();
+        const [resetHour, resetMinute] = resetTime.split(':').map(Number);
+        const resetDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour, resetMinute);
 
-        if (lastReset !== today) {
+        if (lastReset !== today && now >= resetDateTime) {
             const streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
             const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
             const completedTasksCount = tasks.filter(task => task.completed).length;
@@ -221,9 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCountdown() {
         const now = new Date();
-        const midnight = new Date();
-        midnight.setHours(24, 0, 0, 0); // Set to midnight
-        const timeRemaining = midnight - now;
+        const [resetHour, resetMinute] = resetTime.split(':').map(Number);
+        let nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour, resetMinute);
+        
+        if (now >= nextReset) {
+            nextReset.setDate(nextReset.getDate() + 1);
+        }
+
+        const timeRemaining = nextReset - now;
 
         const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
         const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
