@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    resetTasksDaily(true); // Pass true to force reset for testing
+    resetTasksDaily(false); // Pass true to force reset for testing
     loadHistory(); // Ensure history is loaded after resetTasksDaily
 
     // Check every minute if it's midnight
