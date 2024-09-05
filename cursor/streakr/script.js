@@ -200,8 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const completedTasksCount = tasks.filter(task => task.completed).length;
             const totalTasksCount = tasks.length;
 
+            let newStreak = streak;
             if (completedTasksCount > 0 && lastReset) {
-                localStorage.setItem(`${STORAGE_PREFIX}streak`, streak + 1);
+                newStreak = streak + 1;
+                localStorage.setItem(`${STORAGE_PREFIX}streak`, newStreak);
             } else {
                 localStorage.setItem(`${STORAGE_PREFIX}streak`, 0);
             }
@@ -215,11 +217,28 @@ document.addEventListener('DOMContentLoaded', () => {
             loadTasks(); // Reload tasks after resetting
             updateStreak();
             loadHistory(); // Reload history after updating
+
+            // Throw confetti if the streak has increased
+            if (newStreak > streak) {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
         }
     }
 
-    resetTasksDaily(); // Pass true to force reset for testing
+    resetTasksDaily(true); // Pass true to force reset for testing
     loadHistory(); // Ensure history is loaded after resetTasksDaily
+
+    // Check every minute if it's midnight
+    setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0) {
+            resetTasksDaily();
+        }
+    }, 60000); // Check every 60 seconds
 
     // Initialize SortableJS
     new Sortable(taskList, {
