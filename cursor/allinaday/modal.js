@@ -23,11 +23,7 @@ function updateModalContent(currentDayOfYear) {
     modalHeader.textContent = `Date: ${dateString}, Day: ${currentDayOfYear}`;
 
     // Update these lines
-    // Add notes section
-    notesTextarea.placeholder = 'Enter your notes for the day...';
-    notesTextarea.value = loadNotes(datestamp);
-    notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
-    modalContent.appendChild(notesTextarea);
+
 
     // Add mood selector
     moodSelector.className = 'mood-selector';
@@ -44,6 +40,13 @@ function updateModalContent(currentDayOfYear) {
     }
     moodSelector.addEventListener('change', (e) => saveMood(datestamp, e.target.value));
     modalContent.appendChild(moodSelector);
+
+    // Add notes section
+    notesTextarea.placeholder = 'Enter your notes for the day...';
+    notesTextarea.value = loadNotes(datestamp);
+    notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
+    modalContent.appendChild(notesTextarea);
+
 }
 
 function saveNotes(datestamp, notes) {
