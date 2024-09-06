@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Display today's date
     const today = new Date().toLocaleDateString();
-    dateDisplay.textContent = `Today's Date: ${today}`;
+    dateDisplay.textContent = `${today}`;
 
     // Load tasks and history from localStorage
     loadTasks();
@@ -66,20 +66,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const totalTasks = document.querySelectorAll('#task-list li').length;
                 const completionPercentage = (completedTasks / totalTasks) * 100;
 
-                // Exponentially increase confetti based on completed tasks
-                const particleCount = Math.pow(2, completedTasks) * 10; // Exponential growth
+                // Slower increase in confetti based on completed tasks
+                const particleCount = Math.pow(1.5, completedTasks) * 10;
                 
                 if (completionPercentage < 100) {
                     confetti({
-                        particleCount: Math.min(particleCount, 300), // Lower cap at 300 particles
+                        particleCount: Math.min(particleCount, 300),
                         spread: 70,
                         origin: { y: 0.6 }
                     });
                 } else if (completionPercentage === 100) {
                     throwFireworks();
                 }
+
+                // Update task graph and streak immediately
+                updateTaskGraph();
+                updateStreak();
             } else {
                 taskText.classList.remove('completed');
+                // Also update when unchecking a task
+                updateTaskGraph();
+                updateStreak();
             }
             saveTasks();
             updatePercentage();
@@ -152,11 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 "Brush Teeth",
                 "Drink Water",
                 "Take a Walk",
-                "Drink Water",
                 "Avoid Fast Food",
                 "Take Medicine",
-                "Shower",
-                "Drink Water",
                 "Brush Teeth"
             ];
             defaultTasks.forEach(task => addTask(task, false));
@@ -175,8 +179,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateStreak() {
-        const streak = localStorage.getItem(`${STORAGE_PREFIX}streak`) || 0;
-        streakDisplay.textContent = `Current Streak: ${streak} days`;
+        let streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
+        const lastResetDate = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
+        const today = getTodayDate();
+    
+        const completedTasks = document.querySelectorAll('#task-list li .task-text.completed').length;
+        const totalTasks = document.querySelectorAll('#task-list li').length;
+    
+        // Check if there are any tasks and if any are completed
+        if (totalTasks > 0 && completedTasks > 0) {
+            // If it's a new day and tasks are completed, increase the streak
+            if (lastResetDate !== today) {
+                streak++;
+                localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
+            }
+        } else if (lastResetDate !== today) {
+            // If it's a new day and no tasks are completed, reset the streak
+            streak = 0;
+            localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
+        }
+    
+        // Update the streak in localStorage
+        localStorage.setItem(`${STORAGE_PREFIX}streak`, streak);
+    
+        // Update the streak display
+        const streakDisplay = document.getElementById('streak-display');
+        if (streakDisplay) {
+            streakDisplay.textContent = `Current Streak: ${streak} day${streak !== 1 ? 's' : ''}`;
+        }
     }
 
     function loadHistory() {
@@ -244,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Date().toISOString().split('T')[0];
     }
 
-    // Reset tasks every day
     function resetTasksDaily(forceReset = false) {
         let lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
         const now = new Date();
@@ -294,10 +323,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-        countdownDisplay.textContent = `Time Remaining: ${hours}h ${minutes}m ${seconds}s`;
+        countdownDisplay.textContent = `${hours} Hours ${minutes} Minutes and ${seconds} seconds remaining.`;
 
         if (timeRemaining <= 0) {
             resetTasksDaily();
+        }
+    }
+
+    function updateTaskGraph() {
+        const completedTasks = document.querySelectorAll('#task-list li .task-text.completed').length;
+        const totalTasks = document.querySelectorAll('#task-list li').length;
+        const today = getTodayDate();
+    
+        // Get the current history
+        let history = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}history`)) || [];
+    
+        // Find today's entry in the history
+        let todayEntry = history.find(entry => entry.date === today);
+    
+        if (todayEntry) {
+            // Update today's entry
+            todayEntry.tasksCompleted = completedTasks;
+            todayEntry.totalTasks = totalTasks;
+        } else {
+            // Add a new entry for today
+            history.push({ date: today, tasksCompleted: completedTasks, totalTasks: totalTasks });
+        }
+    
+        // Save the updated history
+        localStorage.setItem(`${STORAGE_PREFIX}history`, JSON.stringify(history));
+    
+        // Update the chart
+        if (historyChart) {
+            const dates = history.map(entry => entry.date);
+            const tasksCompleted = history.map(entry => entry.tasksCompleted);
+            const totalTasks = history.map(entry => entry.totalTasks);
+    
+            historyChart.data.labels = dates;
+            historyChart.data.datasets[0].data = tasksCompleted;
+            historyChart.data.datasets[1].data = totalTasks;
+            historyChart.update();
+        } else {
+            // If the chart doesn't exist, create it
+            loadHistory();
         }
     }
 
