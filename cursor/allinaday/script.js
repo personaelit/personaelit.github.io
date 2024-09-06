@@ -5,12 +5,18 @@ const ctx = canvas.getContext('2d');
 const slider = document.getElementById('timeSlider');
 const clockElement = document.getElementById('clock');
 const datePicker = document.getElementById('datePicker');
+const settingsPanel = document.getElementById('settingsPanel');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const closeSettingsPanelBtn = document.getElementById('closeSettingsPanelBtn');
 
 let time = 0;
 let stars = [];
 let currentDayOfYear;
 let earthPosition = { x: 0, y: 0, radius: 20 };
 let currentYear;
+
+let userName = localStorage.getItem('aiad_userName') || '';
+let userDOB = localStorage.getItem('aiad_userDOB') || '';
 
 function getCurrentDayOfYear() {
     const now = new Date();
@@ -155,12 +161,26 @@ function drawMonths() {
     });
 }
 
+function drawSettingsIcon() {
+    const iconSize = 30;
+    const padding = 20;
+    const x = canvas.width - iconSize - padding;
+    const y = canvas.height - iconSize - padding;
+
+    ctx.fillStyle = 'white';
+    ctx.font = `${iconSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚙️', x + iconSize / 2, y + iconSize / 2);
+}
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
-    drawMonths(); // Add this line
+    drawMonths();
     drawSun();
     drawEarth();
+    drawSettingsIcon();
 }
 
 function animate() {
@@ -216,7 +236,6 @@ createStars();
 initializeEarthPosition();
 animate();
 
-// Update the canvas click event listener
 canvas.addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -228,7 +247,52 @@ canvas.addEventListener('click', function(event) {
         updateModalContent(currentDayOfYear);
         showModal();
     }
+
+    // Check if the click is on the settings icon
+    const iconSize = 30;
+    const padding = 20;
+    const iconX = canvas.width - iconSize - padding;
+    const iconY = canvas.height - iconSize - padding;
+    if (x >= iconX && x <= iconX + iconSize && y >= iconY && y <= iconY + iconSize) {
+        toggleSettingsPanel();
+    }
 });
+
+function toggleSettingsPanel() {
+    if (settingsPanel.classList.contains('open')) {
+        closeSettingsPanel();
+    } else {
+        openSettingsPanel();
+    }
+}
+
+function openSettingsPanel() {
+    document.getElementById('userName').value = userName;
+    document.getElementById('userDOB').value = userDOB;
+    settingsPanel.classList.add('open');
+}
+
+function closeSettingsPanel() {
+    settingsPanel.classList.remove('open');
+}
+
+function saveSettings() {
+    userName = document.getElementById('userName').value;
+    userDOB = document.getElementById('userDOB').value;
+    
+    // Save to local storage
+    localStorage.setItem('aiad_userName', userName);
+    localStorage.setItem('aiad_userDOB', userDOB);
+
+    // You can add logic here to use the userName and userDOB
+    // For example, update the display or calculate age
+
+    closeSettingsPanel();
+}
+
+// Add event listeners
+saveSettingsBtn.addEventListener('click', saveSettings);
+closeSettingsPanelBtn.addEventListener('click', closeSettingsPanel);
 
 function updateClock() {
     const now = new Date();

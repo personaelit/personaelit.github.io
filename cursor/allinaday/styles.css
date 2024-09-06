@@ -128,3 +128,42 @@ canvas {
 #datePicker::-webkit-calendar-picker-indicator {
     filter: invert(1);
 }
+
+.settings-panel {
+    position: fixed;
+    top: 50%;
+    right: -300px;
+    width: 300px;
+    height: 300px; /* Adjust this value as needed */
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: right 0.3s ease-in-out;
+    transform: translateY(-50%);
+    border-radius: 10px 0 0 10px;
+}
+
+.settings-panel.open {
+    right: 0;
+}
+
+.settings-panel h2 {
+    margin-top: 0;
+}
+
+.settings-panel label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.settings-panel input {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 15px;
+}
+
+.settings-panel button {
+    padding: 5px 10px;
+    margin-right: 10px;
+}
