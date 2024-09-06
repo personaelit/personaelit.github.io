@@ -28,10 +28,13 @@ function updateModalContent(currentDayOfYear) {
     modalContent.appendChild(notesTextarea);
 
     // Add mood selector
+    moodSelector.className = 'mood-selector';
     moodSelector.innerHTML = `
-        <label><input type="radio" name="mood" value="1"> 😢</label>
-        <label><input type="radio" name="mood" value="2"> 😐</label>
-        <label><input type="radio" name="mood" value="3"> 😄</label>
+        <input type="radio" name="mood" value="1" id="mood1"><label for="mood1">😢</label>
+        <input type="radio" name="mood" value="2" id="mood2"><label for="mood2">😕</label>
+        <input type="radio" name="mood" value="3" id="mood3"><label for="mood3">😐</label>
+        <input type="radio" name="mood" value="4" id="mood4"><label for="mood4">🙂</label>
+        <input type="radio" name="mood" value="5" id="mood5"><label for="mood5">😄</label>
     `;
     const savedMood = loadMood(currentDayOfYear);
     if (savedMood) {

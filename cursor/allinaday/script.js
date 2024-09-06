@@ -8,6 +8,7 @@ const datePicker = document.getElementById('datePicker');
 const settingsPanel = document.getElementById('settingsPanel');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const closeSettingsPanelBtn = document.getElementById('closeSettingsPanelBtn');
+const daysAliveElement = document.getElementById('daysAlive');
 
 let time = 0;
 let stars = [];
@@ -185,6 +186,10 @@ function draw() {
 
 function animate() {
     draw();
+    const now = new Date();
+    if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+        calculateDaysAlive();
+    }
     requestAnimationFrame(animate);
 }
 
@@ -232,6 +237,72 @@ function updateDatePicker() {
     datePicker.value = date.toISOString().split('T')[0];
 }
 
+function calculateDaysAlive() {
+    if (userDOB) {
+        const birthDate = new Date(userDOB);
+        const today = new Date();
+        const timeDiff = today - birthDate;
+        const daysAlive = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        daysAliveElement.textContent = `Days Alive: ${daysAlive}`;
+    } else {
+        daysAliveElement.textContent = '';
+    }
+}
+
+function saveSettings() {
+    userName = document.getElementById('userName').value;
+    userDOB = document.getElementById('userDOB').value;
+    
+    // Save to local storage
+    localStorage.setItem('aiad_userName', userName);
+    localStorage.setItem('aiad_userDOB', userDOB);
+
+    calculateDaysAlive();
+    closeSettingsPanel();
+}
+
+// Add this function to initialize the days alive display
+function initializeDaysAlive() {
+    calculateDaysAlive();
+}
+
+// Call this function after loading the saved settings
+function loadSavedSettings() {
+    userName = localStorage.getItem('aiad_userName') || '';
+    userDOB = localStorage.getItem('aiad_userDOB') || '';
+    initializeDaysAlive();
+}
+
+// Call loadSavedSettings at the end of the script
+loadSavedSettings();
+
+// Add event listeners
+saveSettingsBtn.addEventListener('click', saveSettings);
+closeSettingsPanelBtn.addEventListener('click', closeSettingsPanel);
+
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+setInterval(updateClock, 1000);
+updateClock(); // Initial call to avoid delay
+
+datePicker.addEventListener('change', function() {
+    const selectedDate = new Date(this.value);
+    currentYear = selectedDate.getFullYear();
+    const start = new Date(currentYear, 0, 0);
+    const diff = selectedDate - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    currentDayOfYear = Math.floor(diff / oneDay) + 1; // Add 1 to account for day 1
+    
+    updateEarthPosition(currentDayOfYear);
+    slider.value = currentDayOfYear;
+});
+
 createStars();
 initializeEarthPosition();
 animate();
@@ -275,44 +346,3 @@ function openSettingsPanel() {
 function closeSettingsPanel() {
     settingsPanel.classList.remove('open');
 }
-
-function saveSettings() {
-    userName = document.getElementById('userName').value;
-    userDOB = document.getElementById('userDOB').value;
-    
-    // Save to local storage
-    localStorage.setItem('aiad_userName', userName);
-    localStorage.setItem('aiad_userDOB', userDOB);
-
-    // You can add logic here to use the userName and userDOB
-    // For example, update the display or calculate age
-
-    closeSettingsPanel();
-}
-
-// Add event listeners
-saveSettingsBtn.addEventListener('click', saveSettings);
-closeSettingsPanelBtn.addEventListener('click', closeSettingsPanel);
-
-function updateClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
-}
-
-setInterval(updateClock, 1000);
-updateClock(); // Initial call to avoid delay
-
-datePicker.addEventListener('change', function() {
-    const selectedDate = new Date(this.value);
-    currentYear = selectedDate.getFullYear();
-    const start = new Date(currentYear, 0, 0);
-    const diff = selectedDate - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    currentDayOfYear = Math.floor(diff / oneDay) + 1; // Add 1 to account for day 1
-    
-    updateEarthPosition(currentDayOfYear);
-    slider.value = currentDayOfYear;
-});

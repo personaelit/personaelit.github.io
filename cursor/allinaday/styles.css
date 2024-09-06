@@ -63,6 +63,43 @@ canvas {
     width: 80%; /* Could be more or less, depending on screen size */
 }
 
+/* Textarea styles */
+.modal-content textarea {
+    width: 90%;
+    height: 100px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Mood selector styles */
+.modal-content .mood-selector {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.modal-content .mood-selector label {
+    cursor: pointer;
+    font-size: 28px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0.7;
+}
+
+.modal-content .mood-selector input[type="radio"] {
+    display: none;
+}
+
+.modal-content .mood-selector label:hover,
+.modal-content .mood-selector input[type="radio"]:checked + label {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
 .close {
     color: #aaa;
     float: right;
@@ -166,4 +203,23 @@ canvas {
 .settings-panel button {
     padding: 5px 10px;
     margin-right: 10px;
+}
+
+#days-alive-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+#daysAlive {
+    font-size: 18px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    font-weight: 300;
+    letter-spacing: 1px;
 }
