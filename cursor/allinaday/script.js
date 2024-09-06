@@ -1,10 +1,15 @@
 const canvas = document.getElementById('solarSystem');
 const ctx = canvas.getContext('2d');
 const slider = document.getElementById('timeSlider');
+const modal = document.getElementById('modal');
+const closeModal = document.querySelector('.close');
+const modalHeader = document.getElementById('modalHeader');
+const clock = document.getElementById('clock');
 
 let time = 0;
 let stars = [];
 let currentDayOfYear;
+let earthPosition = { x: 0, y: 0, radius: 20 };
 
 function getCurrentDayOfYear() {
     const now = new Date();
@@ -70,27 +75,26 @@ function drawSun() {
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // Remove the sun rays
-    // ctx.strokeStyle = '#FFD700';  // Golden yellow for rays
-    // ctx.lineWidth = 2;
-
-    // for (let i = 0; i < 12; i++) {
-    //     const angle = (i / 12) * Math.PI * 2;
-    //     const innerX = centerX + Math.cos(angle) * sunRadius;
-    //     const innerY = centerY + Math.sin(angle) * sunRadius;
-    //     const outerX = centerX + Math.cos(angle) * (sunRadius * 1.5);
-    //     const outerY = centerY + Math.sin(angle) * (sunRadius * 1.5);
-
-    //     ctx.beginPath();
-    //     ctx.moveTo(innerX, innerY);
-    //     ctx.lineTo(outerX, outerY);
-    //     ctx.stroke();
-    // }
-
     // Add a glow effect
     ctx.beginPath();
     ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
     ctx.fill();
+
+    // Overlay the current date and year on the sun
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear, 0, currentDayOfYear);
+    const options = { month: 'short', day: 'numeric' };
+    const dateString = date.toLocaleDateString('en-US', options);
+
+    ctx.fillStyle = 'black';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Draw the date string
+    ctx.fillText(dateString, centerX, centerY - 10); // Adjust y position for line break
+    // Draw the year string
+    ctx.fillText(currentYear, centerX, centerY + 10); // Adjust y position for line break
 }
 
 function drawEarth() {
@@ -99,6 +103,9 @@ function drawEarth() {
     const angle = time - Math.PI / 2;
     const x = canvas.width / 2 + Math.cos(angle) * radius;
     const y = canvas.height / 2 + Math.sin(angle) * radius;
+
+    // Update earth position
+    earthPosition = { x, y, radius: 20 };
 
     // Determine the angle between the sun and Earth
     const angleToSun = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
@@ -200,3 +207,48 @@ function initializeEarthPosition() {
 createStars();
 initializeEarthPosition();
 animate();
+
+// Modal functionality
+canvas.addEventListener('click', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Check if the click is within the Earth's radius
+    const distance = Math.sqrt((x - earthPosition.x) ** 2 + (y - earthPosition.y) ** 2);
+    if (distance <= earthPosition.radius) {
+        updateModalContent();
+        modal.style.display = 'block';
+    }
+});
+
+closeModal.addEventListener('click', function() {
+    modal.style.display = 'none';
+});
+
+window.addEventListener('click', function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+});
+
+function updateModalContent() {
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear, 0, currentDayOfYear);
+    const options = { month: 'short', day: 'numeric' };
+    const dateString = date.toLocaleDateString('en-US', options);
+
+    modalHeader.textContent = `Date: ${dateString}, Day: ${currentDayOfYear}`;
+    updateClock();
+}
+
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    clock.textContent = `Time: ${hours}:${minutes}:${seconds}`;
+}
+
+// Update the clock every second
+setInterval(updateClock, 1000);
