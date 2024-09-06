@@ -1,10 +1,9 @@
+import { showModal, updateModalContent } from './modal.js';
+
 const canvas = document.getElementById('solarSystem');
 const ctx = canvas.getContext('2d');
 const slider = document.getElementById('timeSlider');
-const modal = document.getElementById('modal');
-const closeModal = document.querySelector('.close');
-const modalHeader = document.getElementById('modalHeader');
-const clock = document.getElementById('clock');
+const clockElement = document.getElementById('clock');
 
 let time = 0;
 let stars = [];
@@ -208,7 +207,7 @@ createStars();
 initializeEarthPosition();
 animate();
 
-// Modal functionality
+// Update the canvas click event listener
 canvas.addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -217,38 +216,18 @@ canvas.addEventListener('click', function(event) {
     // Check if the click is within the Earth's radius
     const distance = Math.sqrt((x - earthPosition.x) ** 2 + (y - earthPosition.y) ** 2);
     if (distance <= earthPosition.radius) {
-        updateModalContent();
-        modal.style.display = 'block';
+        updateModalContent(currentDayOfYear);
+        showModal();
     }
 });
-
-closeModal.addEventListener('click', function() {
-    modal.style.display = 'none';
-});
-
-window.addEventListener('click', function(event) {
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-});
-
-function updateModalContent() {
-    const currentYear = new Date().getFullYear();
-    const date = new Date(currentYear, 0, currentDayOfYear);
-    const options = { month: 'short', day: 'numeric' };
-    const dateString = date.toLocaleDateString('en-US', options);
-
-    modalHeader.textContent = `Date: ${dateString}, Day: ${currentDayOfYear}`;
-    updateClock();
-}
 
 function updateClock() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
-    clock.textContent = `Time: ${hours}:${minutes}:${seconds}`;
+    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
 }
 
-// Update the clock every second
 setInterval(updateClock, 1000);
+updateClock(); // Initial call to avoid delay
