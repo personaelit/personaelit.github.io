@@ -107,21 +107,25 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 slider.addEventListener('input', function() {
-    currentDayOfYear = Math.floor((slider.value / 100) * 365) + 1;
-    time = (currentDayOfYear / 365) * Math.PI * 2;
+    currentDayOfYear = parseInt(slider.value);
+    time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     updateDateLabel();
 });
 
 function updateDateLabel() {
-    const date = new Date(new Date().getFullYear(), 0, currentDayOfYear);
+    // Create a new Date object for the current year
+    const currentYear = new Date().getFullYear();
+    // Create a date object for the selected day
+    const date = new Date(currentYear, 0, currentDayOfYear);
+    
     const options = { month: 'short', day: 'numeric' };
     document.getElementById('dateLabel').textContent = date.toLocaleDateString('en-US', options);
 }
 
 function initializeEarthPosition() {
     currentDayOfYear = getCurrentDayOfYear();
-    time = (currentDayOfYear / 365) * Math.PI * 2;
-    slider.value = (currentDayOfYear / 365) * 100;
+    time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
+    slider.value = currentDayOfYear;
     updateDateLabel();
 }
 
