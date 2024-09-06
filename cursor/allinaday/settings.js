@@ -13,13 +13,17 @@ function saveSettings() {
     localStorage.setItem('aiad_userName', userName);
     localStorage.setItem('aiad_userDOB', userDOB);
 
-    calculateDaysAlive();
+    //calculateDaysAlive();
     closeSettingsPanel();
 }
 
 function loadSavedSettings() {
     userName = localStorage.getItem('aiad_userName') || '';
     userDOB = localStorage.getItem('aiad_userDOB') || '';
+    
+    // Update the input fields with the loaded values
+    document.getElementById('userName').value = userName;
+    document.getElementById('userDOB').value = userDOB;
 }
 
 function toggleSettingsPanel() {
@@ -27,8 +31,9 @@ function toggleSettingsPanel() {
 }
 
 function openSettingsPanel() {
-    document.getElementById('userName').value = userName;
-    document.getElementById('userDOB').value = userDOB;
+    // Remove this line as we'll load settings in initializeSettings
+    // document.getElementById('userName').value = userName;
+    // document.getElementById('userDOB').value = userDOB;
     settingsPanel.classList.add('open');
 }
 
@@ -37,11 +42,11 @@ function closeSettingsPanel() {
 }
 
 function initializeSettings() {
-    loadSavedSettings();
+    loadSavedSettings(); // Call this to load and set the values
     saveSettingsBtn.addEventListener('click', saveSettings);
-    closeSettingsPanelBtn.addEventListener('click', closeSettingsPanel);
 
-    // Load settings from localStorage
+
+    // Load other settings from localStorage
     const savedSettings = JSON.parse(localStorage.getItem('aiad_settings')) || {};
     
     // Apply saved settings
