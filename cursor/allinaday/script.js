@@ -1,13 +1,11 @@
 import { showModal, updateModalContent } from './modal.js';
+import { initializeSettings, toggleSettingsPanel, openSettingsPanel, closeSettingsPanel } from './settings.js';
 
 const canvas = document.getElementById('solarSystem');
 const ctx = canvas.getContext('2d');
 const slider = document.getElementById('timeSlider');
 const clockElement = document.getElementById('clock');
 const datePicker = document.getElementById('datePicker');
-const settingsPanel = document.getElementById('settingsPanel');
-const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-const closeSettingsPanelBtn = document.getElementById('closeSettingsPanelBtn');
 const daysAliveElement = document.getElementById('daysAlive');
 
 let time = 0;
@@ -15,9 +13,6 @@ let stars = [];
 let currentDayOfYear;
 let earthPosition = { x: 0, y: 0, radius: 20 };
 let currentYear;
-
-let userName = localStorage.getItem('aiad_userName') || '';
-let userDOB = localStorage.getItem('aiad_userDOB') || '';
 
 function getCurrentDayOfYear() {
     const now = new Date();
@@ -237,7 +232,16 @@ function updateDatePicker() {
     datePicker.value = date.toISOString().split('T')[0];
 }
 
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+}
+
 function calculateDaysAlive() {
+    let userDOB = localStorage.getItem('aiad_userDOB') || '';
     if (userDOB) {
         const birthDate = new Date(userDOB);
         const today = new Date();
@@ -249,44 +253,11 @@ function calculateDaysAlive() {
     }
 }
 
-function saveSettings() {
-    userName = document.getElementById('userName').value;
-    userDOB = document.getElementById('userDOB').value;
-    
-    // Save to local storage
-    localStorage.setItem('aiad_userName', userName);
-    localStorage.setItem('aiad_userDOB', userDOB);
-
-    calculateDaysAlive();
-    closeSettingsPanel();
-}
-
-// Add this function to initialize the days alive display
 function initializeDaysAlive() {
     calculateDaysAlive();
 }
 
-// Call this function after loading the saved settings
-function loadSavedSettings() {
-    userName = localStorage.getItem('aiad_userName') || '';
-    userDOB = localStorage.getItem('aiad_userDOB') || '';
-    initializeDaysAlive();
-}
-
-// Call loadSavedSettings at the end of the script
-loadSavedSettings();
-
-// Add event listeners
-saveSettingsBtn.addEventListener('click', saveSettings);
-closeSettingsPanelBtn.addEventListener('click', closeSettingsPanel);
-
-function updateClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
-}
+initializeDaysAlive();
 
 setInterval(updateClock, 1000);
 updateClock(); // Initial call to avoid delay
@@ -329,20 +300,4 @@ canvas.addEventListener('click', function(event) {
     }
 });
 
-function toggleSettingsPanel() {
-    if (settingsPanel.classList.contains('open')) {
-        closeSettingsPanel();
-    } else {
-        openSettingsPanel();
-    }
-}
-
-function openSettingsPanel() {
-    document.getElementById('userName').value = userName;
-    document.getElementById('userDOB').value = userDOB;
-    settingsPanel.classList.add('open');
-}
-
-function closeSettingsPanel() {
-    settingsPanel.classList.remove('open');
-}
+initializeSettings();
