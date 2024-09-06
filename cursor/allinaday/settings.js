@@ -22,8 +22,6 @@ function loadSavedSettings() {
     userDOB = localStorage.getItem('aiad_userDOB') || '';
 }
 
-
-
 function toggleSettingsPanel() {
     settingsPanel.classList.toggle('open');
 }
@@ -42,6 +40,23 @@ function initializeSettings() {
     loadSavedSettings();
     saveSettingsBtn.addEventListener('click', saveSettings);
     closeSettingsPanelBtn.addEventListener('click', closeSettingsPanel);
+
+    // Load settings from localStorage
+    const savedSettings = JSON.parse(localStorage.getItem('aiad_settings')) || {};
+    
+    // Apply saved settings
+    Object.keys(savedSettings).forEach(key => {
+        const input = document.getElementById(key);
+        if (input) {
+            if (input.type === 'checkbox') {
+                input.checked = savedSettings[key];
+            } else {
+                input.value = savedSettings[key];
+            }
+            // Trigger change event to apply the setting
+            input.dispatchEvent(new Event('change'));
+        }
+    });
 }
 
 export { initializeSettings, toggleSettingsPanel, openSettingsPanel, closeSettingsPanel };

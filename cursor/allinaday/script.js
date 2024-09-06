@@ -13,6 +13,11 @@ let stars = [];
 let currentDayOfYear;
 let earthPosition = { x: 0, y: 0, radius: 20 };
 let currentYear;
+let isDragging = false;
+let dragStartAngle = 0;
+let dragStartTime = 0;
+const CLICK_TIME_THRESHOLD = 200; // milliseconds
+let lastTouchEnd = 0;
 
 function getCurrentDayOfYear() {
     const now = new Date();
@@ -133,6 +138,13 @@ function drawEarth() {
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(`Day ${currentDayOfYear}`, x, y + 40);
+
+    // Add visual cue for draggability
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 }
 
 function drawMonths() {
@@ -278,19 +290,82 @@ createStars();
 initializeEarthPosition();
 animate();
 
-canvas.addEventListener('click', function(event) {
+function handleDragStart(event) {
+    event.preventDefault(); // Prevent default touch behavior
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const clientX = event.clientX || event.touches[0].clientX;
+    const clientY = event.clientY || event.touches[0].clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
-    // Check if the click is within the Earth's radius
     const distance = Math.sqrt((x - earthPosition.x) ** 2 + (y - earthPosition.y) ** 2);
     if (distance <= earthPosition.radius) {
+        isDragging = true;
+        dragStartAngle = Math.atan2(y - canvas.height / 2, x - canvas.width / 2);
+        dragStartTime = new Date().getTime();
+    }
+}
+
+function handleDragMove(event) {
+    if (!isDragging) return;
+    event.preventDefault(); // Prevent default touch behavior
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = event.clientX || event.touches[0].clientX;
+    const clientY = event.clientY || event.touches[0].clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    const currentAngle = Math.atan2(y - canvas.height / 2, x - canvas.width / 2);
+    let angleDiff = currentAngle - dragStartAngle;
+
+    // Ensure the angle difference is between -PI and PI
+    if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+    if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+    time += angleDiff;
+    dragStartAngle = currentAngle;
+
+    // Update currentDayOfYear based on the new time
+    currentDayOfYear = Math.floor((time / (Math.PI * 2) * 365) + 1) % 365 || 365;
+    updateDateLabel();
+    updateDatePicker();
+    slider.value = currentDayOfYear;
+}
+
+function handleDragEnd(event) {
+    if (!isDragging) return;
+    
+    const dragEndTime = new Date().getTime();
+    const dragDuration = dragEndTime - dragStartTime;
+
+    if (dragDuration < CLICK_TIME_THRESHOLD) {
+        // This was a quick tap/click, so open the modal
         updateModalContent(currentDayOfYear);
         showModal();
     }
 
-    // Check if the click is on the settings icon
+    isDragging = false;
+}
+
+function handleCanvasInteraction(event) {
+    console.log("Canvas interaction");
+
+    // Prevent ghost clicks on mobile
+    if (event.type === 'touchend') {
+        const now = new Date().getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+            return;
+        }
+        lastTouchEnd = now;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX || event.changedTouches[0].clientX) - rect.left;
+    const y = (event.clientY || event.changedTouches[0].clientY) - rect.top;
+
+    // Check if the interaction is on the settings icon
     const iconSize = 30;
     const padding = 20;
     const iconX = canvas.width - iconSize - padding;
@@ -298,6 +373,34 @@ canvas.addEventListener('click', function(event) {
     if (x >= iconX && x <= iconX + iconSize && y >= iconY && y <= iconY + iconSize) {
         toggleSettingsPanel();
     }
+}
+
+// Remove previous click event listener
+//canvas.removeEventListener('click', handleCanvasClick);
+
+// Add new event listeners
+canvas.addEventListener('click', handleCanvasInteraction);
+canvas.addEventListener('touchend', handleCanvasInteraction);
+
+// Prevent default touch behavior to avoid unwanted scrolling or zooming
+canvas.addEventListener('touchstart', function(event) {
+    if (event.touches.length === 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+// Update event listeners
+canvas.addEventListener('mousedown', handleDragStart);
+canvas.addEventListener('touchstart', handleDragStart);
+
+canvas.addEventListener('mousemove', handleDragMove);
+canvas.addEventListener('touchmove', handleDragMove);
+
+canvas.addEventListener('mouseup', handleDragEnd);
+canvas.addEventListener('touchend', handleDragEnd);
+
+document.body.addEventListener('click', function() {
+    console.log("Body clicked");
 });
 
 initializeSettings();
