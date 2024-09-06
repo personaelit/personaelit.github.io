@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function throwFireworks() {
-        const duration = 5 * 1000;
+        const duration = 2 * 1000;
         const animationEnd = Date.now() + duration;
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
@@ -188,15 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Check if there are any tasks and if any are completed
         if (totalTasks > 0 && completedTasks > 0) {
-            // If it's a new day and tasks are completed, increase the streak
-            if (lastResetDate !== today) {
+            // If it's a new day or there was no streak before, start/continue the streak
+            if (lastResetDate !== today || streak === 0) {
                 streak++;
                 localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
             }
-        } else if (lastResetDate !== today) {
-            // If it's a new day and no tasks are completed, reset the streak
+        } else {
+            // If no tasks are completed, reset the streak
             streak = 0;
-            localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
         }
     
         // Update the streak in localStorage
@@ -323,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-        countdownDisplay.textContent = `${hours} Hours ${minutes} Minutes and ${seconds} seconds remaining.`;
+        countdownDisplay.textContent = `${hours} hours ${minutes} minutes and ${seconds} seconds remaining.`;
 
         if (timeRemaining <= 0) {
             resetTasksDaily();

@@ -131,7 +131,7 @@ sub {
     }
 
     #task-list {
-        padding: 60px; /* Add padding to task list on mobile screens */
+        padding:0 60px; /* Add padding to task list on mobile screens */
     }
 }
 
