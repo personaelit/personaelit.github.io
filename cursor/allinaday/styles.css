@@ -223,3 +223,42 @@ canvas {
     font-weight: 300;
     letter-spacing: 1px;
 }
+
+@media screen and (max-width: 768px) {
+    #date-chooser,
+    #clock-container,
+    #days-alive-container {
+        position: absolute;
+        top:0;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+        transform: none;
+        left: auto;
+        right: auto;
+        top: auto;
+    }
+
+    #date-chooser {
+        margin-top: 60px;
+    }
+
+    #days-alive-container {
+        margin-top: 10px;
+    }
+
+    #clock-container {
+        margin-top: 90px;
+    }
+
+    /* #datePicker,
+    #clock,
+    #daysAlive {
+        display: inline-block;
+        width: auto;
+    } */
+
+    #controls {
+        bottom: 60px;
+    }
+}
