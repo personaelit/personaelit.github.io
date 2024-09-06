@@ -4,6 +4,7 @@ const canvas = document.getElementById('solarSystem');
 const ctx = canvas.getContext('2d');
 const slider = document.getElementById('timeSlider');
 const clockElement = document.getElementById('clock');
+const datePicker = document.getElementById('datePicker');
 
 let time = 0;
 let stars = [];
@@ -201,6 +202,13 @@ function initializeEarthPosition() {
     time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     slider.value = currentDayOfYear;
     updateDateLabel();
+    updateDatePicker();
+}
+
+function updateDatePicker() {
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear, 0, currentDayOfYear);
+    datePicker.value = date.toISOString().split('T')[0];
 }
 
 createStars();
@@ -231,3 +239,14 @@ function updateClock() {
 
 setInterval(updateClock, 1000);
 updateClock(); // Initial call to avoid delay
+
+datePicker.addEventListener('change', function() {
+    const selectedDate = new Date(this.value);
+    const start = new Date(selectedDate.getFullYear(), 0, 0);
+    const diff = selectedDate - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    currentDayOfYear = Math.floor(diff / oneDay);
+    
+    updateEarthPosition(currentDayOfYear);
+    slider.value = currentDayOfYear;
+});
