@@ -15,7 +15,7 @@ h1 {
     color: #00bfa5;
     text-align: center;
     font-size: 3em; /* Increase font size */
-    text-shadow: 0 0 10px #00bfa5, 0 0 20px #00bfa5, 0 0 30px #00bfa5, 0 0 40px #00bfa5; /* Add glow effect */
+    text-shadow: 0 0 5px #00bfa5, 0 0 10px #00bfa5; /* Reduced glow effect */
     margin: 20px 0; /* Add margin */
 }
 
@@ -32,7 +32,7 @@ sub {
     color: #00bfa5;
     text-align: center;
     font-size: 1.5em; /* Increase font size */
-    text-shadow: 0 0 10px #00bfa5, 0 0 20px #00bfa5, 0 0 30px #00bfa5; /* Add glow effect */
+    text-shadow: 0 0 5px #00bfa5; /* Reduced glow effect */
     margin: 10px 0; /* Add margin */
 }
 
