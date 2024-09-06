@@ -13,8 +13,8 @@ function saveSettings() {
     localStorage.setItem('aiad_userName', userName);
     localStorage.setItem('aiad_userDOB', userDOB);
 
-    //calculateDaysAlive();
-    closeSettingsPanel();
+    // Reload the page to reload the UI.
+    location.reload();
 }
 
 function loadSavedSettings() {
@@ -31,9 +31,7 @@ function toggleSettingsPanel() {
 }
 
 function openSettingsPanel() {
-    // Remove this line as we'll load settings in initializeSettings
-    // document.getElementById('userName').value = userName;
-    // document.getElementById('userDOB').value = userDOB;
+
     settingsPanel.classList.add('open');
 }
 
