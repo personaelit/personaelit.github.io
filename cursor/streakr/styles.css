@@ -11,12 +11,30 @@ body {
     padding: 0;
 }
 
-h1, h2, sub {
+h1 {
     color: #00bfa5;
     text-align: center;
+    font-size: 3em; /* Increase font size */
+    text-shadow: 0 0 10px #00bfa5, 0 0 20px #00bfa5, 0 0 30px #00bfa5, 0 0 40px #00bfa5; /* Add glow effect */
+    margin: 20px 0; /* Add margin */
 }
 
-sub {display: block;}
+h2 {
+    color: #00bfa5;
+    text-align: center;
+    font-size: 2em; /* Increase font size */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Add text shadow */
+    margin: 20px 0; /* Add margin */
+}
+
+sub {
+    display: block;
+    color: #00bfa5;
+    text-align: center;
+    font-size: 1.5em; /* Increase font size */
+    text-shadow: 0 0 10px #00bfa5, 0 0 20px #00bfa5, 0 0 30px #00bfa5; /* Add glow effect */
+    margin: 10px 0; /* Add margin */
+}
 
 #date-display, #streak-display, #percentage-display, #countdown-display, #about {
     text-align: center;
@@ -115,4 +133,16 @@ sub {display: block;}
     #task-list {
         padding: 60px; /* Add padding to task list on mobile screens */
     }
+}
+
+#streak-display {
+    background-color: #2a2a2a; /* Dark background */
+    padding: 20px; /* Add padding */
+    border: 2px solid #00bfa5; /* Border to match theme */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    font-size: 1.5em; /* Increase font size */
+    text-align: center; /* Center text */
+    margin: 20px auto; /* Center element with margin */
+    max-width: 300px; /* Limit width */
 }

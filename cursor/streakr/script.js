@@ -255,25 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    resetTasksDaily(false); // Pass true to force reset for testing
-    loadHistory(); // Ensure history is loaded after resetTasksDaily
-
-    // Check every minute if it's midnight
-    setInterval(() => {
-        const now = new Date();
-        if (now.getHours() === 0 && now.getMinutes() === 0) {
-            resetTasksDaily();
-        }
-    }, 60000); // Check every 60 seconds
-
-    // Initialize SortableJS
-    new Sortable(taskList, {
-        animation: 150,
-        onEnd: () => {
-            saveTasks();
-        }
-    });
-
     function updateCountdown() {
         const now = new Date();
         const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -286,11 +267,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
         countdownDisplay.textContent = `Time Remaining: ${hours}h ${minutes}m ${seconds}s`;
+
+        if (timeRemaining <= 0) {
+            resetTasksDaily();
+        }
     }
 
     setInterval(updateCountdown, 1000);
 
     updateCountdown(); // Initial call to display immediately
 
+    // Initialize SortableJS
+    new Sortable(taskList, {
+        animation: 150,
+        onEnd: () => {
+            saveTasks();
+        }
+    });
 
 });
