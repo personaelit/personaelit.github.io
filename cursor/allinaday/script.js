@@ -10,6 +10,7 @@ let time = 0;
 let stars = [];
 let currentDayOfYear;
 let earthPosition = { x: 0, y: 0, radius: 20 };
+let currentYear;
 
 function getCurrentDayOfYear() {
     const now = new Date();
@@ -80,8 +81,7 @@ function drawSun() {
     ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
     ctx.fill();
 
-    // Overlay the current date and year on the sun
-    const currentYear = new Date().getFullYear();
+    // Use the current year from the date picker
     const date = new Date(currentYear, 0, currentDayOfYear);
     const options = { month: 'short', day: 'numeric' };
     const dateString = date.toLocaleDateString('en-US', options);
@@ -198,6 +198,8 @@ function updateDateLabel() {
 }
 
 function initializeEarthPosition() {
+    const today = new Date();
+    currentYear = today.getFullYear();
     currentDayOfYear = getCurrentDayOfYear();
     time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     slider.value = currentDayOfYear;
@@ -206,7 +208,6 @@ function initializeEarthPosition() {
 }
 
 function updateDatePicker() {
-    const currentYear = new Date().getFullYear();
     const date = new Date(currentYear, 0, currentDayOfYear);
     datePicker.value = date.toISOString().split('T')[0];
 }
@@ -242,10 +243,11 @@ updateClock(); // Initial call to avoid delay
 
 datePicker.addEventListener('change', function() {
     const selectedDate = new Date(this.value);
-    const start = new Date(selectedDate.getFullYear(), 0, 0);
+    currentYear = selectedDate.getFullYear();
+    const start = new Date(currentYear, 0, 0);
     const diff = selectedDate - start;
     const oneDay = 1000 * 60 * 60 * 24;
-    currentDayOfYear = Math.floor(diff / oneDay);
+    currentDayOfYear = Math.floor(diff / oneDay) + 1; // Add 1 to account for day 1
     
     updateEarthPosition(currentDayOfYear);
     slider.value = currentDayOfYear;
