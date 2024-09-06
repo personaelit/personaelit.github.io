@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const STORAGE_PREFIX = 'streakr_';
+    const STORAGE_PREFIX = 'streak_';
 
     // Check for the 'clear' query parameter
     const urlParams = new URLSearchParams(window.location.search);
@@ -100,7 +100,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadTasks() {
         const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
-        tasks.forEach(task => addTask(task.text, task.completed));
+        if (tasks.length === 0) {
+            // Add default tasks if no tasks are saved
+            const defaultTasks = [
+                "Brush Teeth",
+                "Drink Water",
+                "Take a Walk",
+                "Drink Water",
+                "Avoid Fast Food",
+                "Take Medicine",
+                "Shower",
+                "Drink Water",
+                "Brush Teeth"
+            ];
+            defaultTasks.forEach(task => addTask(task, false));
+            saveTasks(); // Save the default tasks to localStorage
+        } else {
+            tasks.forEach(task => addTask(task.text, task.completed));
+        }
     }
 
     function updatePercentage() {
