@@ -280,41 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadTasks(); // Reload tasks after resetting
             updateStreak();
             loadHistory(); // Reload history after updating
-
-            // Throw confetti based on the percentage of tasks completed
-            if (newStreak > streak) {
-                const completionPercentage = totalTasksCount ? (completedTasksCount / totalTasksCount) * 100 : 0;
-                if (completionPercentage === 100) {
-                    // Spectacular confetti pouring effect for 100% completion
-                    const duration = 2 * 1000;
-                    const end = Date.now() + duration;
-
-                    (function frame() {
-                        confetti({
-                            particleCount: 2,
-                            angle: 60,
-                            spread: 55,
-                            origin: { x: 0 }
-                        });
-                        confetti({
-                            particleCount: 2,
-                            angle: 120,
-                            spread: 55,
-                            origin: { x: 1 }
-                        });
-
-                        if (Date.now() < end) {
-                            requestAnimationFrame(frame);
-                        }
-                    }());
-                } else {
-                    const particleCount = Math.min(100, Math.max(10, Math.floor(Math.pow(completionPercentage / 10, 2)))); // Exponential scaling
-                    confetti({
-                        particleCount: particleCount,
-                        spread: 360
-                    });
-                }
-            }
         }
     }
 
