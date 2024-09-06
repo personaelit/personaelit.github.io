@@ -18,13 +18,15 @@ function updateModalContent(currentDayOfYear) {
     const date = new Date(currentYear, 0, currentDayOfYear);
     const options = { month: 'short', day: 'numeric' };
     const dateString = date.toLocaleDateString('en-US', options);
+    const datestamp = date.toISOString().split('T')[0]; // Add this line
 
     modalHeader.textContent = `Date: ${dateString}, Day: ${currentDayOfYear}`;
 
+    // Update these lines
     // Add notes section
     notesTextarea.placeholder = 'Enter your notes for the day...';
-    notesTextarea.value = loadNotes(currentDayOfYear);
-    notesTextarea.addEventListener('input', () => saveNotes(currentDayOfYear, notesTextarea.value));
+    notesTextarea.value = loadNotes(datestamp);
+    notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
 
     // Add mood selector
@@ -36,28 +38,28 @@ function updateModalContent(currentDayOfYear) {
         <input type="radio" name="mood" value="4" id="mood4"><label for="mood4">🙂</label>
         <input type="radio" name="mood" value="5" id="mood5"><label for="mood5">😄</label>
     `;
-    const savedMood = loadMood(currentDayOfYear);
+    const savedMood = loadMood(datestamp);
     if (savedMood) {
         moodSelector.querySelector(`input[value="${savedMood}"]`).checked = true;
     }
-    moodSelector.addEventListener('change', (e) => saveMood(currentDayOfYear, e.target.value));
+    moodSelector.addEventListener('change', (e) => saveMood(datestamp, e.target.value));
     modalContent.appendChild(moodSelector);
 }
 
-function saveNotes(day, notes) {
-    localStorage.setItem(`aiad_notes_${day}`, notes);
+function saveNotes(datestamp, notes) {
+    localStorage.setItem(`aiad_notes_${datestamp}`, notes);
 }
 
-function loadNotes(day) {
-    return localStorage.getItem(`aiad_notes_${day}`) || '';
+function loadNotes(datestamp) {
+    return localStorage.getItem(`aiad_notes_${datestamp}`) || '';
 }
 
-function saveMood(day, mood) {
-    localStorage.setItem(`aiad_mood_${day}`, mood);
+function saveMood(datestamp, mood) {
+    localStorage.setItem(`aiad_mood_${datestamp}`, mood);
 }
 
-function loadMood(day) {
-    return localStorage.getItem(`aiad_mood_${day}`);
+function loadMood(datestamp) {
+    return localStorage.getItem(`aiad_mood_${datestamp}`);
 }
 
 closeModal.addEventListener('click', hideModal);
