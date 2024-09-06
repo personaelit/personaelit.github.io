@@ -106,10 +106,20 @@ function animate() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-slider.addEventListener('input', function() {
-    currentDayOfYear = parseInt(slider.value);
+function updateEarthPosition(value) {
+    currentDayOfYear = parseInt(value);
+    // Ensure the day stays between 1 and 365
+    currentDayOfYear = Math.max(1, Math.min(365, currentDayOfYear));
     time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     updateDateLabel();
+}
+
+slider.addEventListener('input', function() {
+    updateEarthPosition(this.value);
+});
+
+slider.addEventListener('change', function() {
+    updateEarthPosition(this.value);
 });
 
 function updateDateLabel() {
