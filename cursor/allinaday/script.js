@@ -17,6 +17,9 @@ let isDragging = false;
 let dragStartAngle = 0;
 let dragStartTime = 0;
 const CLICK_TIME_THRESHOLD = 200; // milliseconds
+
+let sunPulsate = 0;
+
 let lastTouchEnd = 0;
 
 function getCurrentDayOfYear() {
@@ -67,9 +70,16 @@ function drawBackground() {
 }
 
 function drawSun() {
-    const sunRadius = 50;
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
+    
+    // Update pulsate value
+    sunPulsate = (sunPulsate + 0.05) % (Math.PI * 2);
+    
+    // Calculate pulsating radius
+    const baseRadius = 50;
+    const pulsateAmount = 3; // Reduced from 5 to 3 for a smaller effect
+    const sunRadius = baseRadius + Math.sin(sunPulsate) * pulsateAmount;
 
     // Create radial gradient for the sun
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, sunRadius);
@@ -85,7 +95,7 @@ function drawSun() {
 
     // Add a glow effect
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
     ctx.fill();
 
     // Use the current year from the date picker
