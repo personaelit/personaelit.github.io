@@ -54,16 +54,51 @@ function drawBackground() {
 }
 
 function drawSun() {
-    ctx.fillStyle = 'yellow';
+    const sunRadius = 50;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Create radial gradient for the sun
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, sunRadius);
+    gradient.addColorStop(0, '#FFF700');  // Bright yellow core
+    gradient.addColorStop(0.7, '#FFA500');  // Orange
+    gradient.addColorStop(1, '#FF8C00');  // Dark orange edge
+
+    // Draw the sun
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Remove the sun rays
+    // ctx.strokeStyle = '#FFD700';  // Golden yellow for rays
+    // ctx.lineWidth = 2;
+
+    // for (let i = 0; i < 12; i++) {
+    //     const angle = (i / 12) * Math.PI * 2;
+    //     const innerX = centerX + Math.cos(angle) * sunRadius;
+    //     const innerY = centerY + Math.sin(angle) * sunRadius;
+    //     const outerX = centerX + Math.cos(angle) * (sunRadius * 1.5);
+    //     const outerY = centerY + Math.sin(angle) * (sunRadius * 1.5);
+
+    //     ctx.beginPath();
+    //     ctx.moveTo(innerX, innerY);
+    //     ctx.lineTo(outerX, outerY);
+    //     ctx.stroke();
+    // }
+
+    // Add a glow effect
     ctx.beginPath();
     ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
     ctx.fill();
 }
 
 function drawEarth() {
-    const radius = Math.min(canvas.width, canvas.height) * 0.4;
-    const x = canvas.width / 2 + Math.cos(time) * radius;
-    const y = canvas.height / 2 + Math.sin(time) * radius;
+    const radius = Math.min(canvas.width, canvas.height) * 0.3;
+    // Adjust the angle calculation to start from the top (subtract PI/2)
+    const angle = time - Math.PI / 2;
+    const x = canvas.width / 2 + Math.cos(angle) * radius;
+    const y = canvas.height / 2 + Math.sin(angle) * radius;
 
     // Determine the angle between the sun and Earth
     const angleToSun = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
@@ -91,9 +126,32 @@ function drawEarth() {
     ctx.fillText(`Day ${currentDayOfYear}`, x, y + 40);
 }
 
+function drawMonths() {
+    const radius = Math.min(canvas.width, canvas.height) * 0.4; // Slightly larger than Earth's orbit
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep','Oct', 'Nov', 'Dec'];
+    
+    months.forEach((month, index) => {
+        // Adjust the angle calculation to start from the top
+        const angle = (index / 12) * Math.PI * 2 - Math.PI / 2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        
+        ctx.fillText(month, x, y);
+    });
+}
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
+    drawMonths(); // Add this line
     drawSun();
     drawEarth();
 }
