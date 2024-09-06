@@ -101,17 +101,13 @@ function drawSun() {
     // Use the current year from the date picker
     const date = new Date(currentYear, 0, currentDayOfYear);
     const options = { month: 'short', day: 'numeric' };
-    const dateString = date.toLocaleDateString('en-US', options);
 
     ctx.fillStyle = 'black';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-
-    // Draw the date string
-    ctx.fillText(dateString, centerX, centerY - 10); // Adjust y position for line break
     // Draw the year string
-    ctx.fillText(currentYear, centerX, centerY + 10); // Adjust y position for line break
+    ctx.fillText(currentYear, centerX, centerY); // Adjust y position for line break
 }
 
 function drawEarth() {
@@ -143,11 +139,12 @@ function drawEarth() {
     ctx.arc(x, y, 20, angleToSun - Math.PI / 2, angleToSun + Math.PI / 2);
     ctx.fill();
 
-    // Add label
+    // Add label in the center of the Earth
     ctx.fillStyle = 'white';
-    ctx.font = '16px Arial';
+    ctx.font = '12px Arial'; // Reduced font size to fit inside Earth
     ctx.textAlign = 'center';
-    ctx.fillText(`Day ${currentDayOfYear}`, x, y + 40);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${currentDayOfYear}`, x, y);
 
     // Add visual cue for draggability
     ctx.beginPath();
