@@ -216,7 +216,7 @@ function updateEarthPosition(value) {
     currentDayOfYear = Math.max(1, Math.min(365, currentDayOfYear));
     time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     updateDateLabel();
-    updateDatePicker(); // Add this line to update the date picker
+    updateDatePicker();
 }
 
 slider.addEventListener('input', function() {
@@ -228,12 +228,10 @@ slider.addEventListener('change', function() {
 });
 
 function updateDateLabel() {
-    // Create a new Date object for the current year
-    const currentYear = new Date().getFullYear();
-    // Create a date object for the selected day
+    // Create a date object for the selected day and year
     const date = new Date(currentYear, 0, currentDayOfYear);
     
-    const options = { month: 'short', day: 'numeric' };
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
     document.getElementById('dateLabel').textContent = date.toLocaleDateString('en-US', options);
 }
 
@@ -330,8 +328,11 @@ function handleDragMove(event) {
     time += angleDiff;
     dragStartAngle = currentAngle;
 
-    // Update currentDayOfYear based on the new time
-    currentDayOfYear = Math.floor((time / (Math.PI * 2) * 365) + 1) % 365 || 365;
+    // Update currentDayOfYear and currentYear based on the new time
+    const totalDays = Math.floor((time / (Math.PI * 2)) * 365);
+    currentYear = Math.floor(totalDays / 365) + new Date().getFullYear();
+    currentDayOfYear = (totalDays % 365) + 1;
+
     updateDateLabel();
     updateDatePicker();
     slider.value = currentDayOfYear;
