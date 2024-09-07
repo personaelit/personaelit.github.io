@@ -12,10 +12,10 @@ export function createStars(canvas) {
     }
 }
 
-export function createShootingStar() {
+export function createShootingStar(canvasWidth, canvasHeight) {
     const star = {
         x: 0,
-        y: Math.random() * canvas.height,
+        y: Math.random() * canvasHeight,
         length: Math.random() * 80 + 20,
         speed: Math.random() * 50 + 5,
         angle: 45

@@ -114,7 +114,8 @@ export function handleCanvasInteraction(event) {
 
 export function handleKeyDown(event) {
     if (event.key === 's' || event.key === 'S') {
-        createShootingStar();
+        const canvas = document.querySelector('canvas'); // Get the canvas element
+        createShootingStar(canvas.width, canvas.height);
     }
 }
 

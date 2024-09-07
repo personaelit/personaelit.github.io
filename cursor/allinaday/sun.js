@@ -5,7 +5,7 @@ export function drawSun(ctx, canvas, state) {
     const centerY = canvas.height / 2;
     
     // Update pulsate value
-    sunPulsate = (sunPulsate + 0.05) % (Math.PI * 2);
+    sunPulsate = (sunPulsate + 0.02) % (Math.PI * 2);
     
     // Calculate pulsating radius
     const baseRadius = 50;
