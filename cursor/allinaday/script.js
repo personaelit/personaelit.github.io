@@ -126,8 +126,8 @@ function drawSun() {
     ctx.fill();
 
     // Use the current year from the date picker
-    const date = new Date(currentYear, 0, currentDayOfYear);
-    const options = { month: 'short', day: 'numeric' };
+    const date = new Date(Date.UTC(currentYear, 0, currentDayOfYear));
+    const options = { month: 'short', day: 'numeric', timeZone: 'UTC' };
 
     ctx.fillStyle = 'black';
     ctx.font = '16px Arial';
@@ -263,16 +263,14 @@ slider.addEventListener('change', function() {
 });
 
 function updateDateLabel() {
-    // Create a date object for the selected day and year
-    const date = new Date(currentYear, 0, currentDayOfYear);
-    
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const date = new Date(Date.UTC(currentYear, 0, currentDayOfYear));
+    const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
     document.getElementById('dateLabel').textContent = date.toLocaleDateString('en-US', options);
 }
 
 function initializeEarthPosition() {
     const today = new Date();
-    currentYear = today.getFullYear();
+    currentYear = today.getUTCFullYear();
     currentDayOfYear = getCurrentDayOfYear();
     time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     slider.value = currentDayOfYear;
@@ -281,7 +279,7 @@ function initializeEarthPosition() {
 }
 
 function updateDatePicker() {
-    const date = new Date(currentYear, 0, currentDayOfYear);
+    const date = new Date(Date.UTC(currentYear, 0, currentDayOfYear));
     datePicker.value = date.toISOString().split('T')[0];
 }
 
@@ -313,8 +311,8 @@ updateClock(); // Initial call to avoid delay
 
 datePicker.addEventListener('change', function() {
     const selectedDate = new Date(this.value);
-    currentYear = selectedDate.getFullYear();
-    const start = new Date(currentYear, 0, 0);
+    currentYear = selectedDate.getUTCFullYear();
+    const start = new Date(Date.UTC(currentYear, 0, 0));
     const diff = selectedDate - start;
     const oneDay = 1000 * 60 * 60 * 24;
     currentDayOfYear = Math.floor(diff / oneDay) + 1; // Add 1 to account for day 1
@@ -365,7 +363,7 @@ function handleDragMove(event) {
 
     // Update currentDayOfYear and currentYear based on the new time
     const totalDays = Math.floor((time / (Math.PI * 2)) * 365);
-    currentYear = Math.floor(totalDays / 365) + new Date().getFullYear();
+    currentYear = Math.floor(totalDays / 365) + new Date().getUTCFullYear();
     currentDayOfYear = (totalDays % 365) + 1;
 
     updateDateLabel();
@@ -381,8 +379,7 @@ function handleDragEnd(event) {
 
     if (dragDuration < CLICK_TIME_THRESHOLD) {
         // This was a quick tap/click, so open the modal
-        const selectedDate = new Date(currentYear, 0, 1);
-        selectedDate.setDate(currentDayOfYear);
+        const selectedDate = new Date(Date.UTC(currentYear, 0, currentDayOfYear));
         console.log("Selected date:", selectedDate); // Add this for debugging
         updateModalContent(selectedDate);
         showModal();

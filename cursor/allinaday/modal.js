@@ -16,12 +16,12 @@ function hideModal() {
 
 function updateModalContent(date) {
     const currentDayOfYear = getDayOfYear(date);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
     const dateString = date.toLocaleDateString('en-US', options);
     const datestamp = date.toISOString().split('T')[0];
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
+    date.setUTCHours(0, 0, 0, 0);
 
     // Clear previous content while preserving the close icon and header
     const closeButton = modalContent.querySelector('.close');
@@ -95,7 +95,7 @@ function createPersonalizedGreeting(date) {
 }
 
 function getTimeOfDay(date) {
-    const hour = date.getHours();
+    const hour = date.getUTCHours();
 
     if (hour < 12) return "Good morning";
     if (hour < 18) return "Good afternoon";
@@ -103,8 +103,8 @@ function getTimeOfDay(date) {
 }
 
 function getDayOfYear(date) {
-    const start = new Date(date.getFullYear(), 0, 0);
-    const diff = date - start;
+    const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
+    const diff = date.getTime() - start.getTime();
     const oneDay = 1000 * 60 * 60 * 24;
     return Math.floor(diff / oneDay);
 }
@@ -148,7 +148,7 @@ function addMoodSelector(datestamp) {
 function addNotesSection(datestamp) {
     const notesTextarea = document.createElement('textarea');
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     const date = new Date(datestamp);
     
     if (date < today) {
