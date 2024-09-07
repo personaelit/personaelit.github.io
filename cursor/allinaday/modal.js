@@ -4,7 +4,6 @@ const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');
 const closeModal = document.querySelector('.close');
 const modalHeader = document.getElementById('modalHeader');
-const notesTextarea = document.createElement('textarea');
 const moodSelector = document.createElement('div');
 
 function showModal() {
@@ -124,6 +123,7 @@ function addMoodSelector(datestamp) {
 }
 
 function addNotesSection(datestamp) {
+    const notesTextarea = document.createElement('textarea');
     notesTextarea.placeholder = 'How are you feeling?';
     notesTextarea.value = loadNotes(datestamp);
     notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
