@@ -1,5 +1,5 @@
 import { state, updateEarthPosition, draw } from './script.js';
-import { showModal, updateModalContent } from './modal.js';
+import { showModal, updateModalContent, showReportModal } from './modal.js';
 import { toggleSettingsPanel } from './settings.js';
 import { createShootingStar } from './stars.js';
 import { updateDateLabel, updateDatePicker } from './ui.js';
@@ -108,9 +108,7 @@ export function handleCanvasInteraction(event) {
     if (x >= settingsIconX && x <= settingsIconX + iconSize && y >= settingsIconY && y <= settingsIconY + iconSize) {
         toggleSettingsPanel();
     } else if (x >= reportIconX && x <= reportIconX + iconSize && y >= reportIconY && y <= reportIconY + iconSize) {
-        // Handle report icon click
-        console.log('Report icon clicked');
-        // Add your desired functionality here
+        showReportModal();
     }
 }
 

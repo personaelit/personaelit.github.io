@@ -199,3 +199,99 @@ window.addEventListener('click', function(event) {
 });
 
 export { showModal, hideModal, updateModalContent };
+
+export function showReportModal() {
+    const modal = document.getElementById('modal');
+    const modalContent = document.querySelector('.modal-content');
+    
+    // Clear previous content
+    modalContent.innerHTML = '';
+    
+    // Add report content
+    const reportContent = document.createElement('div');
+    reportContent.innerHTML = `
+        <h2>Mood Report</h2>
+        <canvas id="moodChart"></canvas>
+        <div id="moodStats"></div>
+    `;
+    
+    modalContent.appendChild(reportContent);
+    
+    // Show the modal
+    modal.style.display = 'block';
+    
+    // Generate the mood report
+    generateMoodReport();
+}
+
+function generateMoodReport() {
+    const moodData = getMoodData();
+    createMoodChart(moodData);
+    displayMoodStats(moodData);
+}
+
+function getMoodData() {
+    const moodData = [];
+    const currentDate = new Date();
+    
+    for (let i = 0; i < 30; i++) {
+        const date = new Date(currentDate);
+        date.setDate(date.getDate() - i);
+        const datestamp = date.toISOString().split('T')[0];
+        const mood = loadFromLocalStorage(`aiad_mood_${datestamp}`);
+        
+        if (mood) {
+            moodData.unshift({ date: datestamp, mood: parseInt(mood) });
+        }
+    }
+    
+    return moodData;
+}
+
+function createMoodChart(moodData) {
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: moodData.map(data => data.date),
+            datasets: [{
+                label: 'Mood',
+                data: moodData.map(data => data.mood),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displayMoodStats(moodData) {
+    const moodStats = document.getElementById('moodStats');
+    const averageMood = moodData.reduce((sum, data) => sum + data.mood, 0) / moodData.length;
+    const moodCounts = moodData.reduce((counts, data) => {
+        counts[data.mood] = (counts[data.mood] || 0) + 1;
+        return counts;
+    }, {});
+    
+    moodStats.innerHTML = `
+        <h3>Mood Statistics (Last 30 days)</h3>
+        <p>Average Mood: ${averageMood.toFixed(2)}</p>
+        <p>Mood Distribution:</p>
+        <ul>
+            ${Object.entries(moodCounts).map(([mood, count]) => 
+                `<li>${getMoodEmoji(mood)}: ${count} day${count !== 1 ? 's' : ''}</li>`
+            ).join('')}
+        </ul>
+    `;
+}
