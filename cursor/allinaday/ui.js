@@ -54,7 +54,16 @@ export function drawMonths(ctx, canvas, state) {
 }
 
 export function drawSettingsIcon(ctx, canvas) {
-    // ... (keep the existing drawSettingsIcon function)
+    const iconSize = 30;
+    const padding = 20;
+    const x = canvas.width - iconSize - padding;
+    const y = canvas.height - iconSize - padding;
+
+    ctx.font = `${iconSize}px Arial`;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚙️', x + iconSize / 2, y + iconSize / 2);
 }
 
 export function updateDateLabel() {
