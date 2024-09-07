@@ -137,7 +137,6 @@ canvas {
     background-color: rgba(0, 0, 0, 0.5);
     padding: 10px 15px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
     font-weight: 300;
     letter-spacing: 1px;
 }
@@ -155,7 +154,6 @@ canvas {
     background-color: rgba(0, 0, 0, 0.5);
     padding: 10px 15px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
     font-weight: 300;
     letter-spacing: 1px;
     border: none;
@@ -219,7 +217,7 @@ canvas {
     background-color: rgba(0, 0, 0, 0.5);
     padding: 10px 15px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 10px rgba(255, 255, 255, 0.1);
     font-weight: 300;
     letter-spacing: 1px;
 }
@@ -260,5 +258,24 @@ canvas {
 
     #controls {
         bottom: 60px;
+    }
+}
+
+.jumbo-emoji {
+    font-size: 6rem;
+    text-align: center;
+    margin: 20px 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
     }
 }
