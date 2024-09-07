@@ -16,21 +16,37 @@ function hideModal() {
 
 function updateModalContent(date) {
     const currentDayOfYear = getDayOfYear(date);
-    const options = { month: 'short', day: 'numeric' };
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const dateString = date.toLocaleDateString('en-US', options);
     const datestamp = date.toISOString().split('T')[0];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     date.setHours(0, 0, 0, 0);
 
-    modalHeader.textContent = `Date: ${dateString}, Day: ${currentDayOfYear}`;
-
-    // Clear previous content while preserving the close icon
+    // Clear previous content while preserving the close icon and header
     const closeButton = modalContent.querySelector('.close');
+    const existingHeader = modalContent.querySelector('.modal-date-header');
     modalContent.innerHTML = '';
     if (closeButton) {
         modalContent.appendChild(closeButton);
     }
+    
+    // Create and add the header if it doesn't exist
+    let header;
+    if (existingHeader) {
+        header = existingHeader;
+        modalContent.appendChild(header);
+    } else {
+        header = document.createElement('h2');
+        header.className = 'modal-date-header';
+        modalContent.appendChild(header);
+    }
+    
+    // Update header content
+    header.textContent = dateString;
+
+    // Update the existing modalHeader
+    modalHeader.textContent = `Day of Year: ${currentDayOfYear}`;
 
     if (date.getTime() === today.getTime()) {
         // Today's date
