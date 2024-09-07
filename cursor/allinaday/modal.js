@@ -147,7 +147,16 @@ function addMoodSelector(datestamp) {
 
 function addNotesSection(datestamp) {
     const notesTextarea = document.createElement('textarea');
-    notesTextarea.placeholder = 'How are you feeling?';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(datestamp);
+    
+    if (date < today) {
+        notesTextarea.placeholder = 'Thoughts about this day? Events? Notes? Feelings?';
+    } else {
+        notesTextarea.placeholder = 'How are you feeling?';
+    }
+    
     notesTextarea.value = loadNotes(datestamp);
     notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
