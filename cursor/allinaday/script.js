@@ -120,16 +120,23 @@ function drawEarth() {
     const dayColor = 'rgb(0, 100, 255)';
     const nightColor = 'rgb(0, 10, 50)';
 
-    // Draw the night side (full circle)
-    ctx.fillStyle = nightColor;
+    // Create a gradient for the transition
+    const gradient = ctx.createLinearGradient(
+        x - 20 * Math.cos(angleToSun),
+        y - 20 * Math.sin(angleToSun),
+        x + 20 * Math.cos(angleToSun),
+        y + 20 * Math.sin(angleToSun)
+    );
+    gradient.addColorStop(0, nightColor);
+    gradient.addColorStop(0.4, nightColor);
+    gradient.addColorStop(0.5, 'rgb(0, 55, 152)'); // Transition color
+    gradient.addColorStop(0.6, dayColor);
+    gradient.addColorStop(1, dayColor);
+
+    // Draw the Earth using the gradient
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(x, y, 20, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw the day side (half circle)
-    ctx.fillStyle = dayColor;
-    ctx.beginPath();
-    ctx.arc(x, y, 20, angleToSun - Math.PI / 2, angleToSun + Math.PI / 2);
     ctx.fill();
 
     // Add label in the center of the Earth
@@ -221,10 +228,12 @@ slider.addEventListener('change', function() {
 });
 
 function updateDateLabel() {
-    // Create a date object for the selected day and year
+    // Create a new Date object for the current year
+    const currentYear = new Date().getFullYear();
+    // Create a date object for the selected day
     const date = new Date(currentYear, 0, currentDayOfYear);
     
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const options = { month: 'short', day: 'numeric' };
     document.getElementById('dateLabel').textContent = date.toLocaleDateString('en-US', options);
 }
 
@@ -321,11 +330,8 @@ function handleDragMove(event) {
     time += angleDiff;
     dragStartAngle = currentAngle;
 
-    // Update currentDayOfYear and currentYear based on the new time
-    const totalDays = Math.floor((time / (Math.PI * 2)) * 365);
-    currentYear = Math.floor(totalDays / 365) + new Date().getFullYear();
-    currentDayOfYear = (totalDays % 365) + 1;
-
+    // Update currentDayOfYear based on the new time
+    currentDayOfYear = Math.floor((time / (Math.PI * 2) * 365) + 1) % 365 || 365;
     updateDateLabel();
     updateDatePicker();
     slider.value = currentDayOfYear;
