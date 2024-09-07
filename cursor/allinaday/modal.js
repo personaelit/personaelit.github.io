@@ -62,7 +62,7 @@ function updateModalContent(date) {
     } else if (date.getTime() > today.getTime()) {
         // Future date
         const futureMessage = document.createElement('p');
-        futureMessage.textContent = "This date is in the future. You can't add entries for future dates.";
+        futureMessage.textContent = "What will the future hold?";
         futureMessage.className = 'future-message';
         modalContent.appendChild(futureMessage);
     } else {
@@ -91,7 +91,7 @@ function createPersonalizedGreeting(date) {
     const daysAlive = calculateDaysAlive(date);
     const timeOfDay = getTimeOfDay(new Date());  // Use current time
 
-    return `${timeOfDay}, ${name}! This is day ${daysAlive} of your life. What will you make of it?`;
+    return `${timeOfDay}, ${name}! This is day ${daysAlive} of your journey. Make. it. count.`;
 }
 
 function getTimeOfDay(date) {
