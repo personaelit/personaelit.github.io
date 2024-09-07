@@ -72,11 +72,17 @@ function updateModalContent(date) {
         pastMessage.className = 'past-message';
         modalContent.appendChild(pastMessage);
 
-        // Add jumbo emoji based on saved mood
-        addJumboMoodEmoji(datestamp);
+        // Add mood selector if no mood is saved
+        const savedMood = loadMood(datestamp);
+        if (!savedMood) {
+            addMoodSelector(datestamp);
+        } else {
+            // Add jumbo emoji based on saved mood
+            addJumboMoodEmoji(datestamp);
+        }
 
         // Add notes section for past dates (editable)
-        addNotesSection(datestamp);
+        addNotesSection(datestamp, true);
     }
 }
 
@@ -138,9 +144,9 @@ function addMoodSelector(datestamp) {
     modalContent.appendChild(moodSelector);
 }
 
-function addNotesSection(datestamp) {
+function addNotesSection(datestamp, isPastDate = false) {
     const notesTextarea = document.createElement('textarea');
-    notesTextarea.placeholder = 'How are you feeling?';
+    notesTextarea.placeholder = isPastDate ? 'Any thoughts about this day?' : 'How are you feeling?';
     notesTextarea.value = loadNotes(datestamp);
     notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
