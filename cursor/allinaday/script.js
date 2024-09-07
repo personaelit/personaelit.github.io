@@ -235,10 +235,7 @@ function draw() {
 
 function animate() {
     draw();
-    const now = new Date();
-    if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-        updateDaysAliveLabel();
-    }
+    updateDaysAliveLabel(); // Add this line to update continuously
     requestAnimationFrame(animate);
 }
 
