@@ -23,6 +23,40 @@ let sunPulsate = 0;
 
 let lastTouchEnd = 0;
 
+let shootingStars = [];
+
+function createShootingStar() {
+    const star = {
+        x: 0,
+        y: Math.random() * canvas.height,
+        length: Math.random() * 80 + 20,
+        speed: Math.random() * 50 + 5,
+        angle: 45
+    };
+    shootingStars.push(star);
+}
+
+function updateAndDrawShootingStars() {
+    shootingStars = shootingStars.filter(star => 
+        star.x >= 0 && star.x <= canvas.width && 
+        star.y >= 0 && star.y <= canvas.height
+    );
+    
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    
+    shootingStars.forEach(star => {
+        ctx.beginPath();
+        ctx.moveTo(star.x, star.y);
+        ctx.lineTo(star.x - star.length * Math.cos(star.angle), 
+                   star.y - star.length * Math.sin(star.angle));
+        ctx.stroke();
+        
+        star.x += star.speed * Math.cos(star.angle);
+        star.y += star.speed * Math.sin(star.angle);
+    });
+}
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -196,6 +230,7 @@ function draw() {
     drawSun();
     drawEarth();
     drawSettingsIcon();
+    updateAndDrawShootingStars();
 }
 
 function animate() {
@@ -409,6 +444,12 @@ canvas.addEventListener('touchend', handleDragEnd);
 
 document.body.addEventListener('click', function() {
     console.log("Body clicked");
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 's' || event.key === 'S') {
+        createShootingStar();
+    }
 });
 
 initializeSettings();
