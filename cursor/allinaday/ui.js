@@ -66,6 +66,19 @@ export function drawSettingsIcon(ctx, canvas) {
     ctx.fillText('⚙️', x + iconSize / 2, y + iconSize / 2);
 }
 
+export function drawReportIcon(ctx, canvas) {
+    const iconSize = 30;
+    const padding = 20;
+    const x = padding;
+    const y = canvas.height - iconSize - padding;
+
+    ctx.font = `${iconSize}px Arial`;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📋', x + iconSize / 2, y + iconSize / 2);
+}
+
 export function updateDateLabel() {
     const date = new Date(Date.UTC(state.currentYear, 0, state.currentDayOfYear));
     const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };

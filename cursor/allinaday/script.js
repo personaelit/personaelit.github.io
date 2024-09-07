@@ -1,4 +1,4 @@
-import { initializeUI, canvas, ctx, updateDateLabel, updateDatePicker, drawMonths, drawSettingsIcon } from './ui.js';
+import { initializeUI, canvas, ctx, updateDateLabel, updateDatePicker, drawMonths, drawSettingsIcon,drawReportIcon } from './ui.js';
 import { initializeSettings } from './settings.js';
 import { getCurrentDayOfYear } from './utils.js';
 import { drawStarfield, updateAndDrawShootingStars } from './stars.js';
@@ -23,6 +23,7 @@ function draw() {
     drawSun(ctx, canvas, state);
     drawEarth(ctx, canvas, state);
     drawSettingsIcon(ctx, canvas);
+    drawReportIcon(ctx, canvas);  // Add this line
     updateAndDrawShootingStars(canvas, ctx);
 }
 

@@ -100,10 +100,17 @@ export function handleCanvasInteraction(event) {
 
     const iconSize = 30;
     const padding = 20;
-    const iconX = event.target.width - iconSize - padding;
-    const iconY = event.target.height - iconSize - padding;
-    if (x >= iconX && x <= iconX + iconSize && y >= iconY && y <= iconY + iconSize) {
+    const settingsIconX = event.target.width - iconSize - padding;
+    const settingsIconY = event.target.height - iconSize - padding;
+    const reportIconX = padding;
+    const reportIconY = event.target.height - iconSize - padding;
+
+    if (x >= settingsIconX && x <= settingsIconX + iconSize && y >= settingsIconY && y <= settingsIconY + iconSize) {
         toggleSettingsPanel();
+    } else if (x >= reportIconX && x <= reportIconX + iconSize && y >= reportIconY && y <= reportIconY + iconSize) {
+        // Handle report icon click
+        console.log('Report icon clicked');
+        // Add your desired functionality here
     }
 }
 
