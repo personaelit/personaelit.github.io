@@ -1,3 +1,5 @@
+import { calculateDaysAlive, saveToLocalStorage, loadFromLocalStorage } from './utils.js';
+
 const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');
 const closeModal = document.querySelector('.close');
@@ -13,19 +15,95 @@ function hideModal() {
     modal.style.display = 'none';
 }
 
-function updateModalContent(currentDayOfYear) {
-    const currentYear = new Date().getFullYear();
-    const date = new Date(currentYear, 0, currentDayOfYear);
+function updateModalContent(date) {
+    const currentDayOfYear = getDayOfYear(date);
     const options = { month: 'short', day: 'numeric' };
     const dateString = date.toLocaleDateString('en-US', options);
-    const datestamp = date.toISOString().split('T')[0]; // Add this line
+    const datestamp = date.toISOString().split('T')[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
 
     modalHeader.textContent = `Date: ${dateString}, Day: ${currentDayOfYear}`;
 
-    // Update these lines
+    // Clear previous content while preserving the close icon
+    const closeButton = modalContent.querySelector('.close');
+    modalContent.innerHTML = '';
+    if (closeButton) {
+        modalContent.appendChild(closeButton);
+    }
 
+    if (date.getTime() === today.getTime()) {
+        // Today's date
+        const greeting = createPersonalizedGreeting(date);
+        const greetingElement = document.createElement('p');
+        greetingElement.textContent = greeting;
+        greetingElement.className = 'personalized-greeting';
+        modalContent.appendChild(greetingElement);
 
-    // Add mood selector
+        // Add mood selector and notes for today
+        addMoodSelector(datestamp);
+        addNotesSection(datestamp);
+    } else if (date.getTime() > today.getTime()) {
+        // Future date
+        const futureMessage = document.createElement('p');
+        futureMessage.textContent = "This date is in the future. You can't add entries for future dates.";
+        futureMessage.className = 'future-message';
+        modalContent.appendChild(futureMessage);
+    } else {
+        // Past date
+        const pastMessage = document.createElement('p');
+        
+        pastMessage.className = 'past-message';
+        modalContent.appendChild(pastMessage);
+
+        // Add jumbo emoji based on saved mood
+        addJumboMoodEmoji(datestamp);
+
+        // Add notes section for past dates (editable)
+        addNotesSection(datestamp);
+    }
+}
+
+function createPersonalizedGreeting(date) {
+    const name = loadFromLocalStorage('aiad_userName') || 'friend';
+    const daysAlive = calculateDaysAlive(date);
+    const timeOfDay = getTimeOfDay(date);
+
+    return `${timeOfDay}, ${name}! This is day ${daysAlive} of your life. What will you make of it?`;
+}
+
+function getTimeOfDay(date) {
+    const hour = date.getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+}
+
+function getDayOfYear(date) {
+    const start = new Date(date.getFullYear(), 0, 0);
+    const diff = date - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay);
+}
+
+function saveNotes(datestamp, notes) {
+    saveToLocalStorage(`aiad_notes_${datestamp}`, notes);
+}
+
+function loadNotes(datestamp) {
+    return loadFromLocalStorage(`aiad_notes_${datestamp}`);
+}
+
+function saveMood(datestamp, mood) {
+    saveToLocalStorage(`aiad_mood_${datestamp}`, mood);
+}
+
+function loadMood(datestamp) {
+    return loadFromLocalStorage(`aiad_mood_${datestamp}`);
+}
+
+function addMoodSelector(datestamp) {
     moodSelector.className = 'mood-selector';
     moodSelector.innerHTML = `
         <input type="radio" name="mood" value="1" id="mood1"><label for="mood1">😢</label>
@@ -38,31 +116,46 @@ function updateModalContent(currentDayOfYear) {
     if (savedMood) {
         moodSelector.querySelector(`input[value="${savedMood}"]`).checked = true;
     }
-    moodSelector.addEventListener('change', (e) => saveMood(datestamp, e.target.value));
+    moodSelector.addEventListener('change', (e) => {
+        saveMood(datestamp, e.target.value);
+        updateJumboMoodEmoji(e.target.value);
+    });
     modalContent.appendChild(moodSelector);
+}
 
-    // Add notes section
-    notesTextarea.placeholder = 'Enter your notes for the day...';
+function addNotesSection(datestamp) {
+    notesTextarea.placeholder = 'How are you feeling?';
     notesTextarea.value = loadNotes(datestamp);
     notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
-
 }
 
-function saveNotes(datestamp, notes) {
-    localStorage.setItem(`aiad_notes_${datestamp}`, notes);
+function addJumboMoodEmoji(datestamp) {
+    const savedMood = loadMood(datestamp);
+    if (savedMood) {
+        const jumboEmoji = document.createElement('div');
+        jumboEmoji.className = 'jumbo-emoji';
+        jumboEmoji.textContent = getMoodEmoji(savedMood);
+        modalContent.appendChild(jumboEmoji);
+    }
 }
 
-function loadNotes(datestamp) {
-    return localStorage.getItem(`aiad_notes_${datestamp}`) || '';
+function getMoodEmoji(mood) {
+    const moodEmojis = {
+        '1': '😢',
+        '2': '😕',
+        '3': '😐',
+        '4': '🙂',
+        '5': '😄'
+    };
+    return moodEmojis[mood] || '😐';
 }
 
-function saveMood(datestamp, mood) {
-    localStorage.setItem(`aiad_mood_${datestamp}`, mood);
-}
-
-function loadMood(datestamp) {
-    return localStorage.getItem(`aiad_mood_${datestamp}`);
+function updateJumboMoodEmoji(mood) {
+    const jumboEmoji = modalContent.querySelector('.jumbo-emoji');
+    if (jumboEmoji) {
+        jumboEmoji.textContent = getMoodEmoji(mood);
+    }
 }
 
 closeModal.addEventListener('click', hideModal);

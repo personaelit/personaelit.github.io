@@ -1,5 +1,6 @@
 import { showModal, updateModalContent } from './modal.js';
 import { initializeSettings, toggleSettingsPanel, openSettingsPanel, closeSettingsPanel } from './settings.js';
+import { getCurrentDayOfYear, calculateDaysAlive } from './utils.js';
 
 const canvas = document.getElementById('solarSystem');
 const ctx = canvas.getContext('2d');
@@ -21,14 +22,6 @@ const CLICK_TIME_THRESHOLD = 200; // milliseconds
 let sunPulsate = 0;
 
 let lastTouchEnd = 0;
-
-function getCurrentDayOfYear() {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    return Math.floor(diff / oneDay);
-}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -202,7 +195,7 @@ function animate() {
     draw();
     const now = new Date();
     if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-        calculateDaysAlive();
+        updateDaysAliveLabel();
     }
     requestAnimationFrame(animate);
 }
@@ -216,6 +209,7 @@ function updateEarthPosition(value) {
     currentDayOfYear = Math.max(1, Math.min(365, currentDayOfYear));
     time = ((currentDayOfYear - 1) / 365) * Math.PI * 2;
     updateDateLabel();
+    updateDatePicker(); // Add this line to update the date picker
 }
 
 slider.addEventListener('input', function() {
@@ -227,12 +221,10 @@ slider.addEventListener('change', function() {
 });
 
 function updateDateLabel() {
-    // Create a new Date object for the current year
-    const currentYear = new Date().getFullYear();
-    // Create a date object for the selected day
+    // Create a date object for the selected day and year
     const date = new Date(currentYear, 0, currentDayOfYear);
     
-    const options = { month: 'short', day: 'numeric' };
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
     document.getElementById('dateLabel').textContent = date.toLocaleDateString('en-US', options);
 }
 
@@ -259,21 +251,17 @@ function updateClock() {
     clockElement.textContent = `${hours}:${minutes}:${seconds}`;
 }
 
-function calculateDaysAlive() {
-    let userDOB = localStorage.getItem('aiad_userDOB') || '';
-    if (userDOB) {
-        const birthDate = new Date(userDOB);
-        const today = new Date();
-        const timeDiff = today - birthDate;
-        const daysAlive = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-        daysAliveElement.textContent = `Days Alive: ${daysAlive}`;
+function updateDaysAliveLabel() {
+    const daysAlive = calculateDaysAlive();
+    if (daysAlive !== null) {
+        daysAliveElement.textContent = `Day #: ${daysAlive}`;
     } else {
         daysAliveElement.textContent = '';
     }
 }
 
 function initializeDaysAlive() {
-    calculateDaysAlive();
+    updateDaysAliveLabel();
 }
 
 initializeDaysAlive();
@@ -333,8 +321,11 @@ function handleDragMove(event) {
     time += angleDiff;
     dragStartAngle = currentAngle;
 
-    // Update currentDayOfYear based on the new time
-    currentDayOfYear = Math.floor((time / (Math.PI * 2) * 365) + 1) % 365 || 365;
+    // Update currentDayOfYear and currentYear based on the new time
+    const totalDays = Math.floor((time / (Math.PI * 2)) * 365);
+    currentYear = Math.floor(totalDays / 365) + new Date().getFullYear();
+    currentDayOfYear = (totalDays % 365) + 1;
+
     updateDateLabel();
     updateDatePicker();
     slider.value = currentDayOfYear;
@@ -348,7 +339,10 @@ function handleDragEnd(event) {
 
     if (dragDuration < CLICK_TIME_THRESHOLD) {
         // This was a quick tap/click, so open the modal
-        updateModalContent(currentDayOfYear);
+        const selectedDate = new Date(currentYear, 0, 1);
+        selectedDate.setDate(currentDayOfYear);
+        console.log("Selected date:", selectedDate); // Add this for debugging
+        updateModalContent(selectedDate);
         showModal();
     }
 
