@@ -89,13 +89,14 @@ function updateModalContent(date) {
 function createPersonalizedGreeting(date) {
     const name = loadFromLocalStorage('aiad_userName') || 'friend';
     const daysAlive = calculateDaysAlive(date);
-    const timeOfDay = getTimeOfDay(date);
+    const timeOfDay = getTimeOfDay(new Date());  // Use current time
 
     return `${timeOfDay}, ${name}! This is day ${daysAlive} of your life. What will you make of it?`;
 }
 
 function getTimeOfDay(date) {
     const hour = date.getHours();
+
     if (hour < 12) return "Good morning";
     if (hour < 18) return "Good afternoon";
     return "Good evening";
@@ -144,9 +145,9 @@ function addMoodSelector(datestamp) {
     modalContent.appendChild(moodSelector);
 }
 
-function addNotesSection(datestamp, isPastDate = false) {
+function addNotesSection(datestamp) {
     const notesTextarea = document.createElement('textarea');
-    notesTextarea.placeholder = isPastDate ? 'Any thoughts about this day?' : 'How are you feeling?';
+    notesTextarea.placeholder = 'How are you feeling?';
     notesTextarea.value = loadNotes(datestamp);
     notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
