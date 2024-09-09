@@ -16,7 +16,7 @@ function hideModal() {
 
 function updateModalContent(date) {
     const currentDayOfYear = getDayOfYear(date);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const dateString = date.toLocaleDateString('en-US', options);
     const datestamp = date.toISOString().split('T')[0];
     const today = new Date();
