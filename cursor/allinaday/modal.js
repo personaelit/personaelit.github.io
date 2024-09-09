@@ -88,17 +88,22 @@ function updateModalContent(date) {
 
 function createPersonalizedGreeting(date) {
     const name = loadFromLocalStorage('aiad_userName') || 'friend';
-    const daysAlive = calculateDaysAlive(date);
+    const daysAlive = calculateDaysAlive(date) || 0;
     const timeOfDay = getTimeOfDay(new Date());  // Use current time
 
-    return `${timeOfDay}, ${name}! This is day ${daysAlive} of your journey. Make. it. count.`;
+    if (daysAlive > 0) {
+        return `${timeOfDay}, ${name}! This is day ${daysAlive} of your journey. Make. it. count.`;
+    }
+    else {
+        return `${timeOfDay}, ${name}!`
+    }
 }
 
 function getTimeOfDay(date) {
-    const hour = date.getUTCHours();
+    const hour = date.getHours(); // Use local time instead of UTC
 
     if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
+    if (hour >= 12 && hour < 18) return "Good afternoon";
     return "Good evening";
 }
 
