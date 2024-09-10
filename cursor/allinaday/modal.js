@@ -100,7 +100,7 @@ function createPersonalizedGreeting(date) {
 }
 
 function getTimeOfDay(date) {
-    const hour = date.getHours(); // Use local time instead of UTC
+    const hour = date.getHours();
 
     if (hour < 12) return "Good morning";
     if (hour >= 12 && hour < 18) return "Good afternoon";
