@@ -22,6 +22,9 @@ function updateModalContent(date) {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     date.setUTCHours(0, 0, 0, 0);
+    
+    // Adjust date to local timezone
+    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
 
     // Clear previous content while preserving the close icon and header
     const closeButton = modalContent.querySelector('.close');
@@ -43,7 +46,7 @@ function updateModalContent(date) {
     }
     
     // Update header content
-    header.textContent = dateString;
+    header.textContent = localDate.toLocaleDateString('en-US', options);
 
     // Update the existing modalHeader
     modalHeader.textContent = `Day of Year: ${currentDayOfYear}`;
