@@ -80,14 +80,28 @@ export function drawReportIcon(ctx, canvas) {
 }
 
 export function updateDateLabel() {
-    const date = new Date(Date.UTC(state.currentYear, 0, state.currentDayOfYear));
-    const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+    const date = new Date();
+    date.setFullYear(state.currentYear);
+    date.setMonth(0); // January is 0-based
+    date.setUTCDate(state.currentDayOfYear);
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
     document.getElementById('dateLabel').textContent = date.toLocaleDateString('en-US', options);
 }
 
 export function updateDatePicker() {
-    const date = new Date(Date.UTC(state.currentYear, 0, state.currentDayOfYear));
-    datePicker.value = date.toISOString().split('T')[0];
+    // const date = new Date(Date.UTC(state.currentYear, 0, state.currentDayOfYear));
+    // datePicker.value = date.toISOString().split('T')[0];
+    const date = new Date();
+    date.setFullYear(state.currentYear);
+    date.setMonth(0); // January is 0-based
+    date.setUTCDate(state.currentDayOfYear);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+
+    datePicker.value = formattedDate;
 }
 
 function updateClock() {
