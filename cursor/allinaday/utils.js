@@ -24,3 +24,20 @@ export function saveToLocalStorage(key, value) {
 export function loadFromLocalStorage(key) {
     return localStorage.getItem(key) || '';
 }
+
+export function isToday(date) {
+    const today = new Date();
+    return date.getDate() === today.getDate() && 
+           date.getMonth() === today.getMonth() && 
+           date.getFullYear() === today.getFullYear();
+}
+
+export function isInPast(date) {
+    const today = new Date();
+    return date < today;
+}
+
+export function isInFuture(date) {
+    const today = new Date();
+    return date > today;
+}

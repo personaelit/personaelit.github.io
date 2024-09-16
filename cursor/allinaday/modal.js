@@ -1,4 +1,4 @@
-import { calculateDaysAlive, saveToLocalStorage, loadFromLocalStorage } from './utils.js';
+import { calculateDaysAlive, saveToLocalStorage, loadFromLocalStorage, isToday, isInFuture, isInPast } from './utils.js';
 
 const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');
@@ -15,44 +15,27 @@ function hideModal() {
 }
 
 function updateModalContent(date) {
-    const currentDayOfYear = getDayOfYear(date);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const dateString = date.toLocaleDateString('en-US', options);
-    const datestamp = date.toISOString().split('T')[0];
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    date.setUTCHours(0, 0, 0, 0);
-    
-    // Adjust date to local timezone
-    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    // Clear previous content
 
-    // Clear previous content while preserving the close icon and header
+
     const closeButton = modalContent.querySelector('.close');
-    const existingHeader = modalContent.querySelector('.modal-date-header');
+    // const existingHeader = modalContent.querySelector('.modal-date-header');
     modalContent.innerHTML = '';
     if (closeButton) {
         modalContent.appendChild(closeButton);
     }
-    
-    // Create and add the header if it doesn't exist
-    let header;
-    if (existingHeader) {
-        header = existingHeader;
-        modalContent.appendChild(header);
-    } else {
-        header = document.createElement('h2');
-        header.className = 'modal-date-header';
-        modalContent.appendChild(header);
-    }
-    
-    // Update header content
-    header.textContent = localDate.toLocaleDateString('en-US', options);
 
-    // Update the existing modalHeader
-    modalHeader.textContent = `Day of Year: ${currentDayOfYear}`;
 
-    if (date.getTime() === today.getTime()) {
-        // Today's date
+    const datestamp = date.toISOString().split('T')[0];
+
+    let header = document.createElement('h2');
+    header.className = 'modal-date-header';
+    modalContent.appendChild(header);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+    header.textContent = date.toLocaleDateString('en-US', options);
+
+    if (isToday(date)) {
         const greeting = createPersonalizedGreeting(date);
         const greetingElement = document.createElement('p');
         greetingElement.textContent = greeting;
@@ -62,30 +45,33 @@ function updateModalContent(date) {
         // Add mood selector and notes for today
         addMoodSelector(datestamp);
         addNotesSection(datestamp);
-    } else if (date.getTime() > today.getTime()) {
-        // Future date
+    }
+    else if (isInPast(date)) {
+        const pastMessage = document.createElement('p');
+
+            pastMessage.className = 'past-message';
+            modalContent.appendChild(pastMessage);
+    
+            // Add mood selector if no mood is saved
+            const savedMood = loadMood(datestamp);
+            if (!savedMood) {
+                addMoodSelector(datestamp);
+            } else {
+                // Add jumbo emoji based on saved mood
+                addJumboMoodEmoji(datestamp);
+            }
+    
+            // Add notes section for past dates (editable)
+            addNotesSection(datestamp, true);
+    }
+    else if (isInFuture(date)) {
         const futureMessage = document.createElement('p');
         futureMessage.textContent = "What will the future hold?";
         futureMessage.className = 'future-message';
         modalContent.appendChild(futureMessage);
-    } else {
-        // Past date
-        const pastMessage = document.createElement('p');
-        
-        pastMessage.className = 'past-message';
-        modalContent.appendChild(pastMessage);
-
-        // Add mood selector if no mood is saved
-        const savedMood = loadMood(datestamp);
-        if (!savedMood) {
-            addMoodSelector(datestamp);
-        } else {
-            // Add jumbo emoji based on saved mood
-            addJumboMoodEmoji(datestamp);
-        }
-
-        // Add notes section for past dates (editable)
-        addNotesSection(datestamp, true);
+    }
+    else {
+        console.error(`Unexpected condition occurred: ${date} appears to be outside of the time continuum.`)
     }
 }
 
@@ -158,13 +144,13 @@ function addNotesSection(datestamp) {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const date = new Date(datestamp);
-    
+
     if (date < today) {
         notesTextarea.placeholder = 'Thoughts about this day? Events? Notes? Feelings?';
     } else {
         notesTextarea.placeholder = 'How are you feeling?';
     }
-    
+
     notesTextarea.value = loadNotes(datestamp);
     notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
@@ -200,7 +186,7 @@ function updateJumboMoodEmoji(mood) {
 
 closeModal.addEventListener('click', hideModal);
 
-window.addEventListener('click', function(event) {
+window.addEventListener('click', function (event) {
     if (event.target == modal) {
         hideModal();
     }
@@ -211,10 +197,10 @@ export { showModal, hideModal, updateModalContent };
 export function showReportModal() {
     const modal = document.getElementById('modal');
     const modalContent = document.querySelector('.modal-content');
-    
+
     // Clear previous content
     modalContent.innerHTML = '';
-    
+
     // Add report content
     const reportContent = document.createElement('div');
     reportContent.innerHTML = `
@@ -222,12 +208,12 @@ export function showReportModal() {
         <canvas id="moodChart"></canvas>
         <div id="moodStats"></div>
     `;
-    
+
     modalContent.appendChild(reportContent);
-    
+
     // Show the modal
     modal.style.display = 'block';
-    
+
     // Generate the mood report
     generateMoodReport();
 }
@@ -241,18 +227,18 @@ function generateMoodReport() {
 function getMoodData() {
     const moodData = [];
     const currentDate = new Date();
-    
+
     for (let i = 0; i < 30; i++) {
         const date = new Date(currentDate);
         date.setDate(date.getDate() - i);
         const datestamp = date.toISOString().split('T')[0];
         const mood = loadFromLocalStorage(`aiad_mood_${datestamp}`);
-        
+
         if (mood) {
             moodData.unshift({ date: datestamp, mood: parseInt(mood) });
         }
     }
-    
+
     return moodData;
 }
 
@@ -291,15 +277,15 @@ function displayMoodStats(moodData) {
         counts[data.mood] = (counts[data.mood] || 0) + 1;
         return counts;
     }, {});
-    
+
     moodStats.innerHTML = `
         <h3>Mood Statistics (Last 30 days)</h3>
         <p>Average Mood: ${averageMood.toFixed(2)}</p>
         <p>Mood Distribution:</p>
         <ul>
-            ${Object.entries(moodCounts).map(([mood, count]) => 
-                `<li>${getMoodEmoji(mood)}: ${count} day${count !== 1 ? 's' : ''}</li>`
-            ).join('')}
+            ${Object.entries(moodCounts).map(([mood, count]) =>
+        `<li>${getMoodEmoji(mood)}: ${count} day${count !== 1 ? 's' : ''}</li>`
+    ).join('')}
         </ul>
     `;
 }
