@@ -138,7 +138,7 @@ function throwFireworks() {
     }, 250);
 }
 
-function resetTasksDaily(forceReset = false) {
+export function resetTasksDaily(forceReset = false) {
     // let lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
     // const now = new Date();
     // const today = getTodayDate();

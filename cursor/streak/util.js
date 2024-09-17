@@ -1,4 +1,4 @@
-import { resetTasksDaily } from './historyManager.js'
+import { resetTasksDaily } from './taskManager.js'
 const STORAGE_PREFIX = 'streak_';
 
 
