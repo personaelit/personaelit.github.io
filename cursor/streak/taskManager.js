@@ -138,42 +138,36 @@ function throwFireworks() {
     }, 250);
 }
 
-export function resetTasksDaily(forceReset = false) {
-    // let lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
-    // const now = new Date();
-    // const today = getTodayDate();
+export function resetTasksDaily() {
+    let lastReset = localStorage.getItem(`${STORAGE_PREFIX}lastReset`);
+    const now = new Date();
+    const today = getTodayDate();
 
-    // if (forceReset) {
-    //     // Bump the last reset date by one day for testing
-    //     const lastResetDate = new Date(lastReset);
-    //     lastResetDate.setDate(lastResetDate.getDate() + 1);
-    //     lastReset = lastResetDate.toISOString().split('T')[0];
-    // }
+    
+    if (lastReset !== today) {
+        const streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
+        const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
+        const completedTasksCount = tasks.filter(task => task.completed).length;
+        const totalTasksCount = tasks.length;
 
-    // if (lastReset !== today && (forceReset || (now.getHours() === 0 && now.getMinutes() === 0))) {
-    //     const streak = parseInt(localStorage.getItem(`${STORAGE_PREFIX}streak`)) || 0;
-    //     const tasks = JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}tasks`)) || [];
-    //     const completedTasksCount = tasks.filter(task => task.completed).length;
-    //     const totalTasksCount = tasks.length;
+        let newStreak = streak;
+        if (completedTasksCount > 0 && lastReset) {
+            newStreak = streak + 1;
+            localStorage.setItem(`${STORAGE_PREFIX}streak`, newStreak);
+        } else {
+            localStorage.setItem(`${STORAGE_PREFIX}streak`, 0);
+        }
 
-    //     let newStreak = streak;
-    //     if (completedTasksCount > 0 && lastReset) {
-    //         newStreak = streak + 1;
-    //         localStorage.setItem(`${STORAGE_PREFIX}streak`, newStreak);
-    //     } else {
-    //         localStorage.setItem(`${STORAGE_PREFIX}streak`, 0);
-    //     }
+        saveHistory(lastReset, completedTasksCount, totalTasksCount);
 
-    //     saveHistory(lastReset, completedTasksCount, totalTasksCount);
-
-    //     // Re-add yesterday's tasks as incomplete
-    //     localStorage.setItem(`${STORAGE_PREFIX}tasks`, JSON.stringify(tasks.map(task => ({ ...task, completed: false }))));
-    //     localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
-    //     taskList.innerHTML = '';
-    //     loadTasks(); // Reload tasks after resetting
-    //     updateStreak();
-    //     loadHistory(); // Reload history after updating
-    // }
+        // Re-add yesterday's tasks as incomplete
+        localStorage.setItem(`${STORAGE_PREFIX}tasks`, JSON.stringify(tasks.map(task => ({ ...task, completed: false }))));
+        localStorage.setItem(`${STORAGE_PREFIX}lastReset`, today);
+        taskList.innerHTML = '';
+        loadTasks(); // Reload tasks after resetting
+        updateStreak();
+        loadHistory(); // Reload history after updating
+    }
 }
 
 
