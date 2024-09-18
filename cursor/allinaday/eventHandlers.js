@@ -76,8 +76,11 @@ export function handleDragEnd(event) {
     const dragDuration = dragEndTime - state.dragStartTime;
 
     if (dragDuration < CLICK_TIME_THRESHOLD) {
-        const selectedDate = new Date(state.currentYear, 0, state.currentDayOfYear);
-        updateModalContent(selectedDate);
+        const date = new Date();
+        date.setFullYear(state.currentYear);
+        date.setMonth(0); // January is 0-based
+        date.setUTCDate(state.currentDayOfYear);
+        updateModalContent(date);
         showModal();
     }
 
