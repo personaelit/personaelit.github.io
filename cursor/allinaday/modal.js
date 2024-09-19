@@ -198,8 +198,13 @@ export function showReportModal() {
     const modal = document.getElementById('modal');
     const modalContent = document.querySelector('.modal-content');
 
-    // Clear previous content
+
+    const closeButton = modalContent.querySelector('.close');
     modalContent.innerHTML = '';
+    if (closeButton) {
+        modalContent.appendChild(closeButton);
+    }
+    
 
     // Add report content
     const reportContent = document.createElement('div');
