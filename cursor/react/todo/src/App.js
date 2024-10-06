@@ -3,6 +3,7 @@ import KanbanView from './Components/KanbanView';
 import EisenhowerView from './Components/EisenhowerView';
 import Modal from './Components/Modal';
 import './App.css';
+import ListView from './Components/ListView'; // Add this import
 
 function App() {
   const [todos, setTodos] = useState(() => {
@@ -14,6 +15,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [notes, setNotes] = useState('');
+  const [dueDate, setDueDate] = useState(''); // Add this line
 
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos));
@@ -27,7 +29,8 @@ function App() {
         done: false,
         category: 'To Do',
         priority: 'Urgent & Important',
-        notes: ''
+        notes: '',
+        dueDate: '', // Add dueDate property
       };
       setTodos([...todos, newTodo]);
       setInput('');
@@ -40,7 +43,7 @@ function App() {
   };
 
   const updateTodo = (index, newValue) => {
-    const newTodos = todos.map((todo, i) => (i === index ? { ...todo, text: newValue } : todo));
+    const newTodos = todos.map((todo, i) => (i === index ? { ...todo, ...newValue } : todo)); // Spread newValue
     setTodos(newTodos);
   };
 
@@ -73,6 +76,7 @@ function App() {
   const handleCardClick = (todo) => {
     setSelectedTodo(todo);
     setNotes(todo.notes || '');
+    setDueDate(todo.dueDate || ''); // Add dueDate state
     setIsModalOpen(true);
   };
 
@@ -80,6 +84,7 @@ function App() {
     if (selectedTodo) {
       const index = todos.findIndex(todo => todo === selectedTodo);
       updateNotes(index, notes);
+      updateTodo(index, { dueDate }); // Update dueDate
     }
     setIsModalOpen(false);
     setSelectedTodo(null);
@@ -100,6 +105,7 @@ function App() {
         <div className="view-buttons">
           <button onClick={() => setView('kanban')}>Kanban View</button>
           <button onClick={() => setView('eisenhower')}>Eisenhower View</button>
+          <button onClick={() => setView('list')}>List View</button> {/* Add this button */}
         </div>
         {view === 'kanban' ? (
           <KanbanView
@@ -111,8 +117,18 @@ function App() {
             deleteTodo={deleteTodo}
             onCardClick={handleCardClick}
           />
-        ) : (
+        ) : view === 'eisenhower' ? (
           <EisenhowerView
+            todos={todos}
+            updateCategory={updateCategory}
+            updatePriority={updatePriority}
+            updateTodo={updateTodo}
+            toggleDone={toggleDone}
+            deleteTodo={deleteTodo}
+            onCardClick={handleCardClick}
+          />
+        ) : (
+          <ListView // Add this line
             todos={todos}
             updateCategory={updateCategory}
             updatePriority={updatePriority}
@@ -133,6 +149,12 @@ function App() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add notes here..."
               className="notes-textarea"
+            />
+            <input
+              type="date" // Add this input for due date
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="due-date-input"
             />
           </div>
         )}
