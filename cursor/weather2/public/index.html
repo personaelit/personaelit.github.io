@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Location</title>
+</head>
+<body>
+    <h1>Welcome!</h1>
+    <p id="location">Fetching your location...</p>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+
+                        // Display lat/long on the page
+                        document.getElementById('location').innerText = 
+                            `Your location: Latitude ${latitude}, Longitude ${longitude}`;
+
+                        // Send latitude and longitude to the server
+                        fetch(`/location?lat=${latitude}&lng=${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                // Display detailed location information
+                                document.getElementById('location').innerText = 
+                                    `You are in ${data.city}, ${data.state}, ${data.country}`;
+                            })
+                            .catch(error => {
+                                console.error('Error fetching location details:', error);
+                            });
+                    },
+                    (error) => {
+                        document.getElementById('location').innerText = 
+                            'Unable to retrieve your location.';
+                        console.error(error);
+                    }
+                );
+            } else {
+                document.getElementById('location').innerText = 
+                    'Geolocation is not supported by your browser.';
+            }
+        });
+    </script>
+</body>
+</html>

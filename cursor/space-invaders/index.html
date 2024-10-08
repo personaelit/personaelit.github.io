@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Space Invaders</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <!-- Add difficulty slider -->
+    <input type="range" id="difficultySlider" min="1" max="10" value="5" step="1" style="position: absolute; top: 10px; left: 10px; z-index: 1000;">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const canvas = document.getElementById("gameCanvas");
+            const ctx = canvas.getContext("2d");
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let stars = [];
+            const numStars = 200;
+            for (let i = 0; i < numStars; i++) {
+                const speed = Math.random() * 3 + 0.5;
+                stars.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    speedX: (Math.random() - 0.5) * speed,
+                    speedY: (Math.random() - 0.5) * speed,
+                    radius: Math.random() * 2
+                });
+            }
+
+            // Draw a starfield with stars streaking outward from the center
+            function drawStarfield() {
+                ctx.fillStyle = "#000";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#fff";
+                stars.forEach(star => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    star.x += star.speedX;
+                    star.y += star.speedY;
+
+                    // Wrap around edges to create an infinite effect
+                    if (star.x < 0 || star.x > canvas.width || star.y < 0 || star.y > canvas.height) {
+                        star.x = canvas.width / 2;
+                        star.y = canvas.height / 2;
+                        star.speedX = (Math.random() - 0.5) * star.speed;
+                        star.speedY = (Math.random() - 0.5) * star.speed;
+                    }
+                });
+            }
+
+            // Spaceship sprite as a 2D array
+            const spaceship = [
+                [0, 0, 0, 1, 1, 0, 0, 0],
+                [0, 0, 1, 2, 2, 1, 0, 0],
+                [0, 1, 2, 2, 2, 2, 1, 0],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [0, 1, 2, 2, 2, 2, 1, 0],
+                [0, 0, 1, 1, 1, 1, 0, 0],
+                [0, 0, 0, 1, 1, 0, 0, 0]
+            ];
+
+            // Invader sprite as a 2D array
+            const invader = [
+                [0, 0, 1, 1, 1, 1, 0, 0],
+                [0, 1, 2, 2, 2, 2, 1, 0],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1],
+                [0, 1, 2, 2, 2, 2, 1, 0],
+                [0, 0, 1, 1, 1, 1, 0, 0]
+            ];
+
+            const player = {
+                width: 50,
+                height: 30,
+                x: canvas.width / 2 - 25,
+                y: canvas.height - 60,
+                speed: 7,
+                dx: 0
+            };
+
+            const bullets = [];
+            const invaders = [];
+            const rows = 5;
+            const columns = 11;
+            const invaderWidth = 40;
+            const invaderHeight = 20;
+            const invaderPaddingX = (canvas.width - (columns * invaderWidth)) / (columns + 1);
+            const invaderPaddingY = 20;
+            const bulletSpeed = 5;
+            let invaderDirection = 1;
+            let invaderSpeed = 100;
+            const invaderDrop = 10;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < columns; col++) {
+                    invaders.push({
+                        x: col * (invaderWidth + invaderPaddingX) + invaderPaddingX,
+                        y: row * (invaderHeight + invaderPaddingY) + invaderPaddingY,
+                        width: invaderWidth,
+                        height: invaderHeight,
+                        alive: true
+                    });
+                }
+            }
+
+            const difficultySlider = document.getElementById("difficultySlider");
+
+            const keys = {}; // Track currently pressed keys
+
+            function drawSprite(sprite, x, y, pixelSize) {
+                for (let row = 0; row < sprite.length; row++) {
+                    for (let col = 0; col < sprite[row].length; col++) {
+                        if (sprite[row][col] === 1) {
+                            ctx.fillStyle = "#000"; // Border color
+                        } else if (sprite[row][col] === 2) {
+                            ctx.fillStyle = "#0f0"; // Fill color
+                        } else {
+                            continue;
+                        }
+                        ctx.fillRect(x + col * pixelSize, y + row * pixelSize, pixelSize, pixelSize);
+                    }
+                }
+            }
+
+            function drawPlayer() {
+                drawSprite(spaceship, player.x, player.y, 5);
+            }
+
+            function drawInvaders() {
+                invaders.forEach(invaderObj => {
+                    if (invaderObj.alive) {
+                        drawSprite(invader, invaderObj.x, invaderObj.y, 3);
+                    }
+                });
+            }
+
+            function drawBullets() {
+                ctx.fillStyle = "#0f0";
+                bullets.forEach(bullet => {
+                    ctx.fillRect(bullet.x, bullet.y, 5, 10);
+                });
+            }
+
+            function update() {
+                player.x += player.dx;
+
+                // Adjust invader speed based on difficulty
+                invaderSpeed = difficultySlider.value * 10; // Example: speed increases with difficulty
+
+                if (player.x < 0) {
+                    player.x = 0;
+                } else if (player.x + player.width > canvas.width) {
+                    player.x = canvas.width - player.width;
+                }
+
+                bullets.forEach((bullet, index) => {
+                    bullet.y -= bulletSpeed;
+                    if (bullet.y < 0) {
+                        bullets.splice(index, 1);
+                    }
+                });
+
+                bullets.forEach((bullet, bulletIndex) => {
+                    invaders.forEach((invader, invaderIndex) => {
+                        if (
+                            invader.alive &&
+                            bullet.x < invader.x + invader.width &&
+                            bullet.x + 5 > invader.x &&
+                            bullet.y < invader.y + invader.height &&
+                            bullet.y + 10 > invader.y
+                        ) {
+                            invader.alive = false;
+                            bullets.splice(bulletIndex, 1);
+                        }
+                    });
+                });
+
+                let moveDown = false;
+
+                invaders.forEach(invader => {
+                    if (invader.alive) {
+                        invader.x += invaderDirection * invaderSpeed * 0.05;
+                        if (invader.x + invader.width >= canvas.width || invader.x <= 0) {
+                            moveDown = true;
+                        }
+                    }
+                });
+
+                if (moveDown) {
+                    invaderDirection *= -1;
+                    invaders.forEach(invader => {
+                        if (invader.alive) {
+                            invader.y += invaderDrop;
+                        }
+                    });
+                }
+            }
+
+            function draw() {
+                drawStarfield();
+                drawPlayer();
+                drawInvaders();
+                drawBullets();
+            }
+
+            function loop() {
+                update();
+                draw();
+                requestAnimationFrame(loop);
+            }
+
+            function keyDown(e) {
+                keys[e.key] = true; // Mark the key as pressed
+                if (keys["ArrowRight"] || keys["d"]) {
+                    player.dx = player.speed;
+                } else if (keys["ArrowLeft"] || keys["a"]) {
+                    player.dx = -player.speed;
+                }
+                if (e.key === " " || e.key === "ArrowUp") {
+                    bullets.push({
+                        x: player.x + player.width / 2 - 2.5,
+                        y: player.y
+                    });
+                }
+            }
+
+            function keyUp(e) {
+                delete keys[e.key]; // Remove the key from the pressed keys
+                if (
+                    e.key === "ArrowRight" ||
+                    e.key === "d" ||
+                    e.key === "ArrowLeft" ||
+                    e.key === "a"
+                ) {
+                    player.dx = 0;
+                }
+            }
+
+            document.addEventListener("keydown", keyDown);
+            document.addEventListener("keyup", keyUp);
+
+            loop();
+        });
+    </script>
+</body>
+
+</html>
