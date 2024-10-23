@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Seeker and the Mana</title>
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background: black; }
+        canvas { display: block; }
+        #nirvanaCounter {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="nirvanaCounter">Nirvana Progress: 0 / 42</div>
+    <canvas id="seekerCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('seekerCanvas');
+        const ctx = canvas.getContext('2d');
+        const counterDisplay = document.getElementById('nirvanaCounter');
+
+        let collisionCount = 0;
+        let chasing = false;
+        let achievedNirvana = false;
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (achievedNirvana) {
+                orb.targetX = canvas.width / 2;
+                orb.targetY = canvas.height / 2;
+            }
+        };
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const orb = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 20,
+            hue: 0,
+            speed: 3,
+            targetX: canvas.width / 2,
+            targetY: canvas.height / 2,
+            arrived: false // New property
+        };
+
+        const mana = Array.from({ length: 42 }, (_, i) => ({
+            angle: (i / 42) * Math.PI * 2,
+            size: 5 + Math.random() * 10,
+            speed: 0.02 + Math.random() * 0.02,
+            hue: 260 + Math.random() * 30, // Shades of purple
+            x: orb.x + Math.cos((i / 42) * Math.PI * 2) * 150,
+            y: orb.y + Math.sin((i / 42) * Math.PI * 2) * 150,
+            canCollide: true,
+            collected: false
+        }));
+
+        const distance = (x1, y1, x2, y2) => {
+            return Math.hypot(x2 - x1, y2 - y1);
+        };
+
+        const scatterMana = () => {
+            mana.forEach(m => {
+                m.angle = Math.atan2(m.y - orb.y, m.x - orb.x);
+                m.speed = 2 + Math.random() * 2;
+            });
+        };
+
+        const findClosestMana = () => {
+            return mana.reduce((closest, current) => {
+                if (current.collected || !current.canCollide) return closest;
+                const closestDistance = distance(orb.x, orb.y, closest.x, closest.y);
+                const currentDistance = distance(orb.x, orb.y, current.x, current.y);
+                return currentDistance < closestDistance ? current : closest;
+            }, mana.find(m => !m.collected && m.canCollide));
+        };
+
+        const moveTowards = (targetX, targetY, speed) => {
+            const angle = Math.atan2(targetY - orb.y, targetX - orb.x);
+            orb.x += Math.cos(angle) * speed;
+            orb.y += Math.sin(angle) * speed;
+        };
+
+        const drawOrb = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            orb.hue = (orb.hue + 1) % 360;
+
+            const gradient = ctx.createRadialGradient(
+                orb.x, orb.y, orb.radius / 2,
+                orb.x, orb.y, orb.radius * 2
+            );
+            gradient.addColorStop(0, `hsl(${orb.hue}, 100%, 50%)`);
+            gradient.addColorStop(0.5, `hsl(${(orb.hue + 60) % 360}, 100%, 50%)`);
+            gradient.addColorStop(1, 'transparent');
+
+            ctx.beginPath();
+            ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        };
+
+        const drawMana = () => {
+            mana.forEach(m => {
+                if (m.collected && !achievedNirvana) {
+                    return; // Skip drawing collected mana before Nirvana
+                }
+
+                if (achievedNirvana) {
+                    // Update the angular position
+                    m.angle += m.angularSpeed;
+
+                    // Calculate orbital positions with inclination
+                    const xOffset = m.orbitalRadius * Math.cos(m.angle);
+                    const yOffset = m.orbitalRadius * Math.sin(m.angle) * Math.cos(m.inclination);
+
+                    m.x = orb.x + xOffset;
+                    m.y = orb.y + yOffset;
+                } else {
+                    m.x += Math.cos(m.angle) * m.speed * 2;
+                    m.y += Math.sin(m.angle) * m.speed * 2;
+
+                    if (m.x < 0 || m.x > canvas.width) m.angle = Math.PI - m.angle;
+                    if (m.y < 0 || m.y > canvas.height) m.angle = -m.angle;
+                }
+
+                const gradient = ctx.createRadialGradient(
+                    m.x, m.y, m.size / 2,
+                    m.x, m.y, m.size * 2
+                );
+                gradient.addColorStop(0, `hsl(${m.hue}, 100%, 60%)`);
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            });
+        };
+
+       const animate = () => {
+            drawOrb();
+            drawMana();
+
+            if (achievedNirvana) {
+                // DO Nothing ;)
+            } else if (chasing) {
+                const targetMana = findClosestMana();
+                if (targetMana) {
+                    moveTowards(targetMana.x, targetMana.y, orb.speed);
+
+                    if (targetMana.canCollide && distance(orb.x, orb.y, targetMana.x, targetMana.y) < orb.radius + targetMana.size) {
+                        // Mark the mana as collected
+                        targetMana.collected = true;
+                        collisionCount++;
+                        counterDisplay.textContent = `Nirvana Progress: ${collisionCount} / 42`;
+
+                        if (collisionCount >= 42) {
+                            chasing = false;
+                            achievedNirvana = true;
+                            orb.targetX = canvas.width / 2;
+                            orb.targetY = canvas.height / 2;
+                            orb.arrived = false; // Reset arrived status
+                            counterDisplay.textContent = 'You have reached Nirvana!';
+
+                            // Release the collected mana with orbital properties
+                            mana.forEach((m, index) => {
+                                m.collected = false;
+
+                                // Assign orbital properties
+                                m.orbitalRadius = 50 + (index % 7) * 20;
+                                m.angularSpeed = 0.01 + Math.random() * 0.02;
+                                m.inclination = (Math.PI / 6) * (index % 3 - 1);
+                                m.angle = Math.random() * Math.PI * 2;
+                            });
+                        }
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        };
+
+        canvas.addEventListener('click', (event) => {
+            const clickX = event.clientX;
+            const clickY = event.clientY;
+
+            if (distance(clickX, clickY, orb.x, orb.y) <= orb.radius) {
+                if (achievedNirvana) {
+                    achievedNirvana = false;
+                    chasing = true;
+                    collisionCount = 0;
+                    scatterMana();
+                } else {
+                    chasing = true;
+                    scatterMana();
+                }
+            }
+        });
+
+        animate();
+    </script>
+</body>
+</html>
