@@ -58,7 +58,7 @@
             y: canvas.height / 2,
             radius: 20,
             hue: 0,
-            speed: 3,
+            speed: 0,
             targetX: canvas.width / 2,
             targetY: canvas.height / 2,
             arrived: false // New property
@@ -196,6 +196,8 @@
                         targetMana.collected = true;
                         collisionCount++;
                         counterDisplay.textContent = `Nirvana Progress: ${collisionCount} / 42`;
+
+                        orb.speed += (orb.speed/2)
 
                         if (collisionCount >= 42) {
                             chasing = false;
