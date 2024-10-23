@@ -1,11 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>The Seeker and the Mana</title>
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; background: black; }
-        canvas { display: block; }
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: black;
+        }
+
+        canvas {
+            display: block;
+        }
+
         #nirvanaCounter {
             display: none;
             position: absolute;
@@ -18,6 +29,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="nirvanaCounter">Nirvana Progress: 0 / 42</div>
     <canvas id="seekerCanvas"></canvas>
@@ -146,9 +158,31 @@
             });
         };
 
-       const animate = () => {
+        const drawLinesBetweenMana = () => {
+            for (let i = 0; i < mana.length; i++) {
+                const mi = mana[i];
+                if (mi.collected && !achievedNirvana) continue;
+
+                for (let j = i + 1; j < mana.length; j++) {
+                    const mj = mana[j];
+                    if (mj.collected && !achievedNirvana) continue;
+
+                    // Draw line between mi and mj
+                    ctx.beginPath();
+                    ctx.moveTo(mi.x, mi.y);
+                    ctx.lineTo(mj.x, mj.y);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        };
+
+        const animate = () => {
             drawOrb();
             drawMana();
+            drawLinesBetweenMana();
+
 
             if (achievedNirvana) {
                 // DO Nothing ;)
@@ -209,4 +243,5 @@
         animate();
     </script>
 </body>
+
 </html>
