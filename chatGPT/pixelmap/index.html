@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Pixel Map</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mapCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        const pixelSize = 5; // Set the size of each pixel
+
+        // Define terrain types with cohesive transitions
+        const terrainTypes = [
+            { name: "water", color: "#4da6ff", probability: 0.1 }, // Rivers, lakes, streams
+            { name: "sand", color: "#d2b48c", probability: 0.2 }, // Desert and beaches near water
+            { name: "grass", color: "#7cfc00", probability: 0.4 }, // Plains and meadows
+            { name: "forest", color: "#228B22", probability: 0.2 }, // Forest areas
+            { name: "mountain", color: "#5c5c5c", probability: 0.1 } // Mountain regions
+        ];
+
+        const mapData = [];
+
+        // Initialize map data
+        function initializeMap() {
+            for (let x = 0; x < width / pixelSize; x++) {
+                mapData[x] = [];
+                for (let y = 0; y < height / pixelSize; y++) {
+                    mapData[x][y] = { terrain: "grass" }; // Default to grass initially
+                }
+            }
+        }
+
+        // Function to generate cohesive bodies of water
+        function generateBodiesOfWater() {
+            const queue = [];
+            const startX = Math.floor(Math.random() * (width / pixelSize));
+            const startY = Math.floor(Math.random() * (height / pixelSize));
+            mapData[startX][startY].terrain = "water";
+            queue.push({ x: startX, y: startY });
+
+            while (queue.length > 0) {
+                const { x, y } = queue.shift();
+                const neighbors = [
+                    { x: x + 1, y },
+                    { x: x - 1, y },
+                    { x, y: y + 1 },
+                    { x, y: y - 1 }
+                ];
+
+                neighbors.forEach(neighbor => {
+                    if (neighbor.x >= 0 && neighbor.x < width / pixelSize && neighbor.y >= 0 && neighbor.y < height / pixelSize) {
+                        if (mapData[neighbor.x][neighbor.y].terrain === "grass" && Math.random() < 0.6) {
+                            mapData[neighbor.x][neighbor.y].terrain = "water";
+                            queue.push(neighbor);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Function to generate other terrain types
+        function generateOtherTerrains() {
+            for (let x = 0; x < width / pixelSize; x++) {
+                for (let y = 0; y < height / pixelSize; y++) {
+                    if (mapData[x][y].terrain === "grass") {
+                        const noise = Math.random();
+                        if (noise < 0.1) {
+                            mapData[x][y].terrain = "mountain";
+                        } else if (noise < 0.3) {
+                            mapData[x][y].terrain = "sand";
+                        } else if (noise < 0.5) {
+                            mapData[x][y].terrain = "forest";
+                        }
+                    }
+                }
+            }
+        }
+
+        // Draw the map based on the map data
+        function drawMap() {
+            for (let x = 0; x < width / pixelSize; x++) {
+                for (let y = 0; y < height / pixelSize; y++) {
+                    switch (mapData[x][y].terrain) {
+                        case "water":
+                            ctx.fillStyle = "#4da6ff";
+                            break;
+                        case "sand":
+                            ctx.fillStyle = "#d2b48c";
+                            break;
+                        case "grass":
+                            ctx.fillStyle = "#7cfc00";
+                            break;
+                        case "forest":
+                            ctx.fillStyle = "#228B22";
+                            break;
+                        case "mountain":
+                            ctx.fillStyle = "#5c5c5c";
+                            break;
+                    }
+                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+
+        // Generate the map with cohesive terrain
+        function generateMap() {
+            initializeMap();
+            generateBodiesOfWater();
+            generateOtherTerrains();
+            drawMap();
+        }
+
+        generateMap();
+
+        // Resize handler to regenerate the map when the viewport changes size
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            generateMap();
+        });
+    </script>
+</body>
+</html>
