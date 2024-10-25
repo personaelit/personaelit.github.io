@@ -28,13 +28,14 @@ app.get('/location', async (req, res) => {
     try {
         const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat},${lng}&key=${OPENCAGE_API_KEY}`);
         const data = await response.json();
-        console.log(data.results)
+        // console.log(data.results)
         const { components } = data.results[0].components;
-        const city = components?.city || components?.town || components?.village || 'Unknown City';
-        const state = components?.state || 'Unknown State';
-        const country = components?.country || 'Unknown Country';
+        console.log(data.results[0]);
+        // const city = components?.city || components?.town || components?.village || 'Unknown City';
+        // const state = components?.state || 'Unknown State';
+        // const country = components?.country || 'Unknown Country';
 
-       res.json({ city, state, country });
+       res.json({ components });
     } catch (error) {
         console.error('Error fetching data from OpenCage:', error);
         res.status(500).json({ error: 'Unable to fetch location details' });

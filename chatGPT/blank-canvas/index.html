@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Player Relaxing Chase Game</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #level {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+    <div id="level">Level of Zen: 1</div>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const context = canvas.getContext('2d');
+        const levelDisplay = document.getElementById('level');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Ball properties
+        let seeker = [
+            {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 20,
+                speed: 69,
+                dx: 0,
+                dy: 0,
+                color: '#FFD700'
+            }
+        ];
+        const MAX_SEEKERS = 1;
+
+        // Mana properties
+        let mana = [
+            {
+                x: Math.random() * (canvas.width - 50) + 25,
+                y: Math.random() * (canvas.height - 50) + 25,
+                radius: 25,
+                // Assign random initial velocities
+                dx: (Math.random() - 0.5) * 4,
+                dy: (Math.random() - 0.5) * 4,
+                color: getRandomLightRed()
+            }
+        ];
+        const MAX_MANA = 100;
+
+        // Function to get a random pastel color
+        function getRandomLightRed() {
+            const r = 255;
+            const g = Math.floor(Math.random() * 100) + 150;
+            const b = Math.floor(Math.random() * 100) + 150;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Game properties
+        let level = 1;
+        const NIRVANA = 42;
+        let targetsCaptured = 0;
+
+        // Gravity properties
+        const gravity = {
+            x: 0,
+            y: 0,
+            strength: 0.1,
+        };
+
+        // Function to draw the balls
+        function drawSeekers() {
+            seeker.forEach(ball => {
+                context.beginPath();
+                context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2, false);
+                context.fillStyle = ball.color;
+                context.fill();
+                context.closePath();
+            });
+        }
+
+        // Function to draw the mana
+        function drawMana() {
+            mana.forEach(target => {
+                context.beginPath();
+                context.arc(target.x, target.y, target.radius, 0, Math.PI * 2, false);
+                context.fillStyle = target.color;
+                context.fill();
+                context.closePath();
+            });
+        }
+
+
+        // Function to clear the canvas
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Function to update the positions of the balls and targets
+        function update() {
+            seeker.forEach(ball => {
+                // Apply gravity to the ball's velocity
+                ball.dx += gravity.x * gravity.strength;
+                ball.dy += gravity.y * gravity.strength;
+
+                // Update ball position
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+
+                if (level < NIRVANA) {
+                    // Automatically move the ball toward the closest mana
+                    let closestMana = mana[0];
+                    let minDistance = Math.hypot(ball.x - closestMana.x, ball.y - closestMana.y);
+                    mana.forEach(target => {
+                        const distance = Math.hypot(ball.x - target.x, ball.y - target.y);
+                        if (distance < minDistance) {
+                            closestMana = target;
+                            minDistance = distance;
+                        }
+                    });
+
+                    const angleToTarget = Math.atan2(closestMana.y - ball.y, closestMana.x - ball.x);
+                    ball.dx += Math.cos(angleToTarget) * ball.speed * 0.02;
+                    ball.dy += Math.sin(angleToTarget) * ball.speed * 0.02;
+                } else {
+                    // Swirling motion for the seeker when Nirvana is achieved
+                    const swirlAngle = 0.05 * Math.sin(Date.now() / 1000);
+                    ball.dx += Math.cos(swirlAngle) * 0.5;
+                    ball.dy += Math.sin(swirlAngle) * 0.5;
+                }
+
+                // Friction to gradually slow down the ball
+                ball.dx *= 0.96;
+                ball.dy *= 0.96;
+
+                // Keep the ball within the canvas boundaries
+                if (ball.x - ball.radius < 0) ball.x = ball.radius;
+                if (ball.x + ball.radius > canvas.width) ball.x = canvas.width - ball.radius;
+                if (ball.y - ball.radius < 0) ball.y = ball.radius;
+                if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
+            });
+
+            // Update mana positions
+            mana.forEach((target, index) => {
+                // target.dx += gravity.x * gravity.strength;
+                // target.dy += gravity.y * gravity.strength;
+                target.x += target.dx;
+                target.y += target.dy;
+                target.dx *= 0.96;
+                target.dy *= 0.96;
+
+                // Keep the mana within the canvas boundaries
+                if (target.x - target.radius < 0) target.x = target.radius;
+                if (target.x + target.radius > canvas.width) target.x = canvas.width - target.radius;
+                if (target.y - target.radius < 0) target.y = target.radius;
+                if (target.y + target.radius > canvas.height) target.y = canvas.height - target.radius;
+
+                if (level < NIRVANA) {
+                    // Check for collision with any seeker
+                    seeker.forEach(ball => {
+                        if (isColliding(ball, target)) {
+                            nextLevel(index);
+                        }
+                    });
+                } else {
+                    // Move mana toward the center and swirl around the seeker
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const angleToCenter = Math.atan2(centerY - target.y, centerX - target.x);
+                    target.dx += Math.cos(angleToCenter) * 0.1;
+                    target.dy += Math.sin(angleToCenter) * 0.1;
+
+                    // Add swirling motion
+                    const swirlAngle = 0.05 * Math.sin(Date.now() / 1000);
+                    target.dx += Math.cos(swirlAngle) * 0.5;
+                    target.dy += Math.sin(swirlAngle) * 0.5;
+                }
+            });
+        }
+
+        // Function to move to the next level
+        function nextLevel(targetIndex) {
+            if (level >= NIRVANA) {
+                gravity.strength = 0; // Turn off gravity when Nirvana is achieved
+                levelDisplay.textContent = `Nirvana Achieved: ${NIRVANA}`;
+                return;
+            }
+            level++;
+            levelDisplay.textContent = `Level of Zen: ${level}`;
+
+            // Remove the eliminated target and spawn two new ones
+            mana.splice(targetIndex, 1);
+            if (level < NIRVANA) {
+                for (let i = 0; i < 2; i++) {
+                    if (mana.length < MAX_MANA) {
+                        mana.push({
+                            x: Math.random() * (canvas.width - 50) + 25,
+                            y: Math.random() * (canvas.height - 50) + 25,
+                            radius: Math.max(15, 25 - level),
+                            dx: 0,
+                            dy: 0,
+                            color: getRandomLightRed()
+                        });
+                    }
+                }
+            }
+
+            // Track the number of targets captured and clone the ball every 5 targets
+            targetsCaptured++;
+            if (targetsCaptured % 5 === 0) {
+                if (seeker.length < MAX_SEEKERS) {
+                    seeker.push({
+                        x: canvas.width / 2,
+                        y: canvas.height / 2,
+                        radius: 20,
+                        speed: 1.5,
+                        dx: 0,
+                        dy: 0,
+                        color: '#FFD700'
+                    });
+                }
+            }
+        }
+
+        // Function to check collision between the ball and target
+        function isColliding(ball, target) {
+            const distance = Math.hypot(ball.x - target.x, ball.y - target.y);
+            return distance < ball.radius + target.radius;
+        }
+
+        // Function to randomly change gravity direction
+        function changeGravity() {
+            const directions = [
+                { x: 0, y: 0.5 },  // Down
+                { x: 0, y: -0.5 }, // Up
+                { x: 0.5, y: 0 },  // Right
+                { x: -0.5, y: 0 }  // Left
+            ];
+            const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+            gravity.x = randomDirection.x;
+            gravity.y = randomDirection.y;
+
+            // Change gravity again after a random interval between 3 to 6 seconds
+            setTimeout(changeGravity, Math.random() * 3000 + 3000);
+        }
+
+        // Game loop to update and render the game
+        function gameLoop() {
+            clearCanvas();
+            drawSeekers();
+            drawMana();
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game loop and gravity change cycle
+        gameLoop();
+        changeGravity();
+
+        // Update canvas size and redraw if the window is resized
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+
+</html>
