@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield with Planet Reveal</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let planet = {
+            x: canvas.width / 2,
+            y: canvas.height + 200,
+            radius: 100
+        };
+        let planetRevealSpeed = 0.5;
+        let planetCentered = false;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            planet.x = canvas.width / 2;
+            planet.y = canvas.height + 200;
+            createStars();
+            drawScene();
+        }
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 300; i++) {
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                stars.push({ x, y });
+            }
+        }
+
+        function updateStars() {
+            stars.forEach(star => {
+                star.y += planetRevealSpeed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+            });
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawPlanet() {
+            // Create a radial gradient for shading
+            const gradient = ctx.createRadialGradient(
+                planet.x - planet.radius * 0.3, 
+                planet.y - planet.radius * 0.3, 
+                planet.radius * 0.3, 
+                planet.x, 
+                planet.y, 
+                planet.radius
+            );
+            gradient.addColorStop(0, 'lightblue');
+            gradient.addColorStop(0.5, 'blue');
+            gradient.addColorStop(1, 'darkblue');
+
+            // Draw planet with shading
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'lightblue';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+        }
+
+        function drawScene() {
+            drawStars();
+            drawPlanet();
+            if (!planetCentered) {
+                if (planet.y > canvas.height / 2) {
+                    planet.y -= planetRevealSpeed;
+                    updateStars();
+                } else {
+                    planetCentered = true;
+                }
+            }
+            requestAnimationFrame(drawScene);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        resizeCanvas();
+    </script>
+</body>
+</html>
