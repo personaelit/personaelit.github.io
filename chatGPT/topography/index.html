@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Grid with Gravity Effect, Rotation, and Stream</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gridCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gridCanvas');
+        const context = canvas.getContext('2d');
+
+        // Set canvas size to viewport dimensions
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Grid properties
+        const gridSize = 50;
+        const masses = []; // Store all the mass objects
+        let rotationY = 0; // Rotation angle for the Y-axis
+        let streamPoints = []; // Store stream points
+
+        // Create stream points
+        function createStream() {
+            streamPoints = [];
+            for (let i = 0; i < canvas.width; i += 5) {
+                streamPoints.push({
+                    x: i,
+                    y: canvas.height / 2,
+                });
+            }
+        }
+
+        // Draw the grid with bending effect and rotation
+        function drawGrid() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.save();
+            context.translate(canvas.width / 2, canvas.height / 2);
+            context.transform(Math.cos(rotationY), 0, 0, 1, 0, 0);  // Apply rotation around the Y-axis
+            context.translate(-canvas.width / 2, -canvas.height / 2);
+            
+            context.strokeStyle = '#ccc';
+            context.lineWidth = 0.5;
+
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                context.beginPath();
+                for (let y = 0; y <= canvas.height; y += gridSize) {
+                    const offsetX = calculateDistortion(x, y).x;
+                    const offsetY = calculateDistortion(x, y).y;
+                    if (y === 0) {
+                        context.moveTo(x + offsetX, y + offsetY);
+                    } else {
+                        context.lineTo(x + offsetX, y + offsetY);
+                    }
+                }
+                context.stroke();
+            }
+
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                context.beginPath();
+                for (let x = 0; x <= canvas.width; x += gridSize) {
+                    const offsetX = calculateDistortion(x, y).x;
+                    const offsetY = calculateDistortion(x, y).y;
+                    if (x === 0) {
+                        context.moveTo(x + offsetX, y + offsetY);
+                    } else {
+                        context.lineTo(x + offsetX, y + offsetY);
+                    }
+                }
+                context.stroke();
+            }
+
+            context.restore();
+        }
+
+        function calculateDistortion(x, y) {
+            let totalDistortionX = 0;
+            let totalDistortionY = 0;
+
+            masses.forEach(mass => {
+                const dx = x - mass.x;
+                const dy = y - mass.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const force = mass.mass / (distance * distance + 1000); // Gravity effect, with a constant to avoid extreme distortion
+
+                totalDistortionX += force * dx;
+                totalDistortionY += force * dy;
+            });
+
+            return { x: -totalDistortionX, y: -totalDistortionY };
+        }
+
+        // Draw the stream
+        function drawStream() {
+            context.beginPath();
+            context.strokeStyle = 'rgba(0, 0, 255, 0.8)';
+            context.lineWidth = 2;
+
+            context.moveTo(streamPoints[0].x, streamPoints[0].y);
+            streamPoints.forEach((point, index) => {
+                // Update position
+                point.x += 2;
+                let distortion = calculateDistortion(point.x, point.y);
+                point.y += distortion.y * 0.2; // Apply a stronger vertical distortion to simulate pooling around masses
+
+                // Wrap point around the screen
+                if (point.x > canvas.width) {
+                    point.x = 0;
+                    point.y = canvas.height / 2 + calculateDistortion(point.x, canvas.height / 2).y * 0.2;
+                }
+
+                // Draw line
+                if (index === 0) {
+                    context.moveTo(point.x, point.y);
+                } else {
+                    context.lineTo(point.x, point.y);
+                }
+            });
+
+            context.stroke();
+        }
+
+        // Handle resizing
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            createStream();
+            redrawGrid();
+        });
+
+        function redrawGrid() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            drawMasses();
+            drawStream();
+        }
+
+        // Draw masses on the grid
+        function drawMasses() {
+            context.save();
+            context.translate(canvas.width / 2, canvas.height / 2);
+            context.transform(Math.cos(rotationY), 0, 0, 1, 0, 0);  // Apply rotation around the Y-axis
+            context.translate(-canvas.width / 2, -canvas.height / 2);
+            masses.forEach(mass => {
+                context.beginPath();
+                context.arc(mass.x, mass.y, mass.area, 0, Math.PI * 2);
+                context.fillStyle = 'rgba(0, 0, 255, 0.5)';
+                context.fill();
+            });
+            context.restore();
+        }
+
+        // Handle clicks to create masses
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const mass = {
+                x: x,
+                y: y,
+                mass: Math.random() * 1000 + 100, // Random mass between 100 and 1100
+                area: Math.random() * 40 + 10 // Random area between 10 and 50 (radius of the circle)
+            };
+            masses.push(mass);
+            redrawGrid();
+        });
+
+        // Handle rotation with arrow keys
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                rotationY -= 0.05;
+            } else if (event.key === 'ArrowRight') {
+                rotationY += 0.05;
+            }
+            redrawGrid();
+        });
+
+        // Animation loop
+        function animate() {
+            redrawGrid();
+            requestAnimationFrame(animate);
+        }
+
+        // Initial setup
+        createStream();
+        drawGrid();
+        animate();
+    </script>
+</body>
+</html>

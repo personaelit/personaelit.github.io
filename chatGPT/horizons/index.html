@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Kaleidoscope</title>
+  <style>
+    /* Full viewport canvas with no scrollbars */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: black;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fullscreenCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('fullscreenCanvas');
+    const context = canvas.getContext('2d');
+
+    let rotationAngle = 0;
+    let isDragging = false;
+    let lastMouseX = 0;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      drawKaleidoscope();
+    }
+
+    function drawHexagon(centerX, centerY, radius) {
+      const vertices = [];
+      context.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = rotationAngle + (Math.PI / 3 * i); // Adjust angle based on rotation
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        vertices.push({ x, y });
+        if (i === 0) {
+          context.moveTo(x, y);
+        } else {
+          context.lineTo(x, y);
+        }
+      }
+      context.closePath();
+      context.strokeStyle = '#FFD700'; // Golden hexagon
+      context.lineWidth = 2;
+      context.stroke();
+
+      return vertices;
+    }
+
+    function drawKaleidoscope() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const hexRadius = 50;
+
+      // Draw hexagon and get vertices
+      const vertices = drawHexagon(centerX, centerY, hexRadius);
+
+      // Draw faint lines from each vertex to the edge
+      context.strokeStyle = 'rgba(255, 255, 255, 0.2)'; // Faint white
+      context.lineWidth = 1;
+
+      vertices.forEach(vertex => {
+        const angle = Math.atan2(vertex.y - centerY, vertex.x - centerX);
+        const lineEndX = centerX + Math.cos(angle) * Math.max(canvas.width, canvas.height);
+        const lineEndY = centerY + Math.sin(angle) * Math.max(canvas.width, canvas.height);
+
+        context.beginPath();
+        context.moveTo(vertex.x, vertex.y);
+        context.lineTo(lineEndX, lineEndY);
+        context.stroke();
+      });
+    }
+
+    // Mouse events for rotation control
+    canvas.addEventListener('mousedown', (event) => {
+      isDragging = true;
+      lastMouseX = event.clientX;
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+      if (isDragging) {
+        const deltaX = event.clientX - lastMouseX;
+        rotationAngle += deltaX * 0.01; // Adjust the multiplier to control rotation speed
+        lastMouseX = event.clientX;
+        drawKaleidoscope(); // Redraw on each mouse move
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      isDragging = false;
+    });
+
+    // Touch events for mobile support
+    canvas.addEventListener('touchstart', (event) => {
+      isDragging = true;
+      lastMouseX = event.touches[0].clientX;
+    });
+
+    canvas.addEventListener('touchmove', (event) => {
+      if (isDragging) {
+        const deltaX = event.touches[0].clientX - lastMouseX;
+        rotationAngle += deltaX * 0.01;
+        lastMouseX = event.touches[0].clientX;
+        drawKaleidoscope();
+      }
+    });
+
+    canvas.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
+    // Initial setup
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+  </script>
+</body>
+</html>

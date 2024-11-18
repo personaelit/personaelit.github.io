@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Water Map Generator</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mapCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Map settings
+        const cellSize = 10;
+        const cols = Math.floor(canvas.width / cellSize);
+        const rows = Math.floor(canvas.height / cellSize);
+        const initialWaterProbability = 0.1; // Initial chance of any cell being water
+        const spreadProbability = 0.1; // Chance for water to spread to neighboring cells
+        const iterations = 10 // Number of spread iterations
+
+        // Generate empty map grid
+        let mapGrid = Array.from({ length: cols }, () => Array(rows).fill('land'));
+
+        // Boat and treasure position
+        let boatPosition = { x: 0, y: 0 };
+        let treasurePosition = { x: 0, y: 0 };
+
+        // Initialize map with random water cells
+        function initializeMap() {
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    if (Math.random() < initialWaterProbability) {
+                        mapGrid[x][y] = 'water';
+                    }
+                }
+            }
+
+            // Place the boat at a random water cell
+            placeBoat();
+            // Place the treasure at a random water cell
+            placeTreasure();
+        }
+
+        // Spread water to connect pools
+        function spreadWater() {
+            for (let i = 0; i < iterations; i++) {
+                const newMapGrid = mapGrid.map(arr => [...arr]); // Copy mapGrid
+
+                for (let x = 1; x < cols - 1; x++) {
+                    for (let y = 1; y < rows - 1; y++) {
+                        if (mapGrid[x][y] === 'water') {
+                            // Check neighbors and spread water with a certain probability
+                            for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+                                const nx = x + dx;
+                                const ny = y + dy;
+
+                                if (mapGrid[nx][ny] === 'land' && Math.random() < spreadProbability) {
+                                    newMapGrid[nx][ny] = 'water';
+                                }
+                            }
+                        }
+                    }
+                }
+                mapGrid = newMapGrid;
+            }
+        }
+
+        // Place the boat at a random water cell
+        function placeBoat() {
+            let placed = false;
+            while (!placed) {
+                const x = Math.floor(Math.random() * cols);
+                const y = Math.floor(Math.random() * rows);
+                if (mapGrid[x][y] === 'water') {
+                    boatPosition = { x, y };
+                    placed = true;
+                }
+            }
+        }
+
+        // Place the treasure at a random water cell
+        function placeTreasure() {
+            let placed = false;
+            while (!placed) {
+                const x = Math.floor(Math.random() * cols);
+                const y = Math.floor(Math.random() * rows);
+                if (mapGrid[x][y] === 'water' && (x !== boatPosition.x || y !== boatPosition.y)) {
+                    treasurePosition = { x, y };
+                    placed = true;
+                }
+            }
+        }
+
+        // Draw map based on the grid
+        function drawMap() {
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    ctx.fillStyle = mapGrid[x][y] === 'water' ? '#1E90FF' : '#228B22'; // Blue for water, green for land
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+            // Draw boat
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(boatPosition.x * cellSize, boatPosition.y * cellSize, cellSize, cellSize);
+
+            // Draw treasure
+            ctx.fillStyle = 'red';
+            ctx.fillRect(treasurePosition.x * cellSize, treasurePosition.y * cellSize, cellSize, cellSize);
+        }
+
+        // Move the boat
+        function moveBoat(dx, dy) {
+            const newX = boatPosition.x + dx;
+            const newY = boatPosition.y + dy;
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && mapGrid[newX][newY] === 'water') {
+                boatPosition.x = newX;
+                boatPosition.y = newY;
+                drawMap();
+                checkTreasure();
+            }
+        }
+
+        // Check if boat has found the treasure
+        function checkTreasure() {
+            if (boatPosition.x === treasurePosition.x && boatPosition.y === treasurePosition.y) {
+                alert('You found the treasure!');
+                generateMap();
+            }
+        }
+
+        // Generate and draw the map
+        function generateMap() {
+            initializeMap();
+            spreadWater();
+            drawMap();
+        }
+
+        // Generate initial map and add 'R' to regenerate
+        generateMap();
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'r') {
+                generateMap();
+            } else if (e.key === 'ArrowUp') {
+                moveBoat(0, -1);
+            } else if (e.key === 'ArrowDown') {
+                moveBoat(0, 1);
+            } else if (e.key === 'ArrowLeft') {
+                moveBoat(-1, 0);
+            } else if (e.key === 'ArrowRight') {
+                moveBoat(1, 0);
+            }
+        });
+    </script>
+</body>
+</html>

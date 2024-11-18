@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Simulator</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="streamCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('streamCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to fit the entire viewport
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Stream properties
+        let streamPath = [];
+        let streamSpeed = 10;
+        let direction = Math.random() * 2 * Math.PI; // Random initial direction
+
+        // Initialize stream starting point from a random border
+        let startX, startY;
+        switch (Math.floor(Math.random() * 4)) {
+            case 0: // Top border
+                startX = Math.random() * canvas.width;
+                startY = 0;
+                break;
+            case 1: // Right border
+                startX = canvas.width;
+                startY = Math.random() * canvas.height;
+                break;
+            case 2: // Bottom border
+                startX = Math.random() * canvas.width;
+                startY = canvas.height;
+                break;
+            case 3: // Left border
+                startX = 0;
+                startY = Math.random() * canvas.height;
+                break;
+        }
+        streamPath.push({ x: startX, y: startY });
+
+        // Function to update the stream's path
+        function updateStream() {
+            let lastPoint = streamPath[streamPath.length - 1];
+            let newX = lastPoint.x + Math.cos(direction) * streamSpeed;
+            let newY = lastPoint.y + Math.sin(direction) * streamSpeed;
+
+            // Change direction slightly to simulate meandering
+            direction += (Math.random() - 0.5) * 0.2;
+
+            // Ensure new point is within bounds
+            if (newX < 0) newX = 0;
+            if (newX > canvas.width) newX = canvas.width;
+            if (newY < 0) newY = 0;
+            if (newY > canvas.height) newY = canvas.height;
+
+            streamPath.push({ x: newX, y: newY });
+
+            // Limit the number of points in the path to avoid performance issues
+            if (streamPath.length > 10000) {
+                streamPath.shift();
+            }
+        }
+
+        // Function to draw the stream
+        function drawStream() {
+            ctx.beginPath();
+            ctx.moveTo(streamPath[0].x, streamPath[0].y);
+            for (let i = 1; i < streamPath.length; i++) {
+                ctx.lineTo(streamPath[i].x, streamPath[i].y);
+            }
+            ctx.strokeStyle = 'rgba(0, 150, 255, 0.7)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateStream();
+            drawStream();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
