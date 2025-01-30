@@ -1,4 +1,4 @@
-import { calculateDaysAlive, isToday, isInFuture, isInPast } from './utils.js';
+import { calculateDaysAlive, isToday, isInFuture, isInPast } from './services/dateService.js';
 import { saveToLocalStorage, loadFromLocalStorage } from './services/storageService.js';
 
 const modal = document.getElementById('modal');

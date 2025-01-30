@@ -1,4 +1,4 @@
-import { state, updateEarthPosition, draw } from './script.js';
+import { state, updateEarthPosition } from './script.js';
 import { showModal, updateModalContent, showReportModal } from './modal.js';
 import { toggleSettingsPanel } from './settings.js';
 import { createShootingStar } from './stars.js';
