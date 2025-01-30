@@ -1,11 +1,11 @@
 import { calculateDaysAlive, isToday, isInFuture, isInPast } from './services/dateService.js';
 import { saveToLocalStorage, loadFromLocalStorage } from './services/storageService.js';
+import { saveMood, loadMood, addMoodSelector, addJumboMoodEmoji, getMoodEmoji, updateJumboMoodEmoji, getMoodData, createMoodChart, displayMoodStats } from './services/moodService.js';
 
 const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');
 const closeModal = document.querySelector('.close');
 const modalHeader = document.getElementById('modalHeader');
-const moodSelector = document.createElement('div');
 
 function showModal() {
     modal.style.display = 'block';
@@ -16,16 +16,12 @@ function hideModal() {
 }
 
 function updateModalContent(date) {
-    // Clear previous content
-
 
     const closeButton = modalContent.querySelector('.close');
-    // const existingHeader = modalContent.querySelector('.modal-date-header');
     modalContent.innerHTML = '';
     if (closeButton) {
         modalContent.appendChild(closeButton);
     }
-
 
     const datestamp = date.toISOString().split('T')[0];
 
@@ -44,7 +40,7 @@ function updateModalContent(date) {
         modalContent.appendChild(greetingElement);
 
         // Add mood selector and notes for today
-        addMoodSelector(datestamp);
+        addMoodSelector(datestamp, modalContent);
         addNotesSection(datestamp);
     }
     else if (isInPast(date)) {
@@ -56,10 +52,10 @@ function updateModalContent(date) {
         // Add mood selector if no mood is saved
         const savedMood = loadMood(datestamp);
         if (!savedMood) {
-            addMoodSelector(datestamp);
+            addMoodSelector(datestamp, modalContent);
         } else {
             // Add jumbo emoji based on saved mood
-            addJumboMoodEmoji(datestamp);
+            addJumboMoodEmoji(datestamp, modalContent);
         }
 
         // Add notes section for past dates (editable)
@@ -112,34 +108,6 @@ function loadNotes(datestamp) {
     return loadFromLocalStorage(`aiad_notes_${datestamp}`);
 }
 
-function saveMood(datestamp, mood) {
-    saveToLocalStorage(`aiad_mood_${datestamp}`, mood);
-}
-
-function loadMood(datestamp) {
-    return loadFromLocalStorage(`aiad_mood_${datestamp}`);
-}
-
-function addMoodSelector(datestamp) {
-    moodSelector.className = 'mood-selector';
-    moodSelector.innerHTML = `
-        <input type="radio" name="mood" value="1" id="mood1"><label for="mood1">😢</label>
-        <input type="radio" name="mood" value="2" id="mood2"><label for="mood2">😕</label>
-        <input type="radio" name="mood" value="3" id="mood3"><label for="mood3">😐</label>
-        <input type="radio" name="mood" value="4" id="mood4"><label for="mood4">🙂</label>
-        <input type="radio" name="mood" value="5" id="mood5"><label for="mood5">😄</label>
-    `;
-    const savedMood = loadMood(datestamp);
-    if (savedMood) {
-        moodSelector.querySelector(`input[value="${savedMood}"]`).checked = true;
-    }
-    moodSelector.addEventListener('change', (e) => {
-        saveMood(datestamp, e.target.value);
-        updateJumboMoodEmoji(e.target.value);
-    });
-    modalContent.appendChild(moodSelector);
-}
-
 function addNotesSection(datestamp) {
     const notesTextarea = document.createElement('textarea');
     const today = new Date();
@@ -157,34 +125,6 @@ function addNotesSection(datestamp) {
     modalContent.appendChild(notesTextarea);
 }
 
-function addJumboMoodEmoji(datestamp) {
-    const savedMood = loadMood(datestamp);
-    if (savedMood) {
-        const jumboEmoji = document.createElement('div');
-        jumboEmoji.className = 'jumbo-emoji';
-        jumboEmoji.textContent = getMoodEmoji(savedMood);
-        modalContent.appendChild(jumboEmoji);
-    }
-}
-
-function getMoodEmoji(mood) {
-    const moodEmojis = {
-        '1': '😢',
-        '2': '😕',
-        '3': '😐',
-        '4': '🙂',
-        '5': '😄'
-    };
-    return moodEmojis[mood] || '😐';
-}
-
-function updateJumboMoodEmoji(mood) {
-    const jumboEmoji = modalContent.querySelector('.jumbo-emoji');
-    if (jumboEmoji) {
-        jumboEmoji.textContent = getMoodEmoji(mood);
-    }
-}
-
 closeModal.addEventListener('click', hideModal);
 
 window.addEventListener('click', function (event) {
@@ -199,13 +139,11 @@ export function showReportModal() {
     const modal = document.getElementById('modal');
     const modalContent = document.querySelector('.modal-content');
 
-
     const closeButton = modalContent.querySelector('.close');
     modalContent.innerHTML = '';
     if (closeButton) {
         modalContent.appendChild(closeButton);
     }
-
 
     // Add report content
     const reportContent = document.createElement('div');
@@ -228,70 +166,4 @@ function generateMoodReport() {
     const moodData = getMoodData();
     createMoodChart(moodData);
     displayMoodStats(moodData);
-}
-
-function getMoodData() {
-    const moodData = [];
-    const currentDate = new Date();
-
-    for (let i = 0; i < 30; i++) {
-        const date = new Date(currentDate);
-        date.setDate(date.getDate() - i);
-        const datestamp = date.toISOString().split('T')[0];
-        const mood = loadFromLocalStorage(`aiad_mood_${datestamp}`);
-
-        if (mood) {
-            moodData.unshift({ date: datestamp, mood: parseInt(mood) });
-        }
-    }
-
-    return moodData;
-}
-
-function createMoodChart(moodData) {
-    const ctx = document.getElementById('moodChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: moodData.map(data => data.date),
-            datasets: [{
-                label: 'Mood',
-                data: moodData.map(data => data.mood),
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 5,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-}
-
-function displayMoodStats(moodData) {
-    const moodStats = document.getElementById('moodStats');
-    const averageMood = moodData.reduce((sum, data) => sum + data.mood, 0) / moodData.length;
-    const moodCounts = moodData.reduce((counts, data) => {
-        counts[data.mood] = (counts[data.mood] || 0) + 1;
-        return counts;
-    }, {});
-
-    moodStats.innerHTML = `
-        <h3>Mood Statistics (Last 30 days)</h3>
-        <p>Average Mood: ${averageMood.toFixed(2)}</p>
-        <p>Mood Distribution:</p>
-        <ul>
-            ${Object.entries(moodCounts).map(([mood, count]) =>
-        `<li>${getMoodEmoji(mood)}: ${count} day${count !== 1 ? 's' : ''}</li>`
-    ).join('')}
-        </ul>
-    `;
 }
