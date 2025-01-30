@@ -1,6 +1,5 @@
 import { state } from './script.js';
 import { handleSliderInput, handleDatePickerChange, handleCanvasInteraction, preventDefaultTouch, handleDragStart, handleDragMove, handleDragEnd, handleKeyDown } from './eventHandlers.js';
-import { toggleSettingsPanel } from './settings.js';
 import { createStars } from './stars.js';
 import { calculateDaysAlive } from './utils.js';
 
@@ -113,7 +112,7 @@ function updateClock() {
 }
 
 export function updateDaysAliveLabel() {
-    const daysAlive = calculateDaysAlive();
+    const daysAlive = calculateDaysAlive(localStorage.getItem('aiad_userDOB'));
     if (daysAlive !== null) {
         daysAliveElement.textContent = `Day #: ${daysAlive}`;
     } else {

@@ -1,4 +1,5 @@
-import { calculateDaysAlive, saveToLocalStorage, loadFromLocalStorage, isToday, isInFuture, isInPast } from './utils.js';
+import { calculateDaysAlive, isToday, isInFuture, isInPast } from './utils.js';
+import { saveToLocalStorage, loadFromLocalStorage } from './services/storageService.js';
 
 const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');
@@ -49,20 +50,20 @@ function updateModalContent(date) {
     else if (isInPast(date)) {
         const pastMessage = document.createElement('p');
 
-            pastMessage.className = 'past-message';
-            modalContent.appendChild(pastMessage);
-    
-            // Add mood selector if no mood is saved
-            const savedMood = loadMood(datestamp);
-            if (!savedMood) {
-                addMoodSelector(datestamp);
-            } else {
-                // Add jumbo emoji based on saved mood
-                addJumboMoodEmoji(datestamp);
-            }
-    
-            // Add notes section for past dates (editable)
-            addNotesSection(datestamp, true);
+        pastMessage.className = 'past-message';
+        modalContent.appendChild(pastMessage);
+
+        // Add mood selector if no mood is saved
+        const savedMood = loadMood(datestamp);
+        if (!savedMood) {
+            addMoodSelector(datestamp);
+        } else {
+            // Add jumbo emoji based on saved mood
+            addJumboMoodEmoji(datestamp);
+        }
+
+        // Add notes section for past dates (editable)
+        addNotesSection(datestamp, true);
     }
     else if (isInFuture(date)) {
         const futureMessage = document.createElement('p');
@@ -204,7 +205,7 @@ export function showReportModal() {
     if (closeButton) {
         modalContent.appendChild(closeButton);
     }
-    
+
 
     // Add report content
     const reportContent = document.createElement('div');

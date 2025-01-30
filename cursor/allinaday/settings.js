@@ -1,25 +1,26 @@
-let userName = localStorage.getItem('aiad_userName') || '';
-let userDOB = localStorage.getItem('aiad_userDOB') || '';
+import { loadFromLocalStorage, saveToLocalStorage } from './services/storageService.js';
+
+let userName = loadFromLocalStorage('aiad_userName') || '';
+let userDOB = loadFromLocalStorage('aiad_userDOB') || '';
 
 const settingsPanel = document.getElementById('settingsPanel');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-const closeSettingsPanelBtn = document.getElementById('closeSettingsPanelBtn');
 
 function saveSettings() {
     userName = document.getElementById('userName').value;
     userDOB = document.getElementById('userDOB').value;
     
     // Save to local storage
-    localStorage.setItem('aiad_userName', userName);
-    localStorage.setItem('aiad_userDOB', userDOB);
+    saveToLocalStorage('aiad_userName', userName);
+    saveToLocalStorage('aiad_userDOB', userDOB);
 
     // Reload the page to reload the UI.
     location.reload();
 }
 
 function loadSavedSettings() {
-    userName = localStorage.getItem('aiad_userName') || '';
-    userDOB = localStorage.getItem('aiad_userDOB') || '';
+    userName = loadFromLocalStorage('aiad_userName') || '';
+    userDOB = loadFromLocalStorage('aiad_userDOB') || '';
     
     // Update the input fields with the loaded values
     document.getElementById('userName').value = userName;
@@ -45,7 +46,7 @@ function initializeSettings() {
 
 
     // Load other settings from localStorage
-    const savedSettings = JSON.parse(localStorage.getItem('aiad_settings')) || {};
+    const savedSettings = JSON.parse(loadFromLocalStorage('aiad_settings')) || {};
     
     // Apply saved settings
     Object.keys(savedSettings).forEach(key => {

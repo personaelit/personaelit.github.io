@@ -6,8 +6,8 @@ export function getCurrentDayOfYear() {
     return Math.floor(diff / oneDay);
 }
 
-export function calculateDaysAlive() {
-    let userDOB = localStorage.getItem('aiad_userDOB') || '';
+export function calculateDaysAlive(dateOfBirth) {
+    let userDOB = dateOfBirth;
     if (userDOB) {
         const birthDate = new Date(userDOB);
         const today = new Date();
@@ -17,19 +17,11 @@ export function calculateDaysAlive() {
     return null;
 }
 
-export function saveToLocalStorage(key, value) {
-    localStorage.setItem(key, value);
-}
-
-export function loadFromLocalStorage(key) {
-    return localStorage.getItem(key) || '';
-}
-
 export function isToday(date) {
     const today = new Date();
-    return date.getDate() === today.getDate() && 
-           date.getMonth() === today.getMonth() && 
-           date.getFullYear() === today.getFullYear();
+    return date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear();
 }
 
 export function isInPast(date) {
