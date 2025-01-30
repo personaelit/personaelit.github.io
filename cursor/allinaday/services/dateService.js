@@ -33,3 +33,18 @@ export function isInFuture(date) {
     const today = new Date();
     return date > today;
 }
+
+export function getTimeOfDay(date) {
+    const hour = date.getHours();
+
+    if (hour < 12) return "Good morning";
+    if (hour >= 12 && hour < 18) return "Good afternoon";
+    return "Good evening";
+}
+
+export function getDayOfYear(date) {
+    const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
+    const diff = date.getTime() - start.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay);
+}
