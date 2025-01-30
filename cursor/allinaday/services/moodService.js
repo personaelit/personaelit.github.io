@@ -1,14 +1,14 @@
 import { saveToLocalStorage, loadFromLocalStorage } from './storageService.js';
 
-export function saveMood(datestamp, mood) {
-    saveToLocalStorage(`aiad_mood_${datestamp}`, mood);
+export function saveMood(dateStamp, mood) {
+    saveToLocalStorage(`aiad_mood_${dateStamp}`, mood);
 }
 
-export function loadMood(datestamp) {
-    return loadFromLocalStorage(`aiad_mood_${datestamp}`);
+export function loadMood(dateStamp) {
+    return loadFromLocalStorage(`aiad_mood_${dateStamp}`);
 }
 
-export function addMoodSelector(datestamp, modalContent) {
+export function addMoodSelector(dateStamp, modalContent) {
     const moodSelector = document.createElement('div');
     moodSelector.className = 'mood-selector';
     moodSelector.innerHTML = `
@@ -18,19 +18,19 @@ export function addMoodSelector(datestamp, modalContent) {
         <input type="radio" name="mood" value="4" id="mood4"><label for="mood4">🙂</label>
         <input type="radio" name="mood" value="5" id="mood5"><label for="mood5">😄</label>
     `;
-    const savedMood = loadMood(datestamp);
+    const savedMood = loadMood(dateStamp);
     if (savedMood) {
         moodSelector.querySelector(`input[value="${savedMood}"]`).checked = true;
     }
     moodSelector.addEventListener('change', (e) => {
-        saveMood(datestamp, e.target.value);
+        saveMood(dateStamp, e.target.value);
         updateJumboMoodEmoji(e.target.value, modalContent);
     });
     modalContent.appendChild(moodSelector);
 }
 
-export function addJumboMoodEmoji(datestamp, modalContent) {
-    const savedMood = loadMood(datestamp);
+export function addJumboMoodEmoji(dateStamp, modalContent) {
+    const savedMood = loadMood(dateStamp);
     if (savedMood) {
         const jumboEmoji = document.createElement('div');
         jumboEmoji.className = 'jumbo-emoji';
@@ -64,11 +64,11 @@ export function getMoodData() {
     for (let i = 0; i < 30; i++) {
         const date = new Date(currentDate);
         date.setDate(date.getDate() - i);
-        const datestamp = date.toISOString().split('T')[0];
-        const mood = loadFromLocalStorage(`aiad_mood_${datestamp}`);
+        const dateStamp = date.toISOString().split('T')[0];
+        const mood = loadFromLocalStorage(`aiad_mood_${dateStamp}`);
 
         if (mood) {
-            moodData.unshift({ date: datestamp, mood: parseInt(mood) });
+            moodData.unshift({ date: dateStamp, mood: parseInt(mood) });
         }
     }
 

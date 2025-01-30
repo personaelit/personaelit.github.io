@@ -23,7 +23,7 @@ function updateModalContent(date) {
         modalContent.appendChild(closeButton);
     }
 
-    const datestamp = date.toISOString().split('T')[0];
+    const dateStamp = date.toISOString().split('T')[0];
 
     let header = document.createElement('h2');
     header.className = 'modal-date-header';
@@ -40,8 +40,8 @@ function updateModalContent(date) {
         modalContent.appendChild(greetingElement);
 
         // Add mood selector and notes for today
-        addMoodSelector(datestamp, modalContent);
-        addNotesSection(datestamp);
+        addMoodSelector(dateStamp, modalContent);
+        addNotesSection(dateStamp);
     }
     else if (isInPast(date)) {
         const pastMessage = document.createElement('p');
@@ -50,16 +50,16 @@ function updateModalContent(date) {
         modalContent.appendChild(pastMessage);
 
         // Add mood selector if no mood is saved
-        const savedMood = loadMood(datestamp);
+        const savedMood = loadMood(dateStamp);
         if (!savedMood) {
-            addMoodSelector(datestamp, modalContent);
+            addMoodSelector(dateStamp, modalContent);
         } else {
             // Add jumbo emoji based on saved mood
-            addJumboMoodEmoji(datestamp, modalContent);
+            addJumboMoodEmoji(dateStamp, modalContent);
         }
 
         // Add notes section for past dates (editable)
-        addNotesSection(datestamp, true);
+        addNotesSection(dateStamp, true);
     }
     else if (isInFuture(date)) {
         const futureMessage = document.createElement('p');
@@ -100,19 +100,19 @@ function getDayOfYear(date) {
     return Math.floor(diff / oneDay);
 }
 
-function saveNotes(datestamp, notes) {
-    saveToLocalStorage(`aiad_notes_${datestamp}`, notes);
+function saveNotes(dateStamp, notes) {
+    saveToLocalStorage(`aiad_notes_${dateStamp}`, notes);
 }
 
-function loadNotes(datestamp) {
-    return loadFromLocalStorage(`aiad_notes_${datestamp}`);
+function loadNotes(dateStamp) {
+    return loadFromLocalStorage(`aiad_notes_${dateStamp}`);
 }
 
-function addNotesSection(datestamp) {
+function addNotesSection(dateStamp) {
     const notesTextarea = document.createElement('textarea');
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const date = new Date(datestamp);
+    const date = new Date(dateStamp);
 
     if (date < today) {
         notesTextarea.placeholder = 'Thoughts about this day? Events? Notes? Feelings?';
@@ -120,8 +120,8 @@ function addNotesSection(datestamp) {
         notesTextarea.placeholder = 'How are you feeling?';
     }
 
-    notesTextarea.value = loadNotes(datestamp);
-    notesTextarea.addEventListener('input', () => saveNotes(datestamp, notesTextarea.value));
+    notesTextarea.value = loadNotes(dateStamp);
+    notesTextarea.addEventListener('input', () => saveNotes(dateStamp, notesTextarea.value));
     modalContent.appendChild(notesTextarea);
 }
 
