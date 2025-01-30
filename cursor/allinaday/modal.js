@@ -1,6 +1,7 @@
 import { calculateDaysAlive, isToday, isInFuture, isInPast } from './services/dateService.js';
 import { saveToLocalStorage, loadFromLocalStorage } from './services/storageService.js';
 import { saveMood, loadMood, addMoodSelector, addJumboMoodEmoji, getMoodEmoji, updateJumboMoodEmoji, getMoodData, createMoodChart, displayMoodStats } from './services/moodService.js';
+import { saveNotes, loadNotes, addNotesSection } from './services/noteService.js';
 
 const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');
@@ -41,7 +42,7 @@ function updateModalContent(date) {
 
         // Add mood selector and notes for today
         addMoodSelector(dateStamp, modalContent);
-        addNotesSection(dateStamp);
+        addNotesSection(dateStamp, modalContent);
     }
     else if (isInPast(date)) {
         const pastMessage = document.createElement('p');
@@ -59,7 +60,7 @@ function updateModalContent(date) {
         }
 
         // Add notes section for past dates (editable)
-        addNotesSection(dateStamp, true);
+        addNotesSection(dateStamp, modalContent);
     }
     else if (isInFuture(date)) {
         const futureMessage = document.createElement('p');
@@ -98,31 +99,6 @@ function getDayOfYear(date) {
     const diff = date.getTime() - start.getTime();
     const oneDay = 1000 * 60 * 60 * 24;
     return Math.floor(diff / oneDay);
-}
-
-function saveNotes(dateStamp, notes) {
-    saveToLocalStorage(`aiad_notes_${dateStamp}`, notes);
-}
-
-function loadNotes(dateStamp) {
-    return loadFromLocalStorage(`aiad_notes_${dateStamp}`);
-}
-
-function addNotesSection(dateStamp) {
-    const notesTextarea = document.createElement('textarea');
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const date = new Date(dateStamp);
-
-    if (date < today) {
-        notesTextarea.placeholder = 'Thoughts about this day? Events? Notes? Feelings?';
-    } else {
-        notesTextarea.placeholder = 'How are you feeling?';
-    }
-
-    notesTextarea.value = loadNotes(dateStamp);
-    notesTextarea.addEventListener('input', () => saveNotes(dateStamp, notesTextarea.value));
-    modalContent.appendChild(notesTextarea);
 }
 
 closeModal.addEventListener('click', hideModal);
