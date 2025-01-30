@@ -16,7 +16,7 @@ function hideModal() {
     modal.style.display = 'none';
 }
 
-function updateModalContent(date) {
+function updateDailyModalContent(date) {
 
     const closeButton = modalContent.querySelector('.close');
     modalContent.innerHTML = '';
@@ -98,7 +98,7 @@ window.addEventListener('click', function (event) {
     }
 });
 
-export { showModal, hideModal, updateModalContent };
+export { showModal, hideModal, updateDailyModalContent };
 
 export function showReportModal() {
     const modal = document.getElementById('modal');

@@ -1,5 +1,5 @@
 import { state, updateEarthPosition } from './script.js';
-import { showModal, updateModalContent, showReportModal } from './modal.js';
+import { showModal, updateDailyModalContent, showReportModal } from './modal.js';
 import { toggleSettingsPanel } from './settings.js';
 import { createShootingStar } from './stars.js';
 import { updateDateLabel, updateDatePicker } from './ui.js';
@@ -80,7 +80,7 @@ export function handleDragEnd(event) {
         date.setFullYear(state.currentYear);
         date.setMonth(0); // January is 0-based
         date.setUTCDate(state.currentDayOfYear);
-        updateModalContent(date);
+        updateDailyModalContent(date);
         showModal();
     }
 
