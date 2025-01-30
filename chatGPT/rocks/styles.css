@@ -1,0 +1,15 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(to bottom, #1e3c72, #2a5298);
+  }
+  
+  #gameCanvas {
+    display: block;
+    image-rendering: pixelated; /* Ensures sprites appear pixelated */
+  }
+  
