@@ -51,6 +51,6 @@ export function initializeEarthPosition(state, getCurrentDayOfYear) {
     const today = new Date();
     state.currentYear = today.getUTCFullYear();
     state.currentDayOfYear = getCurrentDayOfYear();
-    state.time = ((state.currentDayOfYear - 1) / 365) * Math.PI * 2;
+    state.time = ((state.currentDayOfYear) / 365) * Math.PI * 2;
     return state.currentDayOfYear;
 }
