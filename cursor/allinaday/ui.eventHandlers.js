@@ -81,7 +81,7 @@ export function handleDragEnd(event) {
         const date = new Date();
         date.setFullYear(state.currentYear);
         date.setMonth(0); // January is 0-based
-        date.setUTCDate(state.currentDayOfYear + 1); // Add 1 to account for UTC date starting at 1
+        date.setUTCDate(state.currentDayOfYear);
         updateDailyModalContent(date);
     }
 
