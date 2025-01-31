@@ -32,7 +32,7 @@ export function drawEarth(ctx, canvas, state) {
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${state.currentDayOfYear}`, x, y);
+    ctx.fillText(`${state.currentDayOfYear -1}`, x, y);
 
     ctx.beginPath();
     ctx.arc(x, y, 22, 0, Math.PI * 2);
