@@ -1,4 +1,4 @@
-import { saveToLocalStorage, loadFromLocalStorage } from './storageService.js';
+import { saveToLocalStorage, loadFromLocalStorage } from './services.notes.js';
 
 export function saveNotes(dateStamp, notes) {
     saveToLocalStorage(`aiad_notes_${dateStamp}`, notes);

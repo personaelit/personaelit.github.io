@@ -1,6 +1,6 @@
 import { initializeUI, canvas, ctx, updateDateLabel, updateDatePicker, drawMonths, drawSettingsIcon,drawReportIcon } from './ui.js';
-import { initializeSettings } from './settings.js';
-import { getCurrentDayOfYear } from './services/dateService.js';
+import { initializeSettings } from './services.settings.js';
+import { getCurrentDayOfYear } from './services.date.js';
 import { drawStarfield, updateAndDrawShootingStars } from './stars.js';
 import { drawSun } from './sun.js';
 import { drawEarth, updateEarthPosition, initializeEarthPosition } from './earth.js';

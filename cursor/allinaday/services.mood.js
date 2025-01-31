@@ -1,4 +1,4 @@
-import { saveToLocalStorage, loadFromLocalStorage } from './storageService.js';
+import { saveToLocalStorage, loadFromLocalStorage } from './services.storage.js';
 
 export function saveMood(dateStamp, mood) {
     saveToLocalStorage(`aiad_mood_${dateStamp}`, mood);

@@ -1,7 +1,7 @@
-import { calculateDaysAlive, isToday, isInFuture, isInPast, getTimeOfDay, getDayOfYear } from './services/dateService.js';
-import { saveToLocalStorage, loadFromLocalStorage } from './services/storageService.js';
-import { saveMood, loadMood, addMoodSelector, addJumboMoodEmoji, getMoodEmoji, updateJumboMoodEmoji, getMoodData, createMoodChart, displayMoodStats } from './services/moodService.js';
-import { saveNotes, loadNotes, addNotesSection } from './services/noteService.js';
+import { calculateDaysAlive, isToday, isInFuture, isInPast, getTimeOfDay, getDayOfYear } from './services.date.js';
+import { saveToLocalStorage, loadFromLocalStorage } from './services.storage.js';
+import { saveMood, loadMood, addMoodSelector, addJumboMoodEmoji, getMoodEmoji, updateJumboMoodEmoji, getMoodData, createMoodChart, displayMoodStats } from './services.mood.js';
+import { saveNotes, loadNotes, addNotesSection } from './services.notes.js';
 
 const modal = document.getElementById('modal');
 const modalContent = modal.querySelector('.modal-content');

@@ -1,4 +1,4 @@
-import { loadFromLocalStorage, saveToLocalStorage } from './services/storageService.js';
+import { loadFromLocalStorage, saveToLocalStorage } from './services.storage.js';
 
 let userName = loadFromLocalStorage('aiad_userName') || '';
 let userDOB = loadFromLocalStorage('aiad_userDOB') || '';
