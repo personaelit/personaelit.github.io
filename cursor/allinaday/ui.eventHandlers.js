@@ -1,7 +1,7 @@
 import { state, updateEarthPosition } from './script.js';
-import { showModal, updateDailyModalContent, showReportModal } from './modal.js';
+import { showModal, updateDailyModalContent, showReportModal } from './ui.modal.js';
 import { toggleSettingsPanel } from './services.settings.js';
-import { createShootingStar } from './stars.js';
+import { createShootingStar } from './ui.stars.js';
 import { updateDateLabel, updateDatePicker } from './ui.js';
 
 const CLICK_TIME_THRESHOLD = 200; // milliseconds

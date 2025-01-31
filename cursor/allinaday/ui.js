@@ -1,6 +1,6 @@
 import { state } from './script.js';
-import { handleSliderInput, handleDatePickerChange, handleCanvasInteraction, preventDefaultTouch, handleDragStart, handleDragMove, handleDragEnd, handleKeyDown } from './eventHandlers.js';
-import { createStars } from './stars.js';
+import { handleSliderInput, handleDatePickerChange, handleCanvasInteraction, preventDefaultTouch, handleDragStart, handleDragMove, handleDragEnd, handleKeyDown } from './ui.eventHandlers.js';
+import { createStars } from './ui.stars.js';
 import { calculateDaysAlive } from './services.date.js';
 
 export const canvas = document.getElementById('solarSystem');
