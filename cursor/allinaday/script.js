@@ -1,7 +1,7 @@
-import { initializeUI, canvas, ctx, updateDateLabel, updateDatePicker, drawMonths, drawSettingsIcon,drawReportIcon } from './ui.js';
-import { initializeSettings } from './services.settings.js';
 import { getCurrentDayOfYear } from './services.date.js';
+import { initializeSettings } from './services.settings.js';
 import { getCurrentWeather } from './services.weather.js';
+import { initializeUI, canvas, ctx, updateDateLabel, updateDatePicker, drawMonths, drawSettingsIcon,drawReportIcon } from './ui.js';
 import { drawStarfield, updateAndDrawShootingStars } from './ui.stars.js';
 import { drawSun } from './ui.sun.js';
 import { sunnyDay } from './ui.sunny.js';

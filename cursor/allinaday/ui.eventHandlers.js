@@ -1,11 +1,11 @@
 import { state, updateEarthPosition } from './script.js';
-import { hideModal } from './ui.modal.js';
-import { toggleSettingsPanel } from './services.settings.js';
-import { createShootingStar } from './ui.stars.js';
-import { updateDateLabel, updateDatePicker } from './ui.js';
 import { updateDailyModalContent } from './services.mood.js';
 import { showReportModal } from './services.reports.js';
+import { toggleSettingsPanel } from './services.settings.js';
 import { setWeather } from './services.weather.js';
+import { updateDateLabel, updateDatePicker } from './ui.js';
+import { hideModal } from './ui.modal.js';
+import { createShootingStar } from './ui.stars.js';
 
 const CLICK_TIME_THRESHOLD = 200; // milliseconds
 let lastTouchEnd = 0;

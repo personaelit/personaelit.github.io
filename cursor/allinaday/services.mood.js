@@ -1,8 +1,8 @@
-import { saveToLocalStorage, loadFromLocalStorage } from './services.storage.js';
 import { isToday, isInFuture, isInPast, calculateDaysAlive, getTimeOfDay } from './services.date.js';
 import { addNotesSection } from './services.notes.js';
-import { addModalContent, showModal } from './ui.modal.js';
+import { saveToLocalStorage, loadFromLocalStorage } from './services.storage.js';
 import { setWeather } from './services.weather.js';
+import { addModalContent, showModal } from './ui.modal.js';
 
 
 function saveMood(dateStamp, mood) {
