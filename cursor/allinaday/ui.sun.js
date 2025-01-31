@@ -3,10 +3,10 @@ let sunPulsate = 0;
 export function drawSun(ctx, canvas, state) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    
+
     // Update pulsate value
     sunPulsate = (sunPulsate + 0.02) % (Math.PI * 2);
-    
+
     // Calculate pulsating radius
     const baseRadius = 50;
     const pulsateAmount = 3;

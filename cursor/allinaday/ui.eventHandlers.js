@@ -5,6 +5,7 @@ import { createShootingStar } from './ui.stars.js';
 import { updateDateLabel, updateDatePicker } from './ui.js';
 import { updateDailyModalContent } from './services.mood.js';
 import { showReportModal } from './services.reports.js';
+import { setWeather } from './services.weather.js';
 
 const CLICK_TIME_THRESHOLD = 200; // milliseconds
 let lastTouchEnd = 0;
@@ -90,6 +91,8 @@ export function handleDragEnd(event) {
 
 export function handleCanvasInteraction(event) {
     
+    setWeather(-1);
+
     if (event.type === 'touchend') {
         const now = new Date().getTime();
         if (now - lastTouchEnd <= 300) {

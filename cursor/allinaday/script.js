@@ -1,8 +1,10 @@
 import { initializeUI, canvas, ctx, updateDateLabel, updateDatePicker, drawMonths, drawSettingsIcon,drawReportIcon } from './ui.js';
 import { initializeSettings } from './services.settings.js';
 import { getCurrentDayOfYear } from './services.date.js';
+import { getCurrentWeather } from './services.weather.js';
 import { drawStarfield, updateAndDrawShootingStars } from './ui.stars.js';
 import { drawSun } from './ui.sun.js';
+import { sunnyDay } from './ui.sunny.js';
 import { drawEarth, updateEarthPosition, initializeEarthPosition } from './ui.earth.js';
 
 // Create a state object to hold shared values
@@ -25,6 +27,15 @@ function draw() {
     drawSettingsIcon(ctx, canvas);
     drawReportIcon(ctx, canvas);  // Add this line
     updateAndDrawShootingStars(canvas, ctx);
+
+    const weather = getCurrentWeather();
+    switch (weather) {
+        case 'sunny':
+            sunnyDay(canvas, ctx);
+            break;
+        default:
+            break;
+    }
 }
 
 function animate() {
