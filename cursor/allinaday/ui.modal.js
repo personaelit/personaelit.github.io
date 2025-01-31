@@ -16,10 +16,18 @@ function hideModal() {
     modal.style.display = 'none';
 }
 
+function clearModalContent() {
+    const closeButton = modalContent.querySelector('.close');
+    modalContent.innerHTML = '';
+    if (closeButton) {
+        modalContent.appendChild(closeButton);
+    }
+}
+
 function updateDailyModalContent(date) {
 
     const closeButton = modalContent.querySelector('.close');
-    modalContent.innerHTML = '';
+    clearModalContent();
     if (closeButton) {
         modalContent.appendChild(closeButton);
     }
@@ -101,14 +109,9 @@ window.addEventListener('click', function (event) {
 export { showModal, hideModal, updateDailyModalContent };
 
 export function showReportModal() {
+    clearModalContent();
     const modal = document.getElementById('modal');
     const modalContent = document.querySelector('.modal-content');
-
-    const closeButton = modalContent.querySelector('.close');
-    modalContent.innerHTML = '';
-    if (closeButton) {
-        modalContent.appendChild(closeButton);
-    }
 
     // Add report content
     const reportContent = document.createElement('div');
