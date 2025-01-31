@@ -1,6 +1,6 @@
 export function getCurrentDayOfYear() {
     const now = new Date();
-    const start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
+    const start = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
     const diff = now.getTime() - start.getTime();
     const oneDay = 1000 * 60 * 60 * 24;
     return Math.floor(diff / oneDay);
