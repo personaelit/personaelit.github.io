@@ -1,5 +1,14 @@
 import { state } from './script.js';
-import { handleSliderInput, handleDatePickerChange, handleCanvasInteraction, preventDefaultTouch, handleDragStart, handleDragMove, handleDragEnd, handleKeyDown } from './ui.eventHandlers.js';
+import { 
+    handleSliderInput, 
+    handleDatePickerChange, 
+    handleCanvasInteraction, 
+    preventDefaultTouch, 
+    handleDragStart, 
+    handleDragMove, 
+    handleDragEnd, 
+    handleKeyDown,
+    handleCloseButtonClick } from './ui.eventHandlers.js';
 import { createStars } from './ui.stars.js';
 import { calculateDaysAlive } from './services.date.js';
 
@@ -9,6 +18,7 @@ export const slider = document.getElementById('timeSlider');
 export const clockElement = document.getElementById('clock');
 export const datePicker = document.getElementById('datePicker');
 export const daysAliveElement = document.getElementById('daysAlive');
+export const closeModal = document.getElementById('close-modal');
 
 export function initializeUI() {
     resizeCanvas();
@@ -139,4 +149,5 @@ function setupEventListeners() {
     canvas.addEventListener('mouseup', handleDragEnd);
     canvas.addEventListener('touchend', handleDragEnd);
     document.addEventListener('keydown', handleKeyDown);
+    closeModal.addEventListener('click', handleCloseButtonClick);
 }

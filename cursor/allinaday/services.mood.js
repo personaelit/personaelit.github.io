@@ -1,14 +1,17 @@
 import { saveToLocalStorage, loadFromLocalStorage } from './services.storage.js';
+import { isToday, isInFuture, isInPast, calculateDaysAlive, getTimeOfDay } from './services.date.js';
+import { addNotesSection } from './services.notes.js';
+import { addModalContent, showModal } from './ui.modal.js';
 
-export function saveMood(dateStamp, mood) {
+function saveMood(dateStamp, mood) {
     saveToLocalStorage(`aiad_mood_${dateStamp}`, mood);
 }
 
-export function loadMood(dateStamp) {
+function loadMood(dateStamp) {
     return loadFromLocalStorage(`aiad_mood_${dateStamp}`);
 }
 
-export function addMoodSelector(dateStamp, modalContent) {
+function addMoodSelector(dateStamp, modalContent) {
     const moodSelector = document.createElement('div');
     moodSelector.className = 'mood-selector';
     moodSelector.innerHTML = `
@@ -29,7 +32,7 @@ export function addMoodSelector(dateStamp, modalContent) {
     modalContent.appendChild(moodSelector);
 }
 
-export function addJumboMoodEmoji(dateStamp, modalContent) {
+function addJumboMoodEmoji(dateStamp, modalContent) {
     const savedMood = loadMood(dateStamp);
     if (savedMood) {
         const jumboEmoji = document.createElement('div');
@@ -39,7 +42,7 @@ export function addJumboMoodEmoji(dateStamp, modalContent) {
     }
 }
 
-export function getMoodEmoji(mood) {
+function getMoodEmoji(mood) {
     const moodEmojis = {
         '1': '😢',
         '2': '😕',
@@ -50,7 +53,7 @@ export function getMoodEmoji(mood) {
     return moodEmojis[mood] || '😐';
 }
 
-export function updateJumboMoodEmoji(mood, modalContent) {
+function updateJumboMoodEmoji(mood, modalContent) {
     const jumboEmoji = modalContent.querySelector('.jumbo-emoji');
     if (jumboEmoji) {
         jumboEmoji.textContent = getMoodEmoji(mood);
@@ -121,4 +124,76 @@ export function displayMoodStats(moodData) {
     ).join('')}
         </ul>
     `;
+}
+
+export function updateDailyModalContent(date) {
+
+    // clearModalContent();
+
+    const modalContent = document.createElement('div');
+    const dateStamp = date.toISOString().split('T')[0];
+
+    let header = document.createElement('h2');
+    header.className = 'modal-date-header';
+    modalContent.appendChild(header);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+    header.textContent = date.toLocaleDateString('en-US', options);
+
+    if (isToday(date)) {
+        const greeting = createPersonalizedGreeting(date);
+        const greetingElement = document.createElement('p');
+        greetingElement.textContent = greeting;
+        greetingElement.className = 'personalized-greeting';
+        modalContent.appendChild(greetingElement);
+
+        // Add mood selector and notes for today
+        addMoodSelector(dateStamp, modalContent);
+        addNotesSection(dateStamp, modalContent);
+    }
+    else if (isInPast(date)) {
+        const pastMessage = document.createElement('p');
+
+        pastMessage.className = 'past-message';
+        modalContent.appendChild(pastMessage);
+
+        // Add mood selector if no mood is saved
+        const savedMood = loadMood(dateStamp);
+        if (!savedMood) {
+            addMoodSelector(dateStamp, modalContent);
+        } else {
+            // Add jumbo emoji based on saved mood
+            addJumboMoodEmoji(dateStamp, modalContent);
+        }
+
+        // Add notes section for past dates (editable)
+        addNotesSection(dateStamp, modalContent);
+    }
+    else if (isInFuture(date)) {
+        const futureMessage = document.createElement('p');
+        futureMessage.textContent = "What will the future hold?";
+        futureMessage.className = 'future-message';
+        modalContent.appendChild(futureMessage);
+    }
+    else {
+        console.error(`Unexpected condition occurred: ${date} appears to be outside of the time continuum.`)
+    }
+
+    addModalContent(modalContent);
+    showModal();
+
+}
+
+
+function createPersonalizedGreeting(date) {
+    const name = loadFromLocalStorage('aiad_userName') || 'friend';
+    const daysAlive = calculateDaysAlive(date) || 0;
+    const timeOfDay = getTimeOfDay(new Date());  // Use current time
+
+    if (daysAlive > 0) {
+        return `${timeOfDay}, ${name}! This is day ${daysAlive} of your journey. Make. it. count.`;
+    }
+    else {
+        return `${timeOfDay}, ${name}!`
+    }
 }

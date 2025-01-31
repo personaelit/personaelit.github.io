@@ -1,8 +1,10 @@
 import { state, updateEarthPosition } from './script.js';
-import { showModal, updateDailyModalContent, showReportModal } from './ui.modal.js';
+import { hideModal } from './ui.modal.js';
 import { toggleSettingsPanel } from './services.settings.js';
 import { createShootingStar } from './ui.stars.js';
 import { updateDateLabel, updateDatePicker } from './ui.js';
+import { updateDailyModalContent } from './services.mood.js';
+import { showReportModal } from './services.reports.js';
 
 const CLICK_TIME_THRESHOLD = 200; // milliseconds
 let lastTouchEnd = 0;
@@ -81,13 +83,13 @@ export function handleDragEnd(event) {
         date.setMonth(0); // January is 0-based
         date.setUTCDate(state.currentDayOfYear + 1); // Add 1 to account for UTC date starting at 1
         updateDailyModalContent(date);
-        showModal();
     }
 
     state.isDragging = false;
 }
 
 export function handleCanvasInteraction(event) {
+    
     if (event.type === 'touchend') {
         const now = new Date().getTime();
         if (now - lastTouchEnd <= 300) {
@@ -126,4 +128,8 @@ export function preventDefaultTouch(event) {
     if (event.touches.length === 1) {
         event.preventDefault();
     }
+}
+
+export function handleCloseButtonClick() {
+    hideModal();
 }
