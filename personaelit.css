@@ -130,6 +130,10 @@ a:hover:not(.article a) {
     transform:scale(1.2) !important;
 }
 
+.external {
+    text-decoration: none;
+}
+
 .external::after {
     content: "🌐";
     margin-left: 4px;

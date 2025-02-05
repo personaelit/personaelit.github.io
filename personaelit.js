@@ -130,10 +130,6 @@ function flagExternalLinks() {
         if (link.hostname !== window.location.hostname) {
             // Add a class to the external link
             link.classList.add("external");
-
-            // Optional: Add an attribute or other annotation
-            link.setAttribute("rel", "noopener noreferrer");
-            link.setAttribute("target", "_blank");
         }
     });
 }
