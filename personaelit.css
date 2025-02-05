@@ -5,7 +5,7 @@
 }
 
 #content:not(.article) {
-    max-width: 900px;
+    max-width: 1200px;
     margin-left: 20px;
 }
 
@@ -38,7 +38,7 @@ li {
     margin-bottom: 10px;
 }
 
-#content p {
+#content p, #content h2 {
     margin: 21px;
     line-height: 2em;
 }
