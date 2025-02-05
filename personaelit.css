@@ -25,9 +25,21 @@ header,
 main,
 .last-updated,
 nav,
-pre,
-li {
+pre {
     padding: 11px;
+}
+
+ul {
+    
+    margin: 10px 42px;
+}
+
+li {
+    margin-bottom: 10px;
+}
+
+#content p {
+    margin: 21px;
 }
 
 #subtitle {
@@ -39,11 +51,6 @@ time {
     background-color: #7c7c7c;
     color: #f5f5f5;
     display: block;
-}
-
-p {
-    padding: 11px 0;
-    line-height: 2;
 }
 
 code {
@@ -107,18 +114,19 @@ body {
 a:not(.article a) {
     display: inline-block;
     background: #f0eeee;
-    padding: 10px 15px;
+    padding: 3px 15px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
     text-decoration: none;
     color: #333;
     font-family: 'Arial', sans-serif;
     font-size: 16px;
-    transition: background-color 0.3s, box-shadow 0.3s;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.1s;
 }
 
 a:hover {
-    background: #f9f9f9;
-    box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.3);
+    background: #f9f9f9 !important;
+    box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.3) !important;
+    transform:scale(1.2) !important;
 }
 
 .external::after {
