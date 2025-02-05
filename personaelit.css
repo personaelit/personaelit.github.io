@@ -4,7 +4,7 @@
     padding: 0;
 }
 
-#content {
+#content:not(.article) {
     max-width: 900px;
     margin-left: 20px;
 }
@@ -124,7 +124,7 @@ a:not(.article a) {
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.1s;
 }
 
-a:hover {
+a:hover:not(.article a) {
     background: #f9f9f9 !important;
     box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.3) !important;
     transform:scale(1.2) !important;
