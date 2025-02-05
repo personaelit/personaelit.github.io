@@ -150,7 +150,7 @@ function stylizeLinks() {
         const randomAngle = Math.random() * 10 - 5;
 
         // Apply the rotation using a CSS transform
-        anchor.style.transform = `rotate(${randomAngle}deg)`;
+        anchor.style.transform += `rotate(${randomAngle}deg)`;
         anchor.classList.add('rotated');
     });
 }
@@ -158,14 +158,18 @@ function stylizeLinks() {
 function startColorTransition() {
     console.log("transition init.")
     let hue = Math.floor(Math.random() * 360); // Initialize with a random hue value between 0 and 359
+    let bgColor = `hsl(${hue}, 100%, 50%)`;
+    let textColor = getTextColor(hue);
+    document.body.style.setProperty('--bg-color', bgColor);
+    document.body.style.setProperty('--text-color', textColor);
 
     setInterval(() => {
         hue = (hue + 1) % 360; // Cycle through 0-359 for the hue value
-        const bgColor = `hsl(${hue}, 100%, 50%)`;
-        const textColor = getTextColor(hue);
+        bgColor = `hsl(${hue}, 100%, 50%)`;
+        textColor = getTextColor(hue);
         document.body.style.setProperty('--bg-color', bgColor);
         document.body.style.setProperty('--text-color', textColor);
-    }, 300); // Adjust the interval for smoothness
+    }, 1000); // Adjust the interval for smoothness
 }
 
 function getTextColor(hue) {
