@@ -12,6 +12,7 @@
 body {
     font-family: 'Lucida Console, Courier New', Courier, monospace;
     background-color: #f5f5f5;
+    margin-bottom: 42px;
 }
 
 header {
@@ -39,6 +40,13 @@ main,
 nav,
 pre {
     padding: 11px;
+}
+
+.last-updated {
+    position: fixed;
+    bottom: 0;
+    background-color: black;
+    color: #d7d5d5;
 }
 
 
