@@ -28,11 +28,10 @@ header {
 
 aside {
     max-width: 600px;
-    margin-left: 21px;
-    margin-top: 21px;
+    margin: 21px;
     background-color: #f5f5f5;
     color: #353535;
-    transform: rotate(5deg);
+    transform: rotate(2deg);
     padding: 11px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 
