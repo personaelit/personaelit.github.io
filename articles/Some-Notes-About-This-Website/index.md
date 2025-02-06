@@ -135,23 +135,23 @@ Another masturbatory design choice, when you click on the page anywhere, a littl
 </code></pre>
 
 <pre><code class="language-javascript">
-function getRippled() {
-	console.log("Ripple, on still water.")
-	const rippleContainer = document.querySelector('body');
-	document.addEventListener('click', (event) => {
-		const ripple = document.createElement('div');
-		ripple.className = 'ripple';
-		// Calculate the position based on scroll offset
-		const scrollX = window.scrollX || document.documentElement.scrollLeft;
-		const scrollY = window.scrollY || document.documentElement.scrollTop;
-		ripple.style.left = `${event.clientX - 10 + scrollX}px`;
-		ripple.style.top = `${event.clientY - 10 + scrollY}px`;
-		rippleContainer.appendChild(ripple);
-		ripple.addEventListener('animationend', () => {
-			ripple.remove();
+	function getRippled() {
+		console.log("Ripple, on still water.")
+		const rippleContainer = document.querySelector('body');
+		document.addEventListener('click', (event) => {
+			const ripple = document.createElement('div');
+			ripple.className = 'ripple';
+			// Calculate the position based on scroll offset
+			const scrollX = window.scrollX || document.documentElement.scrollLeft;
+			const scrollY = window.scrollY || document.documentElement.scrollTop;
+			ripple.style.left = `${event.clientX - 10 + scrollX}px`;
+			ripple.style.top = `${event.clientY - 10 + scrollY}px`;
+			rippleContainer.appendChild(ripple);
+			ripple.addEventListener('animationend', () => {
+				ripple.remove();
+			});
 		});
-	});
-}
+	}
 </code></pre>
 
 Key point - the ripple effect is created by appending a div to the body element at the X and Y coords of the <code>click </code> event and then removing it after the animation ends. The event listener <code>animationend</code> is used to remove the div after its served its (lack of) purpose. 
