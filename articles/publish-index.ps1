@@ -1,5 +1,5 @@
 # Define the path to the HTML template file
-$templatePath = "index.template"
+$templatePath = "article-list.template"
 
 # Define the output path for the final HTML file
 $outputPath = "index.html"

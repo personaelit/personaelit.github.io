@@ -1,32 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
-<head>    
-    <title>Articles that I Wrote</title>
-    
+<head>
+    <title>{{title}}</title>
     <meta charset="UTF-8">
-    <meta name="description" content="This is a page listing articles that I wrote.">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    
-    <link rel="stylesheet" href="../personaelit.css" />
-    <script src="../personaelit.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{description}}">
+    <meta name="author" content="{{author}}">
+    <link rel="stylesheet" href="../../personaelit.css">
+    <link rel="stylesheet" href="../article-styles.css">
+    <script src="../../personaelit.js"></script>
 </head>
 
 <body>
-    <header>
-        <h1 id="title">Articles</h1>
-        <div id="subtitle">stuff I wrote.</div>
+    <header class="article-header">
+        <h1 id="title">{{heading}}</h1>
+        <div id="subtitle">{{subtitle}}</div>
     </header>
-    <nav>
+    <main id="content" class="article">
+        <div class="clipped-image">
+            <img src="header.png" alt="{{header-image-alt-text}}" />
+        </div>
+       {{content}}
+    </main>
+    <nav class="article-nav">
         <a href="../">../</a>
     </nav>
-    <main id="content">
-        [[LINKS]]
-    </main>
-    <span class="last-updated"></span>
-    <footer>
-        <!-- FOOTER -->
-    </footer>
+    <span class='last-updated'>Last Updated: Thursday, 2025/02/06</span>
 </body>
 
 </html>

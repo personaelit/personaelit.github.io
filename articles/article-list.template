@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>    
+    <title>Articles that I Wrote</title>
+    
+    <meta charset="UTF-8">
+    <meta name="description" content="This is a page listing articles that I wrote.">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <link rel="stylesheet" href="../personaelit.css" />
+    <script src="../personaelit.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1 id="title">Articles</h1>
+        <div id="subtitle">stuff I wrote.</div>
+    </header>
+    <nav>
+        <a href="../">../</a>
+    </nav>
+    <main id="content">
+        [[LINKS]]
+    </main>
+    <span class="last-updated"></span>
+    <footer>
+        <!-- FOOTER -->
+    </footer>
+</body>
+
+</html>
