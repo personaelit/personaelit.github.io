@@ -2,7 +2,7 @@
 .article-last-updated,
 .article-header,
 .article {
-    max-width: 74%;
+    max-width: 50%;
     margin: 0 auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
