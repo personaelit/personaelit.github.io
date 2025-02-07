@@ -25,7 +25,7 @@ I started with a block comment describing the flow
 </code>
 </pre>
 I told co-pilot to implement it, and it spit something that roughly looked like this. 
-<pre><code>
+<pre><code class="language-powershell">
 	# Define the paths for the weekly planning and daily journal folders	
 	# NOTE: run this script in the same folder as the weekly planning and daily journal folders.	
 	$weeklyPlanningFolder = "Weekly Planning"	
