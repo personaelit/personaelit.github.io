@@ -154,14 +154,14 @@ function stylizeLinks() {
 function startColorTransition() {
     console.log("transition init.")
     let hue = Math.floor(Math.random() * 360); // Initialize with a random hue value between 0 and 359
-    let bgColor = `hsl(${hue}, 100%, 50%)`;
+    let bgColor = `hsl(${hue}, 75%, 50%)`;
     let textColor = getTextColor(hue);
     document.body.style.setProperty('--bg-color', bgColor);
     document.body.style.setProperty('--text-color', textColor);
 
     setInterval(() => {
         hue = (hue + 1) % 360; // Cycle through 0-359 for the hue value
-        bgColor = `hsl(${hue}, 100%, 50%)`;
+        bgColor = `hsl(${hue}, 75%, 50%)`;
         textColor = getTextColor(hue);
         document.body.style.setProperty('--bg-color', bgColor);
         document.body.style.setProperty('--text-color', textColor);
