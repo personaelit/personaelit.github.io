@@ -5,6 +5,7 @@ description: "A quick post about creating a weekly planning script for use with 
 heading: "A quick post about creating a weekly planning script for use with obsidian."
 header-image-alt-text: "imagine a cat hammering on a keyboard creating exquisite code."
 subtitle: "What to do with all this extra time?"
+publish-date: "2025-02-07"
 
 ---
 

@@ -25,6 +25,7 @@
         <div class="clipped-image">
             <img src="header.png" alt="{{header-image-alt-text}}" />
         </div>
+        <div class="publish-date">{{publish-date}}</div>
        {{content}}
     </main>
     <nav class="article-nav">

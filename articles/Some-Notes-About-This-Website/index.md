@@ -5,6 +5,7 @@ description: "A few notes about the making of this website."
 heading: "Some notes about this website."
 header-image-alt-text: "A man working in front of two monitors displaying code with a pink haze over the whole image."
 subtitle: "How the sausage is made."
+publish-date: "2025-02-05"
 
 ---
 

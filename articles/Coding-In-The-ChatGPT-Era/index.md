@@ -5,6 +5,8 @@ description: "Just my thoughts on the coding landscape in the ChatGPT era."
 heading: "Coding in the Era of ChatGPT"
 header-image-alt-text: "A highly stylized cyborg representation of two AI assistants looking at each other."
 subtitle: "the djinn has left the bottle"
+publish-date: "2025-02-05"
+
 
 ---
 

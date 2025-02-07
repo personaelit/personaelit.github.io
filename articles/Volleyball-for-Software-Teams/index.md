@@ -5,6 +5,7 @@ description: "A rear view of three women ready to face their competitors on the 
 heading: "Volleyball for Software Teams"
 header-image-alt-text: "A man standing in front of a whiteboard."
 subtitle: "I got it! I got it!"
+publish-date: "2023-11-08"
 
 ---
 What Makes for a Good Volleyball Team?

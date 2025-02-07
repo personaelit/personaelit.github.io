@@ -5,6 +5,7 @@ description: "A brief article about how Agile lost its way."
 heading: "What is Agile?"
 header-image-alt-text: "A man standing in front of a whiteboard."
 subtitle: "How we missed the mark."
+publish-date: "2023-11-08"
 
 ---
 

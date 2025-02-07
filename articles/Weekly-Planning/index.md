@@ -5,6 +5,7 @@ description: "A few thoughts about my weekly planning process using obsidian."
 heading: "Weekly Planning"
 header-image-alt-text: "a rustic table with a few books, a plant, and a pen in front of a bokeh view of a room with soft lighting, maybe industrial space reclaimed as office space."
 subtitle: "the world keeps turning round"
+publish-date: "2025-02-07"
 
 ---
 
@@ -18,7 +19,7 @@ subtitle: "the world keeps turning round"
 		- YYYY-MM-DD, dddd.md
 	- Weekly Planning Folder
 		- YYYY-MM-DD - Weekly Planning.md
-- Run a <a href="../Creating-A-Weekly-Planning-Script">initialize script</a>
+- Run an <a href="../Creating-A-Weekly-Planning-Script">initialize script</a>
 - Start with your calendar. 
 	- Add your appointments and meetings to the appropriate days.
 - Then re-evaluate current WIP
