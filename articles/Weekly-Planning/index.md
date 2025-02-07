@@ -11,12 +11,17 @@ publish-date: "2025-02-07"
 
 # Using Obsidian for Weekly Planning
 
-- Monday's are for weekly planning.
+- Mondays are for weekly planning.
 - Coupled with Daily Journaling, this can be a powerful technique for managing time.
 - I use [Obsidian](https://obsidian.md/), because I like its features.
+	- I can tag notes #likeso
+	- I can link notes to each other
+	- There is a fantastic graph view.
+	- Lots of nice features, configurability, really an outstanding product
 - My structure looks like this:
 	- Daily Journal Folder
-		- YYYY-MM-DD, dddd.md
+		- When I open "today's note" I get a file with this format: YYYY-MM-DD, dddd.md
+			- Example 2025-02-07, Friday.md
 	- Weekly Planning Folder
 		- YYYY-MM-DD - Weekly Planning.md
 - Run an <a href="../Creating-A-Weekly-Planning-Script">initialize script</a>
