@@ -4,7 +4,55 @@ window.addEventListener('DOMContentLoaded', (event) => {
     flagExternalLinks();
     activateSlidableCards();
     getRippled();
+    initializeDeconstructSequence();
 });
+
+function initializeDeconstructSequence() {
+    console.log("Derrida would be proud.")
+
+    const selfDestructButton = document.createElement('button');
+    selfDestructButton.innerText = 'deconstruct';
+    selfDestructButton.className = 'deconstruct';
+
+    document.body.appendChild(selfDestructButton);
+
+    selfDestructButton.addEventListener('click', () => {
+        const getAllDescendants = (element) => {
+            const descendants = [];
+            const stack = [element];
+
+            while (stack.length > 0) {
+                const current = stack.pop();
+                descendants.push(current);
+                for (let i = 0; i < current.children.length; i++) {
+                    stack.push(current.children[i]);
+                }
+            }
+
+            return descendants;
+        };
+
+        const allDescendants = getAllDescendants(document.body);
+        //const elements = document.body.children;
+        for (let i = 0; i < allDescendants.length; i++) {
+            const element = allDescendants[i];
+            element.style.transition = 'transform 2s ease-in, opacity 2s ease-in';
+            element.style.transform = `translate(${Math.random() * window.innerWidth - window.innerWidth / 2}px, ${window.innerHeight}px) rotate(${Math.random() * 360}deg)`;
+        }
+
+        const reconstructButton = document.createElement('button');
+        reconstructButton.innerText = 'reconstruct';
+        reconstructButton.className = 'reconstruct';
+    
+        document.body.appendChild(reconstructButton);
+
+        reconstructButton.addEventListener('click', () => {
+            location.reload();
+        });
+
+    });
+
+}
 
 function getRippled() {
 
