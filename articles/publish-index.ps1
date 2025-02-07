@@ -12,8 +12,9 @@ $links = @()
 
 # Loop through each .txt file in the directory
 # Loop through each directory and check for index.html file
-Get-ChildItem -Directory | Where-Object { Test-Path "$($_.FullName)\index.html" } | ForEach-Object {
-    $dirName = $_.Name
+# Sort directories by creation date, newest first
+Get-ChildItem -Directory | Sort-Object CreationTime -Descending | Where-Object { Test-Path "$($_.FullName)\index.html" } | ForEach-Object {
+    $dirName = $_.Name.Replace("-", " ")
     $link = "<li><a href=""$dirName"">$dirName</a></li>"
     $links += $link
 }
