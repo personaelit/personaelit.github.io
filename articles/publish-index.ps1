@@ -11,7 +11,8 @@ $templateContent = Get-Content -Path $templatePath -Raw
 $links = @()
 
 # Loop through each .txt file in the directory
-Get-ChildItem -Directory | ForEach-Object {
+# Loop through each directory and check for index.html file
+Get-ChildItem -Directory | Where-Object { Test-Path "$($_.FullName)\index.html" } | ForEach-Object {
     $dirName = $_.Name
     $createdDate = $_.CreationTime
     $lastModified = $_.LastWriteTime
