@@ -19,6 +19,12 @@
     margin-top: 111px;
 }
 
+#publish-date {
+    border-top:1px solid #d7d5d5;
+    margin-top: 7px;
+    padding-top: 7px;
+}
+
 @media only screen and (max-width:900px) {
 
     .article-nav,
