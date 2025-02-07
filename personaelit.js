@@ -33,7 +33,6 @@ function initializeDeconstructSequence() {
         };
 
         const allDescendants = getAllDescendants(document.body);
-        //const elements = document.body.children;
         for (let i = 0; i < allDescendants.length; i++) {
             const element = allDescendants[i];
             element.style.transition = 'transform 2s ease-in, opacity 2s ease-in';
