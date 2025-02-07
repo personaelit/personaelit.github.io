@@ -1,5 +1,4 @@
 .article-nav,
-.article-last-updated,
 .article-header,
 .article {
     max-width: 50%;
@@ -23,7 +22,6 @@
 @media only screen and (max-width:900px) {
 
     .article-nav,
-    .article-last-updated,
     .article-header,
     .article {
         max-width: 90%;

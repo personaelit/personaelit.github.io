@@ -39,18 +39,11 @@ aside {
 
 header,
 main,
-.last-updated,
 nav,
 pre {
     padding: 11px;
 }
 
-.last-updated {
-    position: fixed;
-    bottom: 0;
-    background-color: black;
-    color: #d7d5d5;
-}
 
 
 ul {
@@ -129,11 +122,6 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 1s linear, color 1s linear;
-}
-
-.last-updated {
-    display: block;
-    margin-top: 20px;
 }
 
 a:not(.article a) {
