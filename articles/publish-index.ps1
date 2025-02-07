@@ -14,8 +14,9 @@ $links = @()
 # Loop through each directory and check for index.html file
 # Sort directories by creation date, newest first
 Get-ChildItem -Directory | Sort-Object CreationTime -Descending | Where-Object { Test-Path "$($_.FullName)\index.html" } | ForEach-Object {
-    $dirName = $_.Name.Replace("-", " ")
-    $link = "<li><a href=""$dirName"">$dirName</a></li>"
+    $dirName = $_.Name
+    $friendlyName = $_.Name.Replace("-", " ")
+    $link = "<li><a href=""$dirName"">$friendlyName</a></li>"
     $links += $link
 }
 
