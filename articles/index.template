@@ -20,12 +20,12 @@
     <header class="article-header">
         <h1 id="title">{{heading}}</h1>
         <div id="subtitle">{{subtitle}}</div>
+        <div id="publish-date">{{publish-date}}</div>
     </header>
     <main id="content" class="article">
         <div class="clipped-image">
             <img src="header.png" alt="{{header-image-alt-text}}" />
         </div>
-        <div class="publish-date">{{publish-date}}</div>
        {{content}}
     </main>
     <nav class="article-nav">
