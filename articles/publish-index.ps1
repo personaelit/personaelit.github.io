@@ -14,9 +14,7 @@ $links = @()
 # Loop through each directory and check for index.html file
 Get-ChildItem -Directory | Where-Object { Test-Path "$($_.FullName)\index.html" } | ForEach-Object {
     $dirName = $_.Name
-    $createdDate = $_.CreationTime
-    $lastModified = $_.LastWriteTime
-    $link = "<li><a href=""$dirName"">$dirName</a> | Created: $createdDate, Last Modified: $lastModified</li>"
+    $link = "<li><a href=""$dirName"">$dirName</a></li>"
     $links += $link
 }
 
