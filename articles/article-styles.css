@@ -11,6 +11,16 @@
     color: #353535;
 }
 
+.article img {
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+    transform: rotate(-3deg);
+    border: 1px dotted #353535;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+
+}
+
 .article-header {
     text-align: center;
     background: black;
@@ -20,7 +30,7 @@
 }
 
 #publish-date {
-    border-top:1px solid #d7d5d5;
+    border-top: 1px solid #d7d5d5;
     margin-top: 7px;
     padding-top: 7px;
 }
@@ -48,6 +58,7 @@
 .clipped-image img {
     height: 100%;
     width: 100%;
-    object-fit: cover; 
+    object-fit: cover;
     object-position: top;
+    transform: rotate(0deg); /* Cancel out a another CSS rule that rotates the image. */
 }
