@@ -1,65 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Disappear</title>
-        <meta name="description" content="Text that disappears at a variable rate depending on a random integer chosen at page load.">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script>
-            window.addEventListener('DOMContentLoaded', (event) => {
-                let text = document.getElementById('text').innerText;
-                let words = text.split(" ");
-                let interval = Math.floor(Math.random() * 500) + 1;
-        
-                let zapWord = () => {
-                    if (words.length === 0) return;
-                    let randomIndex = Math.floor(Math.random() * words.length);
-                    words.splice(randomIndex, 1);
-                    document.getElementById('text').innerText = words.join(" ");
-                    if (words.length > 0) {
-                        setTimeout(zapWord, interval);
-                    }
-                };
-        
-                setTimeout(zapWord, interval);
-            });
-        </script>
-        
-        <style>
-            #text {
-                display: block;
-                margin: 20% auto;
-                width: 80%;
-            }
-        </style>
-    </head>
-    <body>
-        <p id="text">
+<head>
+    <title>Disappear</title>
+    <meta name="description" content="Text that disappears at a variable rate depending on a random integer chosen at page load.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #text {
+            display: block;
+            margin: 20% auto;
+            width: 80%;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: justify;
+        }
+    </style>
+</head>
+<body>
+    <p id="text">
+        In the labyrinthine depths of digital transmission, words conspire and scatter like furtive whispers in a secret assembly. Sentences, once whole and sturdy, now dangle precariously over an abyss of uncertainty, subject to the whimsical erasures of some spectral force. It’s as if the text has been thrust into a Pynchonian plot, where fragments and ellipses reign supreme. Snatches of phrases, stripped of their contexts, flit in and out of existence, leaving behind a breadcrumb trail of orphaned thoughts and half-finished ideas. Deletion occurs with a fickle rhythm, a syncopated dance of vanishing letters and evaporating prose. Entire paragraphs may dissolve in an instant, while elsewhere, a lone word succumbs to the void. The text mutates in waves, a capricious tide of entropy transforming the once orderly narrative into a bewildering mosaic of discontinuity. In this kaleidoscopic flux, the ephemeral nature of written words reveals itself, a testament to the chaotic forces that shape our most fleeting communications.
+    </p>
 
-            In the labyrinthine depths of digital transmission, words conspire and scatter like furtive whispers in a secret assembly. Sentences, once whole and sturdy, now dangle precariously over an abyss of uncertainty, subject to the whimsical erasures of some spectral force. It’s as if the text has been thrust into a Pynchonian plot, where fragments and ellipses reign supreme. Snatches of phrases, stripped of their contexts, flit in and out of existence, leaving behind a breadcrumb trail of orphaned thoughts and half-finished ideas. Deletion occurs with a fickle rhythm, a syncopated dance of vanishing letters and evaporating prose. Entire paragraphs may dissolve in an instant, while elsewhere, a lone word succumbs to the void. The text mutates in waves, a capricious tide of entropy transforming the once orderly narrative into a bewildering mosaic of discontinuity. In this kaleidoscopic flux, the ephemeral nature of written words reveals itself, a testament to the chaotic forces that shape our most fleeting communications.
-            <br />
-            <br />
-            &lt;script&gt;
-            window.addEventListener('DOMContentLoaded', (event) =&gt; {
-                let text = document.getElementById('text').innerText;
-                let words = text.split(" ");
-                let interval = Math.floor(Math.random() * 1000) + 1;
-        
-                let zapWord = () =&gt; {
-                    if (words.length === 0) return;
-                    let randomIndex = Math.floor(Math.random() * words.length);
-                    words.splice(randomIndex, 1);
-                    document.getElementById('text').innerText = words.join(" ");
-                    if (words.length &gt; 0) {
-                        setTimeout(zapWord, interval);
+    <script>
+        (function() {
+            document.addEventListener("DOMContentLoaded", () => {
+                const textElement = document.getElementById("text");
+                let words = textElement.textContent.split(" ");
+                
+                const removeWord = () => {
+                    if (words.length === 0) {
+                        textElement.innerHTML = "&nbsp;"; // Prevent collapse
+                        return;
                     }
-                };
-        
-                setTimeout(zapWord, interval);
-            });
-        &lt;/script&gt;
-        
-        </p>
+                    
+                    const randomIndex = Math.floor(Math.random() * words.length);
+                    words.splice(randomIndex, 1);
+                    textElement.textContent = words.join(" ");
 
-    </body>
+                    // Set new variable interval each time
+                    const newInterval = Math.floor(Math.random() * 500) + 100;
+                    setTimeout(removeWord, newInterval);
+                };
+
+                setTimeout(removeWord, Math.floor(Math.random() * 500) + 100);
+            });
+        })();
+    </script>
+</body>
 </html>
