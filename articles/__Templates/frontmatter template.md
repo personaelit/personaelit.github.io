@@ -3,8 +3,12 @@ title: ""
 author: "James Smits"
 description: ""
 heading: ""
-header-image-alt-text: ""
 subtitle: ""
+header-image-alt-text: ""
 publish-date: "{{date}}"
 
 ---
+
+<aside>
+
+</aside>
