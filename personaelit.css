@@ -158,13 +158,23 @@ a:hover:not(.article a) {
     transform: scale(1.2) !important;
 }
 
-.external {
+.external, .broken-link {
     text-decoration: none;
 }
 
 .external::after {
     content: "🌐";
     margin-left: 4px;
+}
+
+
+.broken-link::after {
+    content: "⛓️‍💥";
+    margin-left: 4px;
+}
+
+a.broken-link {
+    color:#d63333;
 }
 
 .ripple {

@@ -5,7 +5,27 @@ window.addEventListener('DOMContentLoaded', (event) => {
     activateSlidableCards();
     getRippled();
     initializeDeconstructSequence();
+    isItBorked();
 });
+
+function isItBorked() {
+    console.log("Brokedown palace.");
+    const links = document.querySelectorAll("a");
+
+    links.forEach(link => {
+        fetch(link.href, { method: 'HEAD' })
+            .then(response => {
+                if (response.status === 404) {
+                    link.classList.add("broken-link");
+                }
+            })
+            .catch(error => {
+                console.error('Error checking link:', error);
+                link.classList.add("broken-link");
+            });
+    });
+}
+
 
 function initializeDeconstructSequence() {
     console.log("Derrida would be proud.")
