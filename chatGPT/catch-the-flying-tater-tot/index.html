@@ -5,50 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catch the Flying Tater Tot</title>
     <style>
+          body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+         
+        }
         #tot {
             position: absolute;
             pointer-events: auto;
-            width: 50px; /* Adjust the size as needed */
-            height: 50px; /* Adjust the size as needed */
-            transition: transform 0.05s linear; /* Faster transition */
+            width: 50px;
+            height: 50px;
+            transition: transform 0.05s linear;
         }
-
         @media (min-width: 768px) {
             #tot {
                 width: 100px;
                 height: 100px;
             }
         }
-
-        #splat {
+        #splat, #resetButton, #timer {
             position: absolute;
+        }
+        #splat {
             display: none;
-            width: 100px; /* Adjust the size as needed */
-            height: 100px; /* Adjust the size as needed */
+            width: 100px;
+            height: 100px;
         }
         #resetButton {
             display: none;
-            position: absolute;
             top: 20px;
             left: 20px;
             padding: 10px 20px;
             font-size: 16px;
         }
         #timer {
-            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 64px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
         }
     </style>
 </head>
 <body>
+    <canvas id="cloudCanvas"></canvas>
     <img id="tot" src="flying-tot.png" alt="Flying Tater Tot">
     <img id="splat" src="splat.png" alt="Splat">
     <button id="resetButton">Reset</button>
     <div id="timer">0.0s</div>
+    <script>
+        const canvas = document.getElementById('cloudCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
+        let clouds = [];
+        for (let i = 0; i < 10; i++) {
+            clouds.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 100 + 100,
+                speed: Math.random() * 0.5 + 0.2
+            });
+        }
+
+        function drawClouds() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            clouds.forEach(cloud => {
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.fill();
+                cloud.x += cloud.speed;
+                if (cloud.x > canvas.width) cloud.x = -cloud.size;
+            });
+            requestAnimationFrame(drawClouds);
+        }
+
+        drawClouds();
+    </script>
     <script>
         const tot = document.getElementById('tot');
         const splat = document.getElementById('splat');
