@@ -4,7 +4,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     flagExternalLinks();
     activateSlidableCards();
     getRippled();
-    initializeDeconstructSequence();
+    blowItUp();
     isItBorked();
 });
 
@@ -29,8 +29,8 @@ function isItBorked() {
 }
 
 
-function initializeDeconstructSequence() {
-    console.log("Derrida would be proud.")
+function blowItUp() {
+    console.log("In 5... 4... 3... 2... 1...")
 
     const selfDestructButton = document.createElement('button');
     selfDestructButton.innerText = '💣';
