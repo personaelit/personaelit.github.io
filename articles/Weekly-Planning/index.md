@@ -13,6 +13,7 @@ publish-date: "2025-02-07"
 
 - Mondays are for weekly planning.
 - Coupled with Daily Journaling, this can be a powerful technique for managing time.
+- The Weekly planning note becomes the agenda for the week with links to notes for individual tasks
 - I use [Obsidian](https://obsidian.md/), because I like its features.
 	- I can tag notes #likeso
 	- I can link notes to each other
