@@ -9,9 +9,9 @@ publish-date: "2025-02-13"
 
 ---
 
-I've become a wee bit obsessed with [Obsidian](https://obsidan.md.).
+I've become a wee bit obsessed with [Obsidian](https://obsidian.md.).
 
-If you're not familiar with it, it is a note  taking tool that has some nifty features.
+If you're not familiar, Obsidian is a note-taking tool packed with nifty features.
 
 I've been using it for a while, but only lately, have really started to exercise the features. 
 
@@ -20,7 +20,7 @@ I've been using it for a while, but only lately, have really started to exercise
 	<ul>
 		<li>Templates</li>
 		<li>Tags</li>
-		<li>Hot Keys</li>
+		<li>Hotkeys</li>
 		<li>and Graph View</li>
 	</ul>
 </aside>
@@ -36,7 +36,7 @@ It's a visual representation of my workload *with meaning.*
 
 As I continue to work, take notes, tag, and organize, new patterns emerge.  It's like my personal pet Kombucha SCOBY[^1] . 
 
-Later, I may write about [templating in obsidian](../Templating-In-Obsidian), [hot keys](../Obsidian-Hot-Heys), and [tags](../Obsidian-Tags), but for now, that's all. 
+Later, I may write about [templating in obsidian](../Templating-In-Obsidian), [hotkeys](../Obsidian-Hotkeys), and [tags](../Obsidian-Tags), but for now, that's all. 
 
 
 
