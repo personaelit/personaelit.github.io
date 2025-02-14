@@ -31,16 +31,22 @@ function isItBorked() {
     });
 }
 
-function flagExternalLinks() {
-    console.log("wave that flag.")
+function isItBorked() {
+    console.log("Brokedown palace.");
     const links = document.querySelectorAll("a");
 
-    // Iterate through each link
     links.forEach(link => {
-        // Check if the link is external
-        if (link.hostname !== window.location.hostname) {
-            // Add a class to the external link
-            link.classList.add("external");
+        if (link.hostname === window.location.hostname) {
+            fetch(link.href, { method: 'HEAD' })
+                .then(response => {
+                    if (response.status === 404) {
+                        link.classList.add("broken-link");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking link:', error);
+                    link.classList.add("broken-link");
+                });
         }
     });
 }
