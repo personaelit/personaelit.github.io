@@ -13,16 +13,18 @@ function isItBorked() {
     const links = document.querySelectorAll("a");
 
     links.forEach(link => {
-        fetch(link.href, { method: 'HEAD' })
-            .then(response => {
-                if (response.status === 404) {
+        if (link.hostname === window.location.hostname) {
+            fetch(link.href, { method: 'HEAD' })
+                .then(response => {
+                    if (response.status === 404) {
+                        link.classList.add("broken-link");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking link:', error);
                     link.classList.add("broken-link");
-                }
-            })
-            .catch(error => {
-                console.error('Error checking link:', error);
-                link.classList.add("broken-link");
-            });
+                });
+        }
     });
 }
 
@@ -213,35 +215,44 @@ function stylizeLinks() {
 }
 
 function startColorTransition() {
-    console.log("transition init.")
-    let hue = Math.floor(Math.random() * 360); // Initialize with a random hue value between 0 and 359
-    let saturation = Math.floor(Math.random() * 100); // Initialize with a random saturation value between 0 and 99
-    let lightness = Math.floor(Math.random() * 100); // Initialize with a fixed lightness value
-    let bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    let textColor = getTextColor(hue, saturation, lightness);
-    document.body.style.setProperty('--bg-color', bgColor);
-    document.body.style.setProperty('--text-color', textColor);
+    console.log("transition init.");
+    
+    let hue = Math.floor(Math.random() * 360); // Random hue 0-359
+    let saturation = Math.floor(Math.random() * 100); // Random saturation 0-99
+    let lightness = Math.floor(Math.random() * 100); // Random lightness 0-99
 
-    setInterval(() => {
+    let saturationDirection = 1; // Control saturation changes
+    let lightnessDirection = 1;  // Control lightness changes
+
+    function updateColors() {
         hue = (hue + 1) % 360; // Cycle through 0-359 for the hue value
 
         // Reverse saturation direction at bounds
         if (saturation >= 100 || saturation <= 0) {
-            saturationDirection = -saturationDirection;
+            saturationDirection *= -1;
         }
-        saturation += saturationDirection;
+        saturation = Math.max(0, Math.min(100, saturation + saturationDirection));
 
         // Reverse lightness direction at bounds
         if (lightness >= 100 || lightness <= 0) {
-            lightnessDirection = -lightnessDirection;
+            lightnessDirection *= -1;
         }
-        lightness += lightnessDirection;
+        lightness = Math.max(0, Math.min(100, lightness + lightnessDirection));
 
-        bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        textColor = getTextColor(hue, saturation, lightness);
+        let bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        let textColor = getTextColor(hue, saturation, lightness);
         document.body.style.setProperty('--bg-color', bgColor);
         document.body.style.setProperty('--text-color', textColor);
-    }, 1000);
+    }
+
+    // Clear any existing interval before starting a new one
+    if (window.colorTransitionInterval) {
+        clearInterval(window.colorTransitionInterval);
+    }
+    window.colorTransitionInterval = setInterval(updateColors, 1000);
+
+    // Initial update
+    updateColors();
 }
 
 function getTextColor(hue, saturation, lightness) {
