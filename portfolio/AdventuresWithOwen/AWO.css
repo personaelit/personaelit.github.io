@@ -19,23 +19,28 @@ body {
 
 #header {
     width: 100%;
+    max-width: 80%;
     height: auto;
     text-align: center;
     margin-bottom: 25px;
-    color: #f2f2f2;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
-	background-color:rgba(0, 0, 0, 0.50);
+    color: black;
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
+	background-color:rgba(255, 255, 255, 100);
     transform: rotate(-2deg);
+    margin: 20px;
+    padding: 20px;
 }
 
 #title {
-    font-size: 2.5rem;
+    font-size: 5rem;
     font-weight: bold;
+    margin: 0;
 }
 
 #tagline {
-    font-size: 1.5rem;
+    font-size: 3rem;
     font-weight: bold;
+    margin: 0;
 }
 
 #images {
@@ -62,12 +67,12 @@ body {
     background-repeat: both;
     min-height: 288px;
     font-family: 'Reenie Beanie', arial, serif;
-    font-size: 1.25rem;
+    font-size: 2rem;
     box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.50);
 }
 
 #entry h1 {
-    font-size: 2rem;
+    font-size: 3rem;
     padding: 0;
     margin: 0;
 }
@@ -123,7 +128,7 @@ body {
 }
 
 ul#imageList li:hover img.Polaroid {
-    transform: scale(1.25);
+    transform: scale(1.5);
     z-index: 100;
 }
 
@@ -138,12 +143,16 @@ ul#imageList li:hover img.Polaroid {
     }
 
     #images {
-        margin: 200px 0;
+        margin:0;
+    }
+
+    #images img {
+        transform: scale(.75);
     }
 
     #entry {
-        width: 100%;
-        margin: 20px 0;
+        width: 80%;
+        margin: 0 auto;
         padding: 10px;
     }
 
@@ -154,6 +163,11 @@ ul#imageList li:hover img.Polaroid {
     #entry p {
         font-size: 2rem;
     }
+
+    body{
+		background-position: bottom right 225px,top 180px right, top left;
+
+	}
 }
 
 @media (min-width: 768px) {
@@ -172,7 +186,7 @@ ul#imageList li:hover img.Polaroid {
 		top: -225px
 	}
 	body{
-		background-position: bottom right 225px,top right 225px, top left;
+		background-position: bottom right 225px,top 180px right 225px, top left;
 
 	}
 }
