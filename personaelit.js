@@ -11,7 +11,7 @@ function initializeDeconstructSequence() {
     console.log("Derrida would be proud.")
 
     const selfDestructButton = document.createElement('button');
-    selfDestructButton.innerText = 'deconstruct';
+    selfDestructButton.innerText = '💣';
     selfDestructButton.className = 'deconstruct';
 
     document.body.appendChild(selfDestructButton);
@@ -39,15 +39,9 @@ function initializeDeconstructSequence() {
             element.style.transform = `translate(${Math.random() * window.innerWidth - window.innerWidth / 2}px, ${window.innerHeight}px) rotate(${Math.random() * 360}deg)`;
         }
 
-        const reconstructButton = document.createElement('button');
-        reconstructButton.innerText = 'reconstruct';
-        reconstructButton.className = 'reconstruct';
-    
-        document.body.appendChild(reconstructButton);
-
-        reconstructButton.addEventListener('click', () => {
+        setTimeout(() => {
             location.reload();
-        });
+        }, 6900);
 
     });
 
