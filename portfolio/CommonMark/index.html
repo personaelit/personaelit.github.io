@@ -1,66 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Playing CommonMark JavaScript </title>
+    <title>Markdown Editor</title>
     <meta name="description" content="Playing with JavaScript CommonMark.">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/commonmark@0.29.3/dist/commonmark.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            flex-direction: row;
+        }
+        #editor, #preview {
+            flex: 1;
+            min-height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+        #editor {
+            outline: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="editor" contenteditable="true"># Welcome to the Markdown Editor!
+
+Type Markdown in this editor, and the formatted preview will appear on the right (or below on mobile).</div>
+    <div id="preview"></div>
     <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-
-            document.body.focus();
-
-            //NOTE: click was causing blur which we don't want.
-            document.body.addEventListener('blur', function () {
-                document.body.focus();
-            });
-
-            var reader = new commonmark.Parser();
-            var writer = new commonmark.HtmlRenderer();
-
-            let input = [];
-
-            document.body.addEventListener("keyup", function (event) {
-                if (event.key === "Enter") {
-                    let innerTextArray = document.body.innerText.split('\n').filter(a => a !== '');
-
-                    document.body.innerText = '';
-
-                    let lastLine = innerTextArray[innerTextArray.length - 1];
-                    input.push(lastLine);
-
-                    console.log(input);
-
-                    let md = input.join('\n')
-
-                    var parsed = reader.parse(md);
-                    var result = writer.render(parsed);
-                    document.body.innerHTML = result;
-
-                    // input.forEach(element => {
-                        // var parsed = reader.parse(element);
-                        // var result = writer.render(parsed);
-                        // document.body.innerHTML += result;
-                    // });
-
-                    // Add a new line and move the cursor to the end of the body
-                    var br = document.createElement("br");
-                    document.body.appendChild(br);
-                    var range = document.createRange();
-                    range.setStartAfter(br);
-                    var sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
-            });
-
+        document.addEventListener("DOMContentLoaded", () => {
+            const editor = document.getElementById("editor");
+            const preview = document.getElementById("preview");
+            const reader = new commonmark.Parser();
+            const writer = new commonmark.HtmlRenderer();
+            
+            function updatePreview() {
+                const markdown = editor.innerText.trim();
+                const parsed = reader.parse(markdown);
+                const html = writer.render(parsed);
+                preview.innerHTML = html;
+            }
+            
+            editor.addEventListener("input", updatePreview);
+            updatePreview(); // Render initial content
         });
     </script>
-</head>
-
-<body contenteditable="true"></body>
 </body>
-
 </html>
