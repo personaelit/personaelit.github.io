@@ -74,7 +74,7 @@ a.broken-link {
 
 The result is that this is the style for <a href="/">internal links</a>.  Just a plain jane link.
 
-For <a href="https://obsidian.md">external links</a> the link gets a nifty globe emoji.
+For <a href="https://example.com">external links</a> the link gets a nifty globe emoji.
 
 And <a href="gibberish">broken links</a> get a broken chain and a red color.
 
