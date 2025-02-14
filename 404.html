@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>404 Not Found</title>
+
+    <meta charset="UTF-8">
+    <meta name="description" content="404 - File Not Found">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: black;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="errorCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('errorCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        const text = "404 - you can't find what's not here.";
+        const fontSize = 48;
+        ctx.font = `${fontSize}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const textX = canvas.width / 2;
+        const textY = canvas.height / 2;
+
+        let spotlightX = Math.random() * canvas.width;
+        let spotlightY = Math.random() * canvas.height;
+        let targetX = Math.random() * canvas.width;
+        let targetY = Math.random() * canvas.height;
+        let searching = true;
+        let searchDuration = 300;
+        let searchCount = 0;
+        let dragging = false;
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "black";
+            ctx.fillText(text, textX, textY);
+
+            let gradient = ctx.createRadialGradient(spotlightX, spotlightY, 50, spotlightX, spotlightY, 200);
+            gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+            gradient.addColorStop(1, "rgba(0, 0, 0, 0.2)");
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(spotlightX, spotlightY, 200, 0, Math.PI * 2);
+            ctx.fill();
+
+            const maskGradient = ctx.createRadialGradient(spotlightX, spotlightY, 50, spotlightX, spotlightY, 200);
+            maskGradient.addColorStop(0, "white");
+            maskGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+            ctx.globalCompositeOperation = "source-atop";
+            ctx.fillStyle = maskGradient;
+            ctx.fillText(text, textX, textY);
+            ctx.globalCompositeOperation = "source-over";
+        }
+
+        function animateSpotlight() {
+            if (searching && !dragging) {
+                spotlightX += (targetX - spotlightX) * 0.02;
+                spotlightY += (targetY - spotlightY) * 0.02;
+                
+                if (Math.abs(spotlightX - targetX) < 10 && Math.abs(spotlightY - targetY) < 10) {
+                    targetX = Math.random() * canvas.width;
+                    targetY = Math.random() * canvas.height;
+                    searchCount++;
+                }
+                
+                if (searchCount > searchDuration) {
+                    searching = false;
+                    targetX = textX;
+                    targetY = textY;
+                }
+            }
+
+            drawScene();
+            requestAnimationFrame(animateSpotlight);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            dragging = true;
+            canvas.style.cursor = "pointer";
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (dragging) {
+                spotlightX = e.clientX;
+                spotlightY = e.clientY;
+            }
+            const dx = e.clientX - spotlightX;
+            const dy = e.clientY - spotlightY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < 200) {
+                canvas.style.cursor = "pointer";
+            } else {
+                canvas.style.cursor = "none";
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            dragging = false;
+            canvas.style.cursor = "none";
+        });
+
+        animateSpotlight();
+    </script>
+</body>
+
+</html>
