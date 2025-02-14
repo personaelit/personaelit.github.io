@@ -201,24 +201,39 @@ function stylizeLinks() {
 function startColorTransition() {
     console.log("transition init.")
     let hue = Math.floor(Math.random() * 360); // Initialize with a random hue value between 0 and 359
-    let bgColor = `hsl(${hue}, 75%, 50%)`;
-    let textColor = getTextColor(hue);
+    let saturation = Math.floor(Math.random() * 100); // Initialize with a random saturation value between 0 and 99
+    let lightness = Math.floor(Math.random() * 100); // Initialize with a fixed lightness value
+    let bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    let textColor = getTextColor(hue, saturation, lightness);
     document.body.style.setProperty('--bg-color', bgColor);
     document.body.style.setProperty('--text-color', textColor);
 
     setInterval(() => {
         hue = (hue + 1) % 360; // Cycle through 0-359 for the hue value
-        bgColor = `hsl(${hue}, 75%, 50%)`;
-        textColor = getTextColor(hue);
+
+        // Reverse saturation direction at bounds
+        if (saturation >= 100 || saturation <= 0) {
+            saturationDirection = -saturationDirection;
+        }
+        saturation += saturationDirection;
+
+        // Reverse lightness direction at bounds
+        if (lightness >= 100 || lightness <= 0) {
+            lightnessDirection = -lightnessDirection;
+        }
+        lightness += lightnessDirection;
+
+        bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        textColor = getTextColor(hue, saturation, lightness);
         document.body.style.setProperty('--bg-color', bgColor);
         document.body.style.setProperty('--text-color', textColor);
     }, 1000);
 }
 
-function getTextColor(hue) {
+function getTextColor(hue, saturation, lightness) {
     // Calculate the brightness of the color and set text color accordingly
     let r, g, b;
-    [r, g, b] = hslToRgb(hue / 360, 1, 0.5);
+    [r, g, b] = hslToRgb(hue / 360, saturation / 100, lightness / 100);
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     return brightness > 125 ? '#000000' : '#ffffff';
 }
