@@ -7,10 +7,19 @@
     <style>
         #tot {
             position: absolute;
-            width: 40px; /* Adjust the size as needed */
-            height: 40px; /* Adjust the size as needed */
+            pointer-events: auto;
+            width: 50px; /* Adjust the size as needed */
+            height: 50px; /* Adjust the size as needed */
             transition: transform 0.05s linear; /* Faster transition */
         }
+
+        @media (min-width: 768px) {
+            #tot {
+                width: 100px;
+                height: 100px;
+            }
+        }
+
         #splat {
             position: absolute;
             display: none;
@@ -30,7 +39,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 64px;
         }
     </style>
 </head>
@@ -170,7 +179,8 @@
         resetButton.addEventListener('click', resetGame);
 
         setInterval(randomSlowDown, 1000);
-        setInterval(randomMoveTot, 150); // Increase frequency of movement on mobile
+        const movementInterval = isMobile ? 150 : 150; //We can adjust the second value for non-mobile screens if desired.
+        setInterval(randomMoveTot, movementInterval);
 
         tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
         startTimer();
