@@ -1,31 +1,46 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en">
 
 <head>
-    <title>Eisenhower Matrix</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+    <title>Eisenhower Matrix</title>
     <link rel="stylesheet" href="index.css">
-    <script src="index.js"></script>
 </head>
 
 <body>
-        <div id="UrgentImportant" class="quad" title="Urgent And Important">
-            <div class="plus">+</div>
-            <div class="title">Urgent and Important</div>
-        </div>
-        <div id="NotUrgentImportant" class="quad" title="Important But Not Urgent">
-            <div class="plus">+</div>
-            <div class="title">Important but Not Urgent</div>
-        </div>
-        <div id="NotImportantUrgent" class="quad" title="Not Important But Urgent">
-            <div class="plus">+</div>
-            <div class="title">Not Important but Urgent</div>
-        </div>
-        <div id="NotImportantNotUrgent" class="quad" title="Not Important And Not Urgent ">
-            <div class="plus">+</div>
-            <div class="title">Not Important and Not Urgent</div>
-        </div>
+    <main id="matrix">
+        <section id="UrgentImportant" class="quad" aria-label="Urgent and Important">
+            <div class="header">
+                <div class="plus" aria-label="Add task">+</div>
+                <h2 class="title">Urgent and Important</h2>
+            </div>
+        </section>
+
+        <section id="NotUrgentImportant" class="quad" aria-label="Important but Not Urgent">
+            <div class="header">
+                <div class="plus" aria-label="Add task">+</div>
+                <h2 class="title">Important but Not Urgent</h2>
+            </div>
+        </section>
+
+        <section id="UrgentNotImportant" class="quad" aria-label="Not Important but Urgent">
+            <div class="header">
+                <div class="plus" aria-label="Add task">+</div>
+                <h2 class="title">Not Important but Urgent</h2>
+            </div>
+        </section>
+
+        <section id="NotUrgentNotImportant" class="quad" aria-label="Not Important and Not Urgent">
+            <div class="header">
+                <div class="plus" aria-label="Add task">+</div>
+                <h2 class="title">Not Important and Not Urgent</h2>
+            </div>
+        </section>
+    </main>
+
+    <script src="index.js"></script>
 </body>
+
 
 </html>

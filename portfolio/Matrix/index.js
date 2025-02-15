@@ -1,69 +1,53 @@
-window.addEventListener('DOMContentLoaded', (event) => {
-    
+window.addEventListener('DOMContentLoaded', () => {
     const params = new Proxy(new URLSearchParams(window.location.search), {
         get: (searchParams, prop) => searchParams.get(prop),
     });
-    let value = params.clear;
-    if (value === '1'){
+
+    if (params.clear === '1') {
         localStorage.clear();
     }
 
-    if (localStorage.getItem('body') != null)
-    {
-        document.body.innerHTML = localStorage.getItem('body');
-    }
-    
     let draggedTask = null;
 
-    const quads = document.querySelectorAll('.quad');
-    quads.forEach(function (quad) {
-        quad.addEventListener('dragover', handleDragover);
-        quad.addEventListener('drop', handleDrop);
-    })
-    
-    const plusses = document.querySelectorAll('.plus');
-    plusses.forEach(function (plus) {
-        plus.addEventListener('click', handlePlusClick);
-    })
-
-    //NOTE: reapply event listeners to tasks that were retrieved from localStorage.
-    const tasks = document.querySelectorAll('.task');
-    tasks.forEach(function (task) {
-        task.addEventListener('dragover', handleDragover);
+    function addEventListenersToTask(task) {
         task.addEventListener('dragstart', handleDragStart);
         task.addEventListener('dragend', handleDragEnd);
-        task.addEventListener('keyup', handleKeyup);
-    })
+        task.addEventListener('keyup', storeBody);
+        task.addEventListener('touchstart', handleTouchStart);
+        task.addEventListener('touchmove', handleTouchMove);
+        task.addEventListener('touchend', handleTouchEnd);
+    }
 
-    //NOTE: reapply event listeners to x that were retrieved from localStorage.
-    const exes = document.querySelectorAll('.x');
-    exes.forEach(function (x) {
-        x.addEventListener('click', handleXClick);
-    })
+    function storeBody() {
+        const matrixData = Array.from(document.querySelectorAll('.quad')).map(list => ({
+            id: list.id,
+            tasks: Array.from(list.querySelectorAll('.taskInput')).map(task => task.innerText)
+        }));
+        localStorage.setItem('eisenhower-data', JSON.stringify(matrixData));
+    }
 
     function handlePlusClick(e) {
-        
         const task = document.createElement('div');
-        task.setAttribute('class', 'task');
-        task.addEventListener('dragover', handleDragover);
-        task.addEventListener('dragstart', handleDragStart);
-        task.addEventListener('dragend', handleDragEnd);
-        task.draggable = true;        
-
+        task.classList.add('task');
+        task.draggable = true;
+        addEventListenersToTask(task);
+    
         const taskInput = document.createElement('div');
         taskInput.contentEditable = true;
-        taskInput.addEventListener('keyup', handleKeyup);
-        taskInput.setAttribute('class', 'taskInput');
-        
+        taskInput.classList.add('taskInput');
+    
         const x = document.createElement('div');
-        x.setAttribute('class', 'x');
-        x.addEventListener('click', handleXClick);
+        x.classList.add('x');
         x.innerText = "X";
+        x.addEventListener('click', handleXClick);
+    
         task.appendChild(taskInput);
         task.appendChild(x);
-        e.target.parentNode.appendChild(task);
+
+        const list = e.target.closest('.quad');
+        list.appendChild(task);
+    
         taskInput.focus();
-        
         storeBody();
     }
 
@@ -71,35 +55,118 @@ window.addEventListener('DOMContentLoaded', (event) => {
         e.target.parentNode.remove();
         storeBody();
     }
-
-    function handleKeyup(e) {
-        storeBody();
-    }
-    
     function handleDragStart(e) {
         if (e.target.nodeType === Node.TEXT_NODE) {
             return false;
         }
-        draggedTask = e.target;
+        draggedTask = e.target.closest('.task');
     }
-      
-    function handleDragEnd(e) {
+
+    function handleDragEnd() {
         storeBody();
     }
-    
+
     function handleDrop(e) {
         e.preventDefault();
-        if (e.target === draggedTask) return false;
-        draggedTask.parentNode.removeChild(draggedTask);
-        this.appendChild(draggedTask)
-        storeBody();
+        if (draggedTask && draggedTask !== e.target) {
+            e.target.closest('.quad').appendChild(draggedTask);
+            storeBody();
+        }
     }
 
     function handleDragover(e) {
         e.preventDefault();
     }
 
-    function storeBody() {
-        localStorage.setItem('body', document.body.innerHTML);
+    function handleTouchStart(e) {
+        if (e.target.nodeType === Node.TEXT_NODE) {
+            return false;
+        }
+        draggedTask = e.target.closest('.task');
     }
+
+    function handleTouchMove(e) {
+        e.preventDefault();
+        const touchLocation = e.targetTouches[0];
+        const element = document.elementFromPoint(touchLocation.clientX, touchLocation.clientY);
+        if (element && element.classList.contains('quad')) {
+            element.appendChild(draggedTask);
+        }
+    }
+
+    function handleTouchEnd() {
+        storeBody();
+    }
+
+    const exampleTasks = {
+        "UrgentImportant": [
+            "Prepare presentation for tomorrow's meeting",
+            "Submit project report before the deadline",
+            "Call the doctor for an urgent appointment"
+        ],
+        "NotUrgentImportant": [
+            "Plan next month's content strategy",
+            "Read a book on leadership development",
+            "Schedule a networking lunch with a mentor"
+        ],
+        "UrgentNotImportant": [
+            "Reply to an email about a minor issue",
+            "Attend an unplanned meeting with no agenda",
+            "Fix a formatting issue in a report"
+        ],
+        "NotUrgentNotImportant": [
+            "Scroll through social media",
+            "Watch a random YouTube video",
+            "Organize old emails with no real need"
+        ]
+    };
+
+    // Load stored Kanban tasks
+    let storedData = JSON.parse(localStorage.getItem('eisenhower-data'));
+
+    if (!storedData || storedData.length === 0) {
+        // If no stored data, use example tasks
+        storedData = Object.keys(exampleTasks).map(id => ({
+            id,
+            tasks: exampleTasks[id]
+        }));
+    }
+
+    storedData.forEach(({ id, tasks }) => {
+        const quad = document.getElementById(id);
+        tasks.forEach(taskText => {
+            const task = document.createElement('div');
+            task.classList.add('task');
+            task.draggable = true; 
+
+            addEventListenersToTask(task);
+
+            const taskInput = document.createElement('div');
+            taskInput.contentEditable = true;
+            taskInput.innerText = taskText;
+            taskInput.classList.add('taskInput');
+
+            const x = document.createElement('div');
+            x.classList.add('x');
+            x.innerText = "X";
+            x.addEventListener('click', handleXClick);
+
+            task.appendChild(taskInput);
+            task.appendChild(x);
+            quad.appendChild(task);
+        });
+    });
+
+     // Attach event listeners
+     document.querySelectorAll('.quad').forEach(list => {
+        list.addEventListener('dragover', handleDragover);
+        list.addEventListener('drop', handleDrop);
+        list.addEventListener('touchmove', handleTouchMove);
+        list.addEventListener('touchend', handleTouchEnd);
+    });
+
+    document.querySelectorAll('.plus').forEach(plus => {
+        plus.addEventListener('click', handlePlusClick);
+    });
+
 });
