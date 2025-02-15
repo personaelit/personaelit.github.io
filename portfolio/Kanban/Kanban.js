@@ -43,8 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
         task.appendChild(taskInput);
         task.appendChild(x);
-    
-        // Append task to the parent .list, not the .list-header
+
         const list = e.target.closest('.list'); // Find the closest list container
         list.appendChild(task); // Append task below the header
     
@@ -124,6 +123,8 @@ window.addEventListener('DOMContentLoaded', () => {
         tasks.forEach(taskText => {
             const task = document.createElement('div');
             task.classList.add('task');
+            task.draggable = true; 
+
             addEventListenersToTask(task);
 
             const taskInput = document.createElement('div');

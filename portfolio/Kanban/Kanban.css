@@ -78,12 +78,15 @@ body {
 }
 
 .taskInput {
-    flex: 1; /* Makes input take up available space */
-    min-width: 0; /* Prevents overflow issues */
-    padding: 8px;
-    border: none;
-    outline: none;
-    background-color: transparent;
+    background-color: white;
+    border-radius: 3px;
+    padding: 5px;
+    margin: 5px;
+    width: 100%;
+    cursor: move;
+    display: flex; /* Keeps text and X button in one row */
+    align-items: center;
+    position: relative;
 }
 
 .x {
