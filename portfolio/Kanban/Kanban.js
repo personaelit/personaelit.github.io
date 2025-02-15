@@ -1,106 +1,80 @@
-window.addEventListener('DOMContentLoaded', (event) => {
-    
+window.addEventListener('DOMContentLoaded', () => {
     const params = new Proxy(new URLSearchParams(window.location.search), {
         get: (searchParams, prop) => searchParams.get(prop),
     });
-    let value = params.clear;
-    if (value === '1'){
+
+    if (params.clear === '1') {
         localStorage.clear();
     }
 
-    if (localStorage.getItem('kanban-body') != null)
-    {
-        document.body.innerHTML = localStorage.getItem('kanban-body');
-    }
-    
     let draggedTask = null;
 
-    const lists = document.querySelectorAll('.list');
-    lists.forEach(function (quad) {
-        quad.addEventListener('dragover', handleDragover);
-        quad.addEventListener('drop', handleDrop);
-        quad.addEventListener('touchmove', handleTouchMove);
-        quad.addEventListener('touchend', handleTouchEnd);
-    });
-    
-    const plusses = document.querySelectorAll('.plus');
-    plusses.forEach(function (plus) {
-        plus.addEventListener('click', handlePlusClick);
-    });
-
-    // Reapply event listeners to tasks that were retrieved from localStorage.
-    const tasks = document.querySelectorAll('.task');
-    tasks.forEach(function (task) {
-        task.addEventListener('dragover', handleDragover);
+    function addEventListenersToTask(task) {
         task.addEventListener('dragstart', handleDragStart);
         task.addEventListener('dragend', handleDragEnd);
-        task.addEventListener('keyup', handleKeyup);
+        task.addEventListener('keyup', storeBody);
         task.addEventListener('touchstart', handleTouchStart);
         task.addEventListener('touchmove', handleTouchMove);
         task.addEventListener('touchend', handleTouchEnd);
-    });
+    }
 
-    // Reapply event listeners to x that were retrieved from localStorage.
-    const exes = document.querySelectorAll('.x');
-    exes.forEach(function (x) {
-        x.addEventListener('click', handleXClick);
-    });
+    function storeBody() {
+        const boardData = Array.from(document.querySelectorAll('.list')).map(list => ({
+            id: list.id,
+            tasks: Array.from(list.querySelectorAll('.taskInput')).map(task => task.innerText)
+        }));
+        localStorage.setItem('kanban-data', JSON.stringify(boardData));
+    }
 
     function handlePlusClick(e) {
         const task = document.createElement('div');
-        task.setAttribute('class', 'task');
-        task.addEventListener('dragover', handleDragover);
-        task.addEventListener('dragstart', handleDragStart);
-        task.addEventListener('dragend', handleDragEnd);
-        task.addEventListener('touchstart', handleTouchStart);
-        task.addEventListener('touchmove', handleTouchMove);
-        task.addEventListener('touchend', handleTouchEnd);
-        task.draggable = true;        
-
+        task.classList.add('task');
+        task.draggable = true;
+        addEventListenersToTask(task);
+    
         const taskInput = document.createElement('div');
         taskInput.contentEditable = true;
-        taskInput.addEventListener('keyup', handleKeyup);
-        taskInput.setAttribute('class', 'taskInput');
-        
+        taskInput.classList.add('taskInput');
+    
         const x = document.createElement('div');
-        x.contentEditable = false;
-        x.setAttribute('class', 'x');
-        x.addEventListener('click', handleXClick);
+        x.classList.add('x');
         x.innerText = "X";
+        x.addEventListener('click', handleXClick);
+    
         task.appendChild(taskInput);
         task.appendChild(x);
-        e.target.parentNode.appendChild(task);
+    
+        // Append task to the parent .list, not the .list-header
+        const list = e.target.closest('.list'); // Find the closest list container
+        list.appendChild(task); // Append task below the header
+    
         taskInput.focus();
-        
         storeBody();
     }
+    
 
     function handleXClick(e) {
         e.target.parentNode.remove();
         storeBody();
     }
 
-    function handleKeyup(e) {
-        storeBody();
-    }
-    
     function handleDragStart(e) {
         if (e.target.nodeType === Node.TEXT_NODE) {
             return false;
         }
         draggedTask = e.target.closest('.task');
     }
-      
-    function handleDragEnd(e) {
+
+    function handleDragEnd() {
         storeBody();
     }
-    
+
     function handleDrop(e) {
         e.preventDefault();
-        if (e.target === draggedTask) return false;
-        draggedTask.parentNode.removeChild(draggedTask);
-        this.appendChild(draggedTask);
-        storeBody();
+        if (draggedTask && draggedTask !== e.target) {
+            e.target.closest('.list').appendChild(draggedTask);
+            storeBody();
+        }
     }
 
     function handleDragover(e) {
@@ -113,7 +87,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
         }
         draggedTask = e.target.closest('.task');
     }
-    
+
     function handleTouchMove(e) {
         e.preventDefault();
         const touchLocation = e.targetTouches[0];
@@ -122,12 +96,61 @@ window.addEventListener('DOMContentLoaded', (event) => {
             element.appendChild(draggedTask);
         }
     }
-    
-    function handleTouchEnd(e) {
+
+    function handleTouchEnd() {
         storeBody();
     }
 
-    function storeBody() {
-        localStorage.setItem('kanban-body', document.body.innerHTML);
+    // Example tasks to populate the board if it's empty
+    const exampleTasks = {
+        "todo": ["Click '+' to add a new task", "Drag tasks to move them between lists", "Click 'X' to remove a task"],
+        "doing": ["Modify a task by clicking on it", "Refresh the page and your changes persist."],
+        "done": ["Enjoy your Kanban board! 🎉"]
+    };
+
+    // Load stored Kanban tasks
+    let storedData = JSON.parse(localStorage.getItem('kanban-data'));
+
+    if (!storedData || storedData.length === 0) {
+        // If no stored data, use example tasks
+        storedData = Object.keys(exampleTasks).map(id => ({
+            id,
+            tasks: exampleTasks[id]
+        }));
     }
+
+    storedData.forEach(({ id, tasks }) => {
+        const list = document.getElementById(id);
+        tasks.forEach(taskText => {
+            const task = document.createElement('div');
+            task.classList.add('task');
+            addEventListenersToTask(task);
+
+            const taskInput = document.createElement('div');
+            taskInput.contentEditable = true;
+            taskInput.innerText = taskText;
+            taskInput.classList.add('taskInput');
+
+            const x = document.createElement('div');
+            x.classList.add('x');
+            x.innerText = "X";
+            x.addEventListener('click', handleXClick);
+
+            task.appendChild(taskInput);
+            task.appendChild(x);
+            list.appendChild(task);
+        });
+    });
+
+    // Attach event listeners
+    document.querySelectorAll('.list').forEach(list => {
+        list.addEventListener('dragover', handleDragover);
+        list.addEventListener('drop', handleDrop);
+        list.addEventListener('touchmove', handleTouchMove);
+        list.addEventListener('touchend', handleTouchEnd);
+    });
+
+    document.querySelectorAll('.plus').forEach(plus => {
+        plus.addEventListener('click', handlePlusClick);
+    });
 });

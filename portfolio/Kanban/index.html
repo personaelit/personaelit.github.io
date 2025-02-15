@@ -4,22 +4,34 @@
         <title>Kanban Board</title>
         <meta name="description" content="A basic Kanban board.">
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="author" content="Your Name">
+        <meta name="keywords" content="Kanban, Task Management, To-Do Board">
         <link rel="stylesheet" type="text/css" href="Kanban.css">
-        <script src="Kanban.js"></script>
+        <link rel="icon" type="image/png" href="favicon.png">
     </head>
     <body>
-        <div id="todo" class="list" title="Todo">
-            <div class="plus">+</div>
-            <div class="title">// TODO:</div>
+        <div id="kanban-board">
+            <div id="todo" class="list" title="Todo">
+                <div class="list-header">
+                    <div class="plus">+</div>
+                    <div class="title">// TODO:</div>
+                </div>
+            </div>
+            <div id="doing" class="list" title="Doing">
+                <div class="list-header">
+                    <div class="plus">+</div>
+                    <div class="title">// Doing:</div>
+                </div>
+            </div>
+            <div id="done" class="list" title="Done">
+                <div class="list-header">
+                    <div class="plus">+</div>
+                    <div class="title">// Done:</div>
+                </div>
+            </div>
         </div>
-        <div id="doing" class="list" title="Doing">
-            <div class="plus">+</div>
-            <div class="title">// Doing:</div>
-        </div>
-        <div id="done" class="list" title="Done">
-            <div class="plus">+</div>
-            <div class="title">// Done:</div>
-        </div>
+        <script src="Kanban.js"></script>
     </body>
 </html>

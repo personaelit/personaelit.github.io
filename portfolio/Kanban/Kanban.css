@@ -2,79 +2,142 @@
     border: 0;
     padding: 0;
     margin: 0;
-    border-collapse:unset;
+    border-collapse: unset;
 }
-.list {
-    width: 33.33%;
+
+body {
+    display: flex;
     height: 100vh;
-    float:left;
+    overflow: hidden;
+}
+
+#kanban-board {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.list {
+    flex: 1;
+    height: 100vh;
     font-family: 'Courier New', Courier, monospace;
     overflow: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
+.list-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align items to the left */
+    width: 100%;
+    padding: 5px;
+    gap: 8px; /* Ensures consistent spacing between elements */
+}
+
+
 #todo {
     background-color: rgb(245, 245, 140);
 }
+
 #doing {
     background-color: rgb(125, 243, 125);
 }
+
 #done {
-    background-color: rgb(59, 59, 59);
-    color:whitesmoke;
+    background-color: #3b3b3b;
 }
 
 .plus {
     background-color: rgb(6, 172, 48);
-    color:white;
-    width: 20px;
+    color: white;
+    width: 25px;
+    height: 25px;
     border-radius: 5px;
     text-align: center;
-    padding: 2px;
     font-weight: bold;
-    margin: 5px;
     cursor: pointer;
     border: 2px solid black;
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px; /* Adds space between plus and title */
+}
+.task {
+    width: 100%; /* Ensure the task takes the full width of the list */
+    display: flex;
+    align-items: center; /* Keeps the x button aligned */
+    justify-content: space-between; /* Keeps input and x button spaced */
+    padding: 5px;
+    background-color: whitesmoke;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px; /* Space between tasks */
 }
 
 .taskInput {
-    background-color: whitesmoke;
-    color:black;
-    border-radius: 3px;
-    margin: 3px;
-    padding: 3px;
-    width: 72%;
-    cursor:move;
-    display: inline-block;
-    user-select: none;
+    flex: 1; /* Makes input take up available space */
+    min-width: 0; /* Prevents overflow issues */
+    padding: 8px;
+    border: none;
+    outline: none;
+    background-color: transparent;
 }
 
 .x {
-    background-color:rgb(211, 85, 85);
-    color:whitesmoke;
-    width: 15%;
-    border-radius: 5px;
-    text-align: center;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
+    background-color: rgb(211, 85, 85);
+    color: white;
+    border-radius: 5px;
     border: 2px solid black;
-    display: inline-block;
 }
 
+
 .title {
-    text-align: center;
     display: inline-block;
+    font-size: 1.2em;
+    font-weight: bold;
 }
 
 @media only screen and (max-width: 900px) {
+    body {
+        flex-direction: column; /* Make the whole layout column-based */
+    }
+
+    #kanban-board {
+        flex-direction: column; /* Stack lists vertically */
+        align-items: center; /* Center align lists */
+    }
+
+    .list {
+        width: 100%; /* Make lists take up most of the screen width */
+        height: auto; /* Allow them to expand naturally */
+        min-height: 25vh; /* Ensure each has some height */
+    }
+
+    .list-header {
+        justify-content: center; /* Center align title and plus button */
+    }
+
     .plus {
-        width: 75%;
-        border:2px solid black;
-        padding:11px;
-        margin: 3px;
+        width: 30px;
+        height: 30px;
+        margin-right: 8px;
     }
-    .plus::after {
-        content: 'Add Task';
-    }
+
     .title {
-        margin: 0  3px;
+        font-size: 1.3em;
     }
-} 
+
+    .task {
+        width: 95%; /* Keep tasks well-contained */
+    }
+}
+
