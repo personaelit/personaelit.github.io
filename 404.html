@@ -8,7 +8,8 @@
     <meta name="description" content="404 - File Not Found">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -33,7 +34,7 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
+
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -56,14 +57,53 @@
         let searchCount = 0;
         let dragging = false;
 
+        function wrapText(ctx, text, centerX, centerY, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const testWidth = ctx.measureText(testLine).width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            // Vertically center the block of text
+            const totalHeight = lines.length * lineHeight;
+            let startY = centerY - totalHeight / 2 + lineHeight / 2;
+            for (let i = 0; i < lines.length; i++) {
+                // Horizontally center each line
+                const lineWidth = ctx.measureText(lines[i]).width;
+                ctx.fillText(lines[i], centerX - lineWidth / 2, startY + i * lineHeight);
+            }
+        }
+
+
         function drawScene() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = "black";
-            ctx.fillText(text, textX, textY);
+            // Set font before measuring/wrapping
+            ctx.font = `${fontSize}px Arial`;
+            ctx.textAlign = "left"; // We'll handle centering in our function
+            ctx.textBaseline = "middle";
 
+            // Define a max width (e.g., 80% of canvas width) and line height
+            const maxWidth = canvas.width * 0.8;
+            const lineHeight = fontSize * 1.2;
+
+            // Draw base text
+            ctx.fillStyle = "black";
+            wrapText(ctx, text, canvas.width / 2, canvas.height / 2, maxWidth, lineHeight);
+
+            // Draw the spotlight overlay as before
             let gradient = ctx.createRadialGradient(spotlightX, spotlightY, 50, spotlightX, spotlightY, 200);
             gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
             gradient.addColorStop(1, "rgba(0, 0, 0, 0.2)");
@@ -72,26 +112,28 @@
             ctx.arc(spotlightX, spotlightY, 200, 0, Math.PI * 2);
             ctx.fill();
 
+            // Apply the mask with wrapped text
             const maskGradient = ctx.createRadialGradient(spotlightX, spotlightY, 50, spotlightX, spotlightY, 200);
             maskGradient.addColorStop(0, "white");
             maskGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
             ctx.globalCompositeOperation = "source-atop";
             ctx.fillStyle = maskGradient;
-            ctx.fillText(text, textX, textY);
+            wrapText(ctx, text, canvas.width / 2, canvas.height / 2, maxWidth, lineHeight);
             ctx.globalCompositeOperation = "source-over";
         }
+
 
         function animateSpotlight() {
             if (searching && !dragging) {
                 spotlightX += (targetX - spotlightX) * 0.02;
                 spotlightY += (targetY - spotlightY) * 0.02;
-                
+
                 if (Math.abs(spotlightX - targetX) < 10 && Math.abs(spotlightY - targetY) < 10) {
                     targetX = Math.random() * canvas.width;
                     targetY = Math.random() * canvas.height;
                     searchCount++;
                 }
-                
+
                 if (searchCount > searchDuration) {
                     searching = false;
                     targetX = textX;
@@ -116,14 +158,36 @@
             const dx = e.clientX - spotlightX;
             const dy = e.clientY - spotlightY;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 200) {
-                canvas.style.cursor = "pointer";
-            } else {
-                canvas.style.cursor = "none";
-            }
+            canvas.style.cursor = distance < 200 ? "pointer" : "none";
         });
 
         canvas.addEventListener('mouseup', () => {
+            dragging = false;
+            canvas.style.cursor = "none";
+        });
+
+        // Add touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            dragging = true;
+            canvas.style.cursor = "pointer";
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            if (dragging) {
+                spotlightX = touch.clientX;
+                spotlightY = touch.clientY;
+            }
+            const dx = touch.clientX - spotlightX;
+            const dy = touch.clientY - spotlightY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            canvas.style.cursor = distance < 200 ? "pointer" : "none";
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
             dragging = false;
             canvas.style.cursor = "none";
         });
