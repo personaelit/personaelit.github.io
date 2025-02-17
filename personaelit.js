@@ -9,7 +9,104 @@ window.addEventListener('DOMContentLoaded', (event) => {
     lightsOut();
     cloudsComeRollingIn();
     hereComesTheSun();
+    letItRain();
 });
+
+function letItRain() {
+    console.log("Just a box of rain. 🌧️");
+
+    const rainSwitch = document.createElement('button');
+    rainSwitch.innerText = '☔';
+    rainSwitch.className = 'rain-toggle';
+    document.body.appendChild(rainSwitch);
+
+    const canvas = document.createElement('canvas');
+    canvas.id = "rain-canvas";
+    canvas.className = 'rain-canvas';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.zIndex = '-2';
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = document.documentElement.scrollHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let raindrops = [];
+    const dropCount = Math.max(10000, window.innerWidth / 10);
+
+    function createRaindrop() {
+        return {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            speed: 2 + Math.random() * 5,
+            length: 10 + Math.random() * 20,
+            opacity: 0.2 + Math.random() * 0.5
+        };
+    }
+
+    function initRain() {
+        raindrops = Array.from({ length: dropCount }, createRaindrop);
+    }
+    initRain();
+
+    function drawRain() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "rgba(173, 216, 230, 0.6)";
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = "round";
+
+        raindrops.forEach(drop => {
+            ctx.globalAlpha = drop.opacity;
+            ctx.beginPath();
+            ctx.moveTo(drop.x, drop.y);
+            ctx.lineTo(drop.x, drop.y + drop.length);
+            ctx.stroke();
+
+            drop.y += drop.speed;
+
+            if (drop.y > canvas.height) {
+                drop.y = -drop.length;
+                drop.x = Math.random() * canvas.width;
+                drop.speed = 2 + Math.random() * 5;
+            }
+        });
+
+        requestAnimationFrame(drawRain);
+    }
+
+    drawRain();
+
+    const main = document.querySelector('main');
+
+    function updateMainBackground(state) {
+        if (state) {
+            main.style.background = 'rgba(0, 0, 20, 0.5)';
+            main.style.color = '#eee';
+        } else {
+            main.style.background = '';
+            main.style.color = '';
+        }
+    }
+
+    if (localStorage.getItem('rain-mode') === 'enabled') {
+        canvas.style.display = 'block';
+        updateMainBackground(true);
+    }
+
+    rainSwitch.addEventListener('click', () => {
+        const isActive = canvas.style.display === 'block';
+        canvas.style.display = isActive ? 'none' : 'block';
+        localStorage.setItem('rain-mode', isActive ? 'disabled' : 'enabled');
+        updateMainBackground(!isActive);
+    });
+}
 
 function hereComesTheSun() {
     console.log("Sometimes the lights all shining on me. ☀️");
