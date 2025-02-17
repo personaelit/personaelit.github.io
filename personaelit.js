@@ -6,7 +6,131 @@ window.addEventListener('DOMContentLoaded', (event) => {
     getRippled();
     blowItUp();
     isItBorked();
+    lightsOut();
+    cloudsComeRollingIn()
 });
+
+function cloudsComeRollingIn() {
+    console.log("Cloud hands reaching from a rainbow.");
+
+    const cloudSwitch = document.createElement('button');
+    cloudSwitch.innerText = '☁️';
+    cloudSwitch.className = 'cloud-toggle';
+    document.body.appendChild(cloudSwitch);
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'cloud-canvas';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.zIndex = '-1';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function getContrastingColor() {
+        const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+        const rgb = bodyBg.match(/\d+/g).map(Number);
+        const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+        return brightness > 128 ? 'black' : 'white';
+    }
+
+    let cloudCount = Math.max(5, Math.floor(window.innerWidth / 250));
+    let clouds = Array.from({ length: cloudCount }, () => createCloud());
+
+    function createCloud() {
+        return {
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight / 2,
+            speed: 0.5 + Math.random() * 1.5,
+            size: 50 + Math.random() * 70
+        };
+    }
+
+    function drawClouds() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = `180px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const cloudColor = getContrastingColor();
+        
+        clouds.forEach(cloud => {
+            // Draw shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillText('☁️', cloud.x + 3, cloud.y + 3);
+            
+            // Draw cloud
+            ctx.fillStyle = cloudColor;
+            ctx.fillText('☁️', cloud.x, cloud.y);
+            
+            cloud.x += cloud.speed;
+
+            if (cloud.x > canvas.width + 60) cloud.x = -60;
+        });
+
+        requestAnimationFrame(drawClouds);
+    }
+    drawClouds();
+
+    if (localStorage.getItem('cloud-mode') === 'enabled') {
+        canvas.style.display = 'block';
+    }
+
+    cloudSwitch.addEventListener('click', () => {
+        if (canvas.style.display === 'block') {
+            canvas.style.display = 'none';
+            localStorage.setItem('cloud-mode', 'disabled');
+        } else {
+            canvas.style.display = 'block';
+            localStorage.setItem('cloud-mode', 'enabled');
+        }
+    });
+}
+
+
+
+
+
+function lightsOut() {
+    console.log("Once in a while you can get shown the light");
+
+    const lightSwitch = document.createElement('button');
+    lightSwitch.innerText = '💡';
+    lightSwitch.className = 'light-toggle';
+    document.body.appendChild(lightSwitch);
+
+    // Check localStorage for mode state
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+        document.body.style.backgroundColor = '#111';
+        document.body.style.color = '#eee';
+        document.body.style.filter = 'grayscale(100%)';
+
+    }
+
+    lightSwitch.addEventListener('click', () => {
+        document.body.style.transition = 'background-color 1s, color 1s';
+        if (document.body.classList.contains('dark-mode')) {
+            document.body.classList.remove('dark-mode');
+            document.body.style.backgroundColor = '';
+            document.body.style.color = '';
+            document.body.style.filter = 'grayscale(0%)';
+            localStorage.setItem('dark-mode', 'disabled');
+        } else {
+            document.body.classList.add('dark-mode');
+            document.body.style.backgroundColor = '#111';
+            document.body.style.color = '#eee';
+            document.body.style.filter = 'grayscale(100%)';
+            localStorage.setItem('dark-mode', 'enabled');
+        }
+    });
+}
 
 function isItBorked() {
     console.log("Brokedown palace.");
@@ -33,6 +157,7 @@ function blowItUp() {
     console.log("In 5... 4... 3... 2... 1...")
 
     const selfDestructButton = document.createElement('button');
+    selfDestructButton.id = 'selfDestructButton'
     selfDestructButton.innerText = '💣';
     selfDestructButton.className = 'deconstruct';
 
