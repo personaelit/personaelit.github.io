@@ -7,8 +7,98 @@ window.addEventListener('DOMContentLoaded', (event) => {
     blowItUp();
     isItBorked();
     lightsOut();
-    cloudsComeRollingIn()
+    cloudsComeRollingIn();
+    hereComesTheSun();
 });
+
+function hereComesTheSun() {
+    console.log("Sometimes the lights all shining on me. ☀️");
+
+    const sunSwitch = document.createElement('button');
+    sunSwitch.innerText = '☀️';
+    sunSwitch.className = 'sun-toggle';
+    document.body.appendChild(sunSwitch);
+
+    const canvas = document.createElement('canvas');
+    canvas.id = "sun-canvas";
+    canvas.className = 'sun-canvas';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.zIndex = '-2';
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = document.documentElement.scrollHeight;
+        drawSun();
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawSun() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const sunX = canvas.width - 120;
+        const sunY = 120;
+        const sunRadius = 80;
+        const rayCount = 420;
+
+        ctx.fillStyle = '#FFFFE0';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#FFFFE0';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < rayCount; i++) {
+            let angle = (Math.PI * 2 * i) / rayCount;
+            let startX = sunX + Math.cos(angle) * sunRadius;
+            let startY = sunY + Math.sin(angle) * sunRadius;
+            let rayLength = 100 + Math.random() * 400;
+            let endX = sunX + Math.cos(angle) * rayLength;
+            let endY = sunY + Math.sin(angle) * rayLength;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+    }
+
+    drawSun();
+
+    const main = document.querySelector('main');
+
+    function updateMainBackground(state) {
+        if (state) {
+            main.style.background = 'rgba(255, 255, 255, 0.7)'; // Light translucent
+            main.style.color = '#333'; // Dark text
+        } else {
+            main.style.background = '';
+            main.style.color = '';
+        }
+    }
+
+    if (localStorage.getItem('sun-mode') === 'enabled') {
+        canvas.style.display = 'block';
+        updateMainBackground(true);
+    }
+
+    sunSwitch.addEventListener('click', () => {
+        if (canvas.style.display === 'block') {
+            canvas.style.display = 'none';
+            localStorage.setItem('sun-mode', 'disabled');
+            updateMainBackground(false);
+        } else {
+            canvas.style.display = 'block';
+            localStorage.setItem('sun-mode', 'enabled');
+            updateMainBackground(true);
+        }
+    });
+}
 
 function cloudsComeRollingIn() {
     console.log("Cloud hands reaching from a rainbow.");
@@ -19,10 +109,12 @@ function cloudsComeRollingIn() {
     document.body.appendChild(cloudSwitch);
 
     const canvas = document.createElement('canvas');
+    canvas.id = 'cloud-canvas';
     canvas.className = 'cloud-canvas';
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
+    canvas.style.display = "none";
     canvas.style.zIndex = '-1';
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
@@ -59,16 +151,14 @@ function cloudsComeRollingIn() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const cloudColor = getContrastingColor();
-        
+
         clouds.forEach(cloud => {
-            // Draw shadow
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillText('☁️', cloud.x + 3, cloud.y + 3);
-            
-            // Draw cloud
+
             ctx.fillStyle = cloudColor;
             ctx.fillText('☁️', cloud.x, cloud.y);
-            
+
             cloud.x += cloud.speed;
 
             if (cloud.x > canvas.width + 60) cloud.x = -60;
@@ -78,24 +168,35 @@ function cloudsComeRollingIn() {
     }
     drawClouds();
 
+    const main = document.querySelector('main');
+
+    function updateMainBackground(state) {
+        if (state) {
+            main.style.background = 'rgba(255, 255, 255, 0.7)'; // Light translucent
+            main.style.color = '#333'; // Dark text
+        } else {
+            main.style.background = '';
+            main.style.color = '';
+        }
+    }
+
     if (localStorage.getItem('cloud-mode') === 'enabled') {
         canvas.style.display = 'block';
+        updateMainBackground(true);
     }
 
     cloudSwitch.addEventListener('click', () => {
         if (canvas.style.display === 'block') {
             canvas.style.display = 'none';
             localStorage.setItem('cloud-mode', 'disabled');
+            updateMainBackground(false);
         } else {
             canvas.style.display = 'block';
             localStorage.setItem('cloud-mode', 'enabled');
+            updateMainBackground(true);
         }
     });
 }
-
-
-
-
 
 function lightsOut() {
     console.log("Once in a while you can get shown the light");
@@ -221,10 +322,9 @@ function getRippled() {
 }
 
 function activateSlidableCards() {
+    console.log("Aces back to back.")
+
     const cards = document.querySelectorAll(".card");
-
-    console.log("keep your eye on the card.");
-
     const patina = ['#f8f8f8', '#fafafa', '#f3f3f3'];
 
     let top = 1;
