@@ -10,7 +10,68 @@ window.addEventListener('DOMContentLoaded', (event) => {
     cloudsComeRollingIn();
     hereComesTheSun();
     letItRain();
+    glitterRainbowSheen();
 });
+
+
+function glitterRainbowSheen() {
+    console.log("Let it shine! 🌈✨");
+
+    const sheenCanvas = document.createElement('canvas');
+    sheenCanvas.id = "sheen-canvas";
+    sheenCanvas.className = 'sheen-canvas';
+    sheenCanvas.style.position = 'absolute';
+    sheenCanvas.style.top = '0';
+    sheenCanvas.style.left = '0';
+    sheenCanvas.style.zIndex = '-1';
+    sheenCanvas.style.pointerEvents = 'none';
+    sheenCanvas.style.display = 'none';
+    document.body.appendChild(sheenCanvas);
+    const ctx = sheenCanvas.getContext('2d');
+
+    function resizeCanvas() {
+        sheenCanvas.width = window.innerWidth;
+        sheenCanvas.height = document.documentElement.scrollHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let hueShift = 0;
+    function drawSheen() {
+        ctx.clearRect(0, 0, sheenCanvas.width, sheenCanvas.height);
+        
+        const gradient = ctx.createLinearGradient(0, 0, sheenCanvas.width, sheenCanvas.height);
+        gradient.addColorStop(0, `hsl(${hueShift}, 100%, 75%)`);
+        gradient.addColorStop(0.5, `hsl(${(hueShift + 60) % 360}, 100%, 75%)`);
+        gradient.addColorStop(1, `hsl(${(hueShift + 120) % 360}, 100%, 75%)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = 0.6;
+        ctx.fillRect(0, 0, sheenCanvas.width, sheenCanvas.height);
+        
+        hueShift = (hueShift + 1) % 360;
+        requestAnimationFrame(drawSheen);
+    }
+
+    const sheenToggle = document.createElement('button');
+    sheenToggle.innerText = '🌈';
+    sheenToggle.className = 'sheen-toggle';
+    document.body.appendChild(sheenToggle);
+
+    function toggleSheen() {
+        const isActive = sheenCanvas.style.display === 'block';
+        sheenCanvas.style.display = isActive ? 'none' : 'block';
+        localStorage.setItem('sheen-mode', isActive ? 'disabled' : 'enabled');
+    }
+
+    if (localStorage.getItem('sheen-mode') === 'enabled') {
+        sheenCanvas.style.display = 'block';
+    }
+
+    sheenToggle.addEventListener('click', toggleSheen);
+    drawSheen();
+}
+
 
 function letItRain() {
     console.log("Just a box of rain. 🌧️");
@@ -39,7 +100,7 @@ function letItRain() {
     window.addEventListener('resize', resizeCanvas);
 
     let raindrops = [];
-    const dropCount = Math.max(10000, window.innerWidth / 10);
+    const dropCount = Math.max(6969, window.innerWidth / 10);
 
     function createRaindrop() {
         return {

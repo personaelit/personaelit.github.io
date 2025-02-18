@@ -176,7 +176,7 @@ a.broken-link {
     z-index: 1000;
 }
 
-.deconstruct, .light-toggle, .cloud-toggle, .sun-toggle, .rain-toggle {
+.deconstruct, .light-toggle, .cloud-toggle, .sun-toggle, .rain-toggle, .sheen-toggle {
     background-color: rgba(255, 255, 0, 0); /* Transparent background */
     text-shadow: rgba(0, 0, 0, 0.2) 8px 8px;
     font-size: 120px;
@@ -187,7 +187,7 @@ a.broken-link {
 
 }
 
-.deconstruct:hover, .light-toggle:hover, .cloud-toggle:hover, .sun-toggle:hover, .rain-toggle:hover {
+.deconstruct:hover, .light-toggle:hover, .cloud-toggle:hover, .sun-toggle:hover, .rain-toggle:hover, .sheen-toggle:hover {
     animation: wiggle 0.5s infinite;
 }
 
