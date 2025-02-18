@@ -177,7 +177,10 @@ a.broken-link {
     z-index: 1000;
 }
 
-/* Container to position buttons at the bottom */
+.zen-container {
+    position: absolute;
+    bottom: 0;
+}
 
 /* Button styles */
 .zen-control {

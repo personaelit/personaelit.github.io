@@ -7,360 +7,259 @@ window.addEventListener('DOMContentLoaded', (event) => {
     blowItUp();
     isItBorked();
     lightsOut();
-    cloudsComeRollingIn();
     hereComesTheSun();
     letItRain();
+    cloudsComeRollingIn();
     glitterRainbowSheen();
 });
 
 
-function glitterRainbowSheen() {
-    console.log("Let it shine! 🌈✨");
-
-    const sheenCanvas = document.createElement('canvas');
-    sheenCanvas.id = "sheen-canvas";
-    sheenCanvas.className = 'sheen-canvas';
-    sheenCanvas.style.position = 'absolute';
-    sheenCanvas.style.top = '0';
-    sheenCanvas.style.left = '0';
-    sheenCanvas.style.zIndex = '-1';
-    sheenCanvas.style.pointerEvents = 'none';
-    sheenCanvas.style.display = 'none';
-    document.body.appendChild(sheenCanvas);
-    const ctx = sheenCanvas.getContext('2d');
-
-    function resizeCanvas() {
-        sheenCanvas.width = window.innerWidth;
-        sheenCanvas.height = document.documentElement.scrollHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    let hueShift = 0;
-    function drawSheen() {
-        ctx.clearRect(0, 0, sheenCanvas.width, sheenCanvas.height);
-        
-        const gradient = ctx.createLinearGradient(0, 0, sheenCanvas.width, sheenCanvas.height);
-        gradient.addColorStop(0, `hsl(${hueShift}, 100%, 75%)`);
-        gradient.addColorStop(0.5, `hsl(${(hueShift + 60) % 360}, 100%, 75%)`);
-        gradient.addColorStop(1, `hsl(${(hueShift + 120) % 360}, 100%, 75%)`);
-        
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = 0.6;
-        ctx.fillRect(0, 0, sheenCanvas.width, sheenCanvas.height);
-        
-        hueShift = (hueShift + 1) % 360;
-        requestAnimationFrame(drawSheen);
-    }
-
-    const sheenToggle = document.createElement('button');
-    sheenToggle.innerText = '🌈';
-    sheenToggle.className = 'sheen-toggle';
-    sheenToggle.classList.add('zen-control');
-    document.body.appendChild(sheenToggle);
-
-    function toggleSheen() {
-        const isActive = sheenCanvas.style.display === 'block';
-        sheenCanvas.style.display = isActive ? 'none' : 'block';
-        localStorage.setItem('sheen-mode', isActive ? 'disabled' : 'enabled');
-    }
-
-    if (localStorage.getItem('sheen-mode') === 'enabled') {
-        sheenCanvas.style.display = 'block';
-    }
-
-    sheenToggle.addEventListener('click', toggleSheen);
-    drawSheen();
-}
-
-
-function letItRain() {
-    console.log("Just a box of rain. 🌧️");
-
-    const rainSwitch = document.createElement('button');
-    rainSwitch.innerText = '☔';
-    rainSwitch.className = 'rain-toggle';
-    rainSwitch.classList.add('zen-control');
-    document.body.appendChild(rainSwitch);
-
+function createEffectCanvas({ id, zIndex, draw }) {
     const canvas = document.createElement('canvas');
-    canvas.id = "rain-canvas";
-    canvas.className = 'rain-canvas';
-
+    canvas.id = id;
+    canvas.className = id;
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
-    canvas.style.zIndex = '-2';
-    canvas.style.display = "none";
+    canvas.style.zIndex = zIndex;
+    canvas.style.pointerEvents = 'none';
+    canvas.style.display = 'none';
     document.body.appendChild(canvas);
+
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = document.documentElement.scrollHeight;
+        draw(ctx, canvas)
     }
-    resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    return canvas;
+}
 
-    let raindrops = [];
-    const dropCount = Math.max(6969, window.innerWidth / 10);
-
-    function createRaindrop() {
-        return {
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            speed: 2 + Math.random() * 5,
-            length: 10 + Math.random() * 20,
-            opacity: 0.2 + Math.random() * 0.5
-        };
+function createZenContainer(){
+        let zenContainer = document.querySelector('.zen-container');
+    if (!zenContainer) {
+        zenContainer = document.createElement('div');
+        zenContainer.className = 'zen-container';
+        document.body.appendChild(zenContainer);
     }
+    return zenContainer;
+}
 
-    function initRain() {
-        raindrops = Array.from({ length: dropCount }, createRaindrop);
-    }
-    initRain();
+function createToggleButton({ icon, className, localStorageKey, canvas }) {
+    const button = document.createElement('button');
+    button.innerText = icon;
+    button.className = className;
+    button.classList.add('zen-control');
 
-    function drawRain() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "rgba(173, 216, 230, 0.6)";
-        ctx.lineWidth = 1.5;
-        ctx.lineCap = "round";
+    const zenContainer = createZenContainer();
+    zenContainer.appendChild(button);
 
-        raindrops.forEach(drop => {
-            ctx.globalAlpha = drop.opacity;
-            ctx.beginPath();
-            ctx.moveTo(drop.x, drop.y);
-            ctx.lineTo(drop.x, drop.y + drop.length);
-            ctx.stroke();
-
-            drop.y += drop.speed;
-
-            if (drop.y > canvas.height) {
-                drop.y = -drop.length;
-                drop.x = Math.random() * canvas.width;
-                drop.speed = 2 + Math.random() * 5;
-            }
-        });
-
-        requestAnimationFrame(drawRain);
-    }
-
-    drawRain();
-
-    const main = document.querySelector('body');
-
-    function updateMainBackground(state) {
-        if (state) {
-            main.style.background = 'rgba(0, 0, 20, 0.5)';
-            main.style.color = '#eee';
-        } else {
-            main.style.background = '';
-            main.style.color = '';
-        }
-    }
-
-    if (localStorage.getItem('rain-mode') === 'enabled') {
-        canvas.style.display = 'block';
-        updateMainBackground(true);
-    }
-
-    rainSwitch.addEventListener('click', () => {
+    function toggleCanvas() {
         const isActive = canvas.style.display === 'block';
         canvas.style.display = isActive ? 'none' : 'block';
-        localStorage.setItem('rain-mode', isActive ? 'disabled' : 'enabled');
-        updateMainBackground(!isActive);
+        localStorage.setItem(localStorageKey, isActive ? 'disabled' : 'enabled');
+    }
+
+    button.addEventListener('click', toggleCanvas);
+
+    if (localStorage.getItem(localStorageKey) === 'enabled') {
+        canvas.style.display = 'block';
+    }
+}
+
+function glitterRainbowSheen() {
+    console.log("...reaching from a rainbow.");
+
+    const canvas = createEffectCanvas({
+        id: 'sheen-canvas',
+        zIndex: '-5',
+        draw: (ctx, canvas) => {
+            let hueShift = 0;
+            function drawSheen() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, `hsl(${hueShift}, 100%, 75%)`);
+                gradient.addColorStop(0.5, `hsl(${(hueShift + 60) % 360}, 100%, 75%)`);
+                gradient.addColorStop(1, `hsl(${(hueShift + 120) % 360}, 100%, 75%)`);
+
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = 0.6;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                hueShift = (hueShift + 1) % 360;
+                requestAnimationFrame(drawSheen);
+            }
+            drawSheen();
+        }
+    })
+
+
+    createToggleButton({
+        icon: '🌈',
+        className: 'sheen-toggle',
+        localStorageKey: 'sheen-mode',
+        canvas,
+    });
+}
+
+function letItRain() {
+    console.log("Just a box of rain. 🌧️");
+
+    const canvas = createEffectCanvas({
+        id: 'rain-canvas',
+        zIndex: '-2',
+        draw: (ctx, canvas) => {
+            let raindrops = [];
+            const dropCount = Math.max(6969, window.innerWidth / 10);
+
+            function createRaindrop() {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    speed: 2 + Math.random() * 5,
+                    length: 10 + Math.random() * 20,
+                    opacity: 0.2 + Math.random() * 0.5
+                };
+            }
+
+            function initRain() {
+                raindrops = Array.from({ length: dropCount }, createRaindrop);
+            }
+            initRain();
+
+            function drawRain() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = "rgba(173, 216, 230, 0.6)";
+                ctx.lineWidth = 1.5;
+                ctx.lineCap = "round";
+
+                raindrops.forEach(drop => {
+                    ctx.globalAlpha = drop.opacity;
+                    ctx.beginPath();
+                    ctx.moveTo(drop.x, drop.y);
+                    ctx.lineTo(drop.x, drop.y + drop.length);
+                    ctx.stroke();
+
+                    drop.y += drop.speed;
+                    if (drop.y > canvas.height) {
+                        drop.y = -drop.length;
+                        drop.x = Math.random() * canvas.width;
+                        drop.speed = 2 + Math.random() * 5;
+                    }
+                });
+
+                requestAnimationFrame(drawRain);
+            }
+
+            drawRain();
+        }
+    });
+
+    createToggleButton({
+        icon: '☔',
+        className: 'rain-toggle',
+        localStorageKey: 'rain-mode',
+        canvas,
     });
 }
 
 function hereComesTheSun() {
     console.log("Sometimes the lights all shining on me. ☀️");
-
-    const sunSwitch = document.createElement('button');
-    sunSwitch.innerText = '☀️';
-    sunSwitch.className = 'sun-toggle';
-    sunSwitch.classList.add('zen-control');
-    document.body.appendChild(sunSwitch);
-
-    const canvas = document.createElement('canvas');
-    canvas.id = "sun-canvas";
-    canvas.className = 'sun-canvas';
-
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.zIndex = '-2';
-    canvas.style.display = "none";
-    document.body.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = document.documentElement.scrollHeight;
-        drawSun();
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    function drawSun() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const sunX = canvas.width - 120;
-        const sunY = 120;
-        const sunRadius = 80;
-        const rayCount = 420;
-
-        ctx.fillStyle = '#FFFFE0';
-        ctx.beginPath();
-        ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#FFFFE0';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < rayCount; i++) {
-            let angle = (Math.PI * 2 * i) / rayCount;
-            let startX = sunX + Math.cos(angle) * sunRadius;
-            let startY = sunY + Math.sin(angle) * sunRadius;
-            let rayLength = 100 + Math.random() * 400;
-            let endX = sunX + Math.cos(angle) * rayLength;
-            let endY = sunY + Math.sin(angle) * rayLength;
-
+    
+    const canvas = createEffectCanvas({
+        id: "sun-canvas",
+        zIndex: "-2",
+        draw: (ctx, canvas) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const sunX = canvas.width - 120;
+            const sunY = 120;
+            const sunRadius = 80;
+            const rayCount = 420;
+            
+            ctx.fillStyle = '#FFFFE0';
             ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
+            ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#FFFFE0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < rayCount; i++) {
+                let angle = (Math.PI * 2 * i) / rayCount;
+                let startX = sunX + Math.cos(angle) * sunRadius;
+                let startY = sunY + Math.sin(angle) * sunRadius;
+                let rayLength = 100 + Math.random() * 400;
+                let endX = sunX + Math.cos(angle) * rayLength;
+                let endY = sunY + Math.sin(angle) * rayLength;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
         }
-    }
-
-    drawSun();
-
-    const main = document.querySelector('body');
-
-    function updateMainBackground(state) {
-        if (state) {
-            main.style.background = 'rgba(255, 255, 255, 0.7)'; // Light translucent
-            main.style.color = '#333'; // Dark text
-        } else {
-            main.style.background = '';
-            main.style.color = '';
-        }
-    }
-
-    if (localStorage.getItem('sun-mode') === 'enabled') {
-        canvas.style.display = 'block';
-        updateMainBackground(true);
-    }
-
-    sunSwitch.addEventListener('click', () => {
-        if (canvas.style.display === 'block') {
-            canvas.style.display = 'none';
-            localStorage.setItem('sun-mode', 'disabled');
-            updateMainBackground(false);
-        } else {
-            canvas.style.display = 'block';
-            localStorage.setItem('sun-mode', 'enabled');
-            updateMainBackground(true);
-        }
+    });
+    
+    createToggleButton({
+        icon: '☀️',
+        className: 'sun-toggle',
+        localStorageKey: 'sun-mode',
+        canvas,
     });
 }
 
 function cloudsComeRollingIn() {
-    console.log("Cloud hands reaching from a rainbow.");
-
-    const cloudSwitch = document.createElement('button');
-    cloudSwitch.innerText = '☁️';
-    cloudSwitch.className = 'cloud-toggle';
-    cloudSwitch.classList.add('zen-control');
+    console.log("Cloud hands...");
     
-    document.body.appendChild(cloudSwitch);
-
-    const canvas = document.createElement('canvas');
-    canvas.id = 'cloud-canvas';
-    canvas.className = 'cloud-canvas';
+    const canvas = createEffectCanvas({
+        id: "cloud-canvas",
+        zIndex: "-1",
+        draw: (ctx, canvas) => {
+            function getContrastingColor() {
+                const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+                const rgb = bodyBg.match(/\d+/g).map(Number);
+                const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+                return brightness > 128 ? 'black' : 'white';
+            }
+            
+            let clouds = Array.from({ length: Math.max(5, Math.floor(window.innerWidth / 250)) }, () => ({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight / 2,
+                speed: 0.5 + Math.random() * 1.5,
+                size: 50 + Math.random() * 70,
+            }));
+            
+            function drawClouds() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = `180px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const cloudColor = getContrastingColor();
+                
+                clouds.forEach(cloud => {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                    ctx.fillText('☁️', cloud.x + 3, cloud.y + 3);
+                    ctx.fillStyle = cloudColor;
+                    ctx.fillText('☁️', cloud.x, cloud.y);
+                    cloud.x += cloud.speed;
+                    if (cloud.x > canvas.width + 60) cloud.x = -60;
+                });
+                requestAnimationFrame(drawClouds);
+            }
+            drawClouds();
+        }
+    });
     
-    canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.display = "none";
-    canvas.style.zIndex = '-1';
-    document.body.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    function getContrastingColor() {
-        const bodyBg = window.getComputedStyle(document.body).backgroundColor;
-        const rgb = bodyBg.match(/\d+/g).map(Number);
-        const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
-        return brightness > 128 ? 'black' : 'white';
-    }
-
-    let cloudCount = Math.max(5, Math.floor(window.innerWidth / 250));
-    let clouds = Array.from({ length: cloudCount }, () => createCloud());
-
-    function createCloud() {
-        return {
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight / 2,
-            speed: 0.5 + Math.random() * 1.5,
-            size: 50 + Math.random() * 70
-        };
-    }
-
-    function drawClouds() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = `180px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const cloudColor = getContrastingColor();
-
-        clouds.forEach(cloud => {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.fillText('☁️', cloud.x + 3, cloud.y + 3);
-
-            ctx.fillStyle = cloudColor;
-            ctx.fillText('☁️', cloud.x, cloud.y);
-
-            cloud.x += cloud.speed;
-
-            if (cloud.x > canvas.width + 60) cloud.x = -60;
-        });
-
-        requestAnimationFrame(drawClouds);
-    }
-    drawClouds();
-
-    const main = document.querySelector('body');
-
-    function updateMainBackground(state) {
-        if (state) {
-            main.style.background = 'rgba(255, 255, 255, 0.7)'; // Light translucent
-            main.style.color = '#333'; // Dark text
-        } else {
-            main.style.background = '';
-            main.style.color = '';
-        }
-    }
-
-    if (localStorage.getItem('cloud-mode') === 'enabled') {
-        canvas.style.display = 'block';
-        updateMainBackground(true);
-    }
-
-    cloudSwitch.addEventListener('click', () => {
-        if (canvas.style.display === 'block') {
-            canvas.style.display = 'none';
-            localStorage.setItem('cloud-mode', 'disabled');
-            updateMainBackground(false);
-        } else {
-            canvas.style.display = 'block';
-            localStorage.setItem('cloud-mode', 'enabled');
-            updateMainBackground(true);
-        }
+    createToggleButton({
+        icon: '☁️',
+        className: 'cloud-toggle',
+        localStorageKey: 'cloud-mode',
+        canvas,
     });
 }
 
@@ -371,7 +270,8 @@ function lightsOut() {
     lightSwitch.innerText = '💡';
     lightSwitch.className = 'light-toggle';
     lightSwitch.classList.add('zen-control');
-    document.body.appendChild(lightSwitch);
+    const zenContainer = createZenContainer();
+    zenContainer.appendChild(lightSwitch);
 
     // Check localStorage for mode state
     if (localStorage.getItem('dark-mode') === 'enabled') {
@@ -422,16 +322,17 @@ function isItBorked() {
 
 
 function blowItUp() {
-    console.log("In 5... 4... 3... 2... 1...")
-
+    console.log("In 5... 4... 3... 2... 1...");
+    
     const selfDestructButton = document.createElement('button');
-    selfDestructButton.id = 'selfDestructButton'
+    selfDestructButton.id = 'selfDestructButton';
     selfDestructButton.innerText = '💣';
     selfDestructButton.className = 'deconstruct';
     selfDestructButton.classList.add('zen-control');
-
-    document.body.appendChild(selfDestructButton);
-
+    
+    const zenContainer = createZenContainer();
+    zenContainer.appendChild(selfDestructButton)
+    ;
     selfDestructButton.addEventListener('click', () => {
         const getAllDescendants = (element) => {
             const descendants = [];
@@ -449,18 +350,15 @@ function blowItUp() {
         };
 
         const allDescendants = getAllDescendants(document.body);
-        for (let i = 0; i < allDescendants.length; i++) {
-            const element = allDescendants[i];
+        allDescendants.forEach(element => {
             element.style.transition = 'transform 2s ease-in, opacity 2s ease-in';
             element.style.transform = `translate(${Math.random() * window.innerWidth - window.innerWidth / 2}px, ${window.innerHeight}px) rotate(${Math.random() * 360}deg)`;
-        }
-
+        });
+        
         setTimeout(() => {
             location.reload();
         }, 6900);
-
     });
-
 }
 
 function getRippled() {
@@ -607,7 +505,7 @@ function stylizeLinks() {
 
 function startColorTransition() {
     console.log("transition init.");
-    
+
     let hue = Math.floor(Math.random() * 360); // Random hue 0-359
     let saturation = Math.floor(Math.random() * 100); // Random saturation 0-99
     let lightness = Math.floor(Math.random() * 100); // Random lightness 0-99
