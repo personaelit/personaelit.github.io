@@ -11,6 +11,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     letItRain();
     cloudsComeRollingIn();
     glitterRainbowSheen();
+    letItGrow();
 });
 
 
@@ -70,6 +71,82 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
         canvas.style.display = 'block';
     }
 }
+
+function letItGrow() {
+    console.log('Keep on growing.');
+
+    const flowerEmojis = ['🌸', '🌼', '🌻', '🌺', '🌹', '🌷', '💐', '🌿', '🍀'];
+    const flowers = [];
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    document.body.appendChild(canvas);
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Initialize flowers
+    for (let i = 0; i < 10; i++) {
+        const flower = {
+            emoji: flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)],
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            baseX: Math.random() * canvas.width,
+            baseY: Math.random() * canvas.height,
+            angle: Math.random() * Math.PI * 2, // Initial rotation
+            size: 50 + Math.random() * 30,
+            swirlSpeed: 0.02 + Math.random() * 0.03, // Speed of swirling
+            rotationSpeed: 0.02 + Math.random() * 0.05, // Speed of rotation
+            driftSpeedX: (Math.random() - 0.5) * 0.3, // Small drift in X direction
+            driftSpeedY: (Math.random() - 0.5) * 0.3  // Small drift in Y direction
+        };
+        flowers.push(flower);
+    }
+
+    function drawFlowers() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        flowers.forEach(flower => {
+            // Update base position to create drifting effect
+            flower.baseX += flower.driftSpeedX;
+            flower.baseY += flower.driftSpeedY;
+
+            // Wrap flowers around when they drift out of bounds
+            if (flower.baseX > canvas.width) flower.baseX = 0;
+            if (flower.baseX < 0) flower.baseX = canvas.width;
+            if (flower.baseY > canvas.height) flower.baseY = 0;
+            if (flower.baseY < 0) flower.baseY = canvas.height;
+
+            // Swirling motion around drifting base position
+            flower.angle += flower.swirlSpeed;
+            flower.x = flower.baseX + Math.cos(flower.angle) * 50; // Adjust radius of swirling
+            flower.y = flower.baseY + Math.sin(flower.angle) * 50;
+
+            // Rotate emoji
+            ctx.save();
+            ctx.translate(flower.x, flower.y);
+            ctx.rotate(flower.angle * flower.rotationSpeed);
+
+            ctx.font = `${flower.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(flower.emoji, 0, 0);
+
+            ctx.restore();
+        });
+        requestAnimationFrame(drawFlowers);
+    }
+
+    drawFlowers();
+
+    createToggleButton({
+        icon: '🌷',
+        className: 'flower-toggle',
+        localStorageKey: 'flower-mode',
+        canvas,
+    });
+}
+
+
+
 
 function glitterRainbowSheen() {
     console.log("...reaching from a rainbow.");

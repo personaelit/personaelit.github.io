@@ -20,6 +20,7 @@ body {
     margin-bottom: 42px;
     overflow-x: hidden;
     min-height: 100vh;
+    margin-bottom: 180px;
 }
 
 header {
@@ -184,6 +185,7 @@ a.broken-link {
     margin: 0 auto;
     padding: 10px;
     text-align: center;
+    max-height: 180px;
     background-color: rgba(0,0,0,.2);
 }
 
