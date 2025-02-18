@@ -56,6 +56,7 @@ function glitterRainbowSheen() {
     const sheenToggle = document.createElement('button');
     sheenToggle.innerText = '🌈';
     sheenToggle.className = 'sheen-toggle';
+    sheenToggle.classList.add('zen-control');
     document.body.appendChild(sheenToggle);
 
     function toggleSheen() {
@@ -79,11 +80,13 @@ function letItRain() {
     const rainSwitch = document.createElement('button');
     rainSwitch.innerText = '☔';
     rainSwitch.className = 'rain-toggle';
+    rainSwitch.classList.add('zen-control');
     document.body.appendChild(rainSwitch);
 
     const canvas = document.createElement('canvas');
     canvas.id = "rain-canvas";
     canvas.className = 'rain-canvas';
+
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
@@ -144,7 +147,7 @@ function letItRain() {
 
     drawRain();
 
-    const main = document.querySelector('main');
+    const main = document.querySelector('body');
 
     function updateMainBackground(state) {
         if (state) {
@@ -175,11 +178,13 @@ function hereComesTheSun() {
     const sunSwitch = document.createElement('button');
     sunSwitch.innerText = '☀️';
     sunSwitch.className = 'sun-toggle';
+    sunSwitch.classList.add('zen-control');
     document.body.appendChild(sunSwitch);
 
     const canvas = document.createElement('canvas');
     canvas.id = "sun-canvas";
     canvas.className = 'sun-canvas';
+
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
@@ -228,7 +233,7 @@ function hereComesTheSun() {
 
     drawSun();
 
-    const main = document.querySelector('main');
+    const main = document.querySelector('body');
 
     function updateMainBackground(state) {
         if (state) {
@@ -264,11 +269,14 @@ function cloudsComeRollingIn() {
     const cloudSwitch = document.createElement('button');
     cloudSwitch.innerText = '☁️';
     cloudSwitch.className = 'cloud-toggle';
+    cloudSwitch.classList.add('zen-control');
+    
     document.body.appendChild(cloudSwitch);
 
     const canvas = document.createElement('canvas');
     canvas.id = 'cloud-canvas';
     canvas.className = 'cloud-canvas';
+    
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
@@ -326,7 +334,7 @@ function cloudsComeRollingIn() {
     }
     drawClouds();
 
-    const main = document.querySelector('main');
+    const main = document.querySelector('body');
 
     function updateMainBackground(state) {
         if (state) {
@@ -362,6 +370,7 @@ function lightsOut() {
     const lightSwitch = document.createElement('button');
     lightSwitch.innerText = '💡';
     lightSwitch.className = 'light-toggle';
+    lightSwitch.classList.add('zen-control');
     document.body.appendChild(lightSwitch);
 
     // Check localStorage for mode state
@@ -419,6 +428,7 @@ function blowItUp() {
     selfDestructButton.id = 'selfDestructButton'
     selfDestructButton.innerText = '💣';
     selfDestructButton.className = 'deconstruct';
+    selfDestructButton.classList.add('zen-control');
 
     document.body.appendChild(selfDestructButton);
 
@@ -461,6 +471,7 @@ function getRippled() {
     document.addEventListener('click', (event) => {
         const ripple = document.createElement('div');
         ripple.className = 'ripple';
+        ripple.classList.add('zen-control');
 
         // Calculate the position based on scroll offset
         const scrollX = window.scrollX || document.documentElement.scrollLeft;
@@ -579,9 +590,6 @@ function flagExternalLinks() {
         }
     });
 }
-
-
-
 
 function stylizeLinks() {
     console.log("anchors away.")
