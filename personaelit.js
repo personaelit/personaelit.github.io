@@ -230,7 +230,7 @@ function cloudsComeRollingIn() {
             let clouds = Array.from({ length: Math.max(5, Math.floor(window.innerWidth / 250)) }, () => ({
                 x: Math.random() * window.innerWidth,
                 y: Math.random() * window.innerHeight / 2,
-                speed: 0.5 + Math.random() * 1.5,
+                speed: 0.01 + Math.random() * .5,
                 size: 50 + Math.random() * 70,
             }));
             
