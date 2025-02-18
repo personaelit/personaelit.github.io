@@ -178,11 +178,13 @@ a.broken-link {
 }
 
 .zen-container {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     width: 100%;
-    margin: 10px auto;
+    margin: 0 auto;
+    padding: 10px;
     text-align: center;
+    background-color: rgba(0,0,0,.2);
 }
 
 /* Button styles */
