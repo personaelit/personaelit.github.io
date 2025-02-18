@@ -187,6 +187,7 @@ a.broken-link {
     text-align: center;
     max-height: 180px;
     background-color: rgba(0,0,0,.2);
+    display: none;
 }
 
 /* Button styles */
