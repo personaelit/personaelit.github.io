@@ -62,10 +62,11 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
     function toggleCanvas() {
         const isActive = canvas.style.display === 'block';
         if (isActive) {
-            canvas.remove();
+            cancelAnimationFrame(canvas.animationFrameId);
         } else {
-            document.body.appendChild(canvas);
+            canvas.animationFrameId = requestAnimationFrame(() => draw(ctx, canvas));
         }
+
         canvas.style.display = isActive ? 'none' : 'block';
         localStorage.setItem(localStorageKey, isActive ? 'disabled' : 'enabled');
     }
