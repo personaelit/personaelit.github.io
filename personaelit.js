@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     cloudsComeRollingIn();
     glitterRainbowSheen();
     letItGrow();
-    //reflect();
+    launchRocket();
 });
 
 function createEffectCanvas({ id, zIndex, draw }) {
@@ -40,8 +40,8 @@ function createEffectCanvas({ id, zIndex, draw }) {
     return canvas;
 }
 
-function createZenContainer(){
-        let zenContainer = document.querySelector('.zen-container');
+function createZenContainer() {
+    let zenContainer = document.querySelector('.zen-container');
     if (!zenContainer) {
         zenContainer = document.createElement('div');
         zenContainer.className = 'zen-container';
@@ -72,46 +72,88 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
     }
 }
 
-function reflect() {
-    console.log("the Metamorphosis of Narcissus")
+function launchRocket() {
+    console.log("Standing on the moon.");
 
     const canvas = createEffectCanvas({
-        id: 'reflect-canvas',
-        zIndex: '1000',
+        id: 'rocket-canvas',
+        zIndex: '10',
         draw: (ctx, canvas) => {
-            const video = document.createElement('video');
-            video.autoplay = true;
-            video.style.display = 'none';
-            document.body.appendChild(video);
+            const rocket = '🚀';
+            let x = canvas.width / 2;
+            let y = canvas.height / 2;
+            let velocityX = (Math.random() - 0.5) * 4;
+            let velocityY = (Math.random() - 0.5) * 4;
+            let acceleration = 0.05;
+            let maxSpeed = 6;
+            let margin = 80; // Allow slight off-screen movement before reversing
 
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    video.srcObject = stream;
-                    video.play();
-                })
-                .catch(err => {
-                    console.error('Error accessing camera: ', err);
-                });
-
-            function drawVideo() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.globalAlpha = 0.2;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                ctx.globalCompositeOperation = 'color';
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.globalCompositeOperation = 'source-over';
-                requestAnimationFrame(drawVideo);
+            function getNewTarget() {
+                return {
+                    x: Math.random() * (canvas.width - 2 * margin) + margin,
+                    y: Math.random() * (canvas.height - 2 * margin) + margin,
+                };
             }
 
-            drawVideo();
+            let { x: targetX, y: targetY } = getNewTarget();
+
+            function drawRocket() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const shipSize = window.innerWidth < 600 ? 120 : 240;
+                ctx.font = `${shipSize}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                let angle = Math.atan2(velocityY, velocityX) + Math.PI / 4; // Adjust for default emoji rotation
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillText(rocket, 0, 0);
+                ctx.restore();
+            }
+
+            function moveRocket() {
+                let dx = targetX - x;
+                let dy = targetY - y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 20) {
+                    ({ x: targetX, y: targetY } = getNewTarget()); // Pick a new target when close
+                }
+
+                velocityX += (dx / distance) * acceleration;
+                velocityY += (dy / distance) * acceleration;
+
+                velocityX = Math.max(-maxSpeed, Math.min(maxSpeed, velocityX));
+                velocityY = Math.max(-maxSpeed, Math.min(maxSpeed, velocityY));
+
+                x += velocityX;
+                y += velocityY;
+
+                // If it goes slightly off-screen, reverse its trajectory
+                if (x < -margin || x > canvas.width + margin) {
+                    velocityX *= -1;
+                    targetX = Math.random() * (canvas.width - 2 * margin) + margin; // New target within bounds
+                }
+                if (y < -margin || y > canvas.height + margin) {
+                    velocityY *= -1;
+                    targetY = Math.random() * (canvas.height - 2 * margin) + margin; // New target within bounds
+                }
+
+                drawRocket();
+                requestAnimationFrame(moveRocket);
+            }
+
+            drawRocket();
+            moveRocket();
         }
     });
 
     createToggleButton({
-        icon: '🪞',
-        className: 'reflect-toggle',
-        localStorageKey: 'reflect-mode',
+        icon: '🚀',
+        className: 'rocket-toggle',
+        localStorageKey: 'rocket-mode',
         canvas,
     });
 }
@@ -142,40 +184,40 @@ function letItGrow() {
                 };
                 flowers.push(flower);
             }
-        
+
             function drawFlowers() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 flowers.forEach(flower => {
                     // Update base position to create drifting effect
                     flower.baseX += flower.driftSpeedX;
                     flower.baseY += flower.driftSpeedY;
-        
+
                     // Wrap flowers around when they drift out of bounds
                     if (flower.baseX > canvas.width) flower.baseX = 0;
                     if (flower.baseX < 0) flower.baseX = canvas.width;
                     if (flower.baseY > canvas.height) flower.baseY = 0;
                     if (flower.baseY < 0) flower.baseY = canvas.height;
-        
+
                     // Swirling motion around drifting base position
                     flower.angle += flower.swirlSpeed;
                     flower.x = flower.baseX + Math.cos(flower.angle) * 50; // Adjust radius of swirling
                     flower.y = flower.baseY + Math.sin(flower.angle) * 50;
-        
+
                     // Rotate emoji
                     ctx.save();
                     ctx.translate(flower.x, flower.y);
                     ctx.rotate(flower.angle * flower.rotationSpeed);
-        
+
                     ctx.font = `${flower.size}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(flower.emoji, 0, 0);
-        
+
                     ctx.restore();
                 });
                 requestAnimationFrame(drawFlowers);
             }
-        
+
             drawFlowers();
         }
     })
@@ -287,23 +329,23 @@ function letItRain() {
 
 function hereComesTheSun() {
     console.log("Sometimes the lights all shining on me. ☀️");
-    
+
     const canvas = createEffectCanvas({
         id: "sun-canvas",
         zIndex: "-2",
         draw: (ctx, canvas) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             const sunX = canvas.width - 120;
             const sunY = 120;
             const sunRadius = 80;
             const rayCount = 420;
-            
+
             ctx.fillStyle = '#FFFFE0';
             ctx.beginPath();
             ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
             ctx.fill();
-            
+
             ctx.strokeStyle = '#FFFFE0';
             ctx.lineWidth = 1;
             for (let i = 0; i < rayCount; i++) {
@@ -313,7 +355,7 @@ function hereComesTheSun() {
                 let rayLength = 100 + Math.random() * 400;
                 let endX = sunX + Math.cos(angle) * rayLength;
                 let endY = sunY + Math.sin(angle) * rayLength;
-                
+
                 ctx.beginPath();
                 ctx.moveTo(startX, startY);
                 ctx.lineTo(endX, endY);
@@ -321,7 +363,7 @@ function hereComesTheSun() {
             }
         }
     });
-    
+
     createToggleButton({
         icon: '☀️',
         className: 'sun-toggle',
@@ -332,7 +374,7 @@ function hereComesTheSun() {
 
 function cloudsComeRollingIn() {
     console.log("Cloud hands...");
-    
+
     const canvas = createEffectCanvas({
         id: "cloud-canvas",
         zIndex: "-1",
@@ -343,21 +385,21 @@ function cloudsComeRollingIn() {
                 const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
                 return brightness > 128 ? 'black' : 'white';
             }
-            
+
             let clouds = Array.from({ length: Math.max(5, Math.floor(window.innerWidth / 250)) }, () => ({
                 x: Math.random() * window.innerWidth,
                 y: Math.random() * window.innerHeight / 2,
                 speed: 0.01 + Math.random() * .5,
                 size: 50 + Math.random() * 70,
             }));
-            
+
             function drawClouds() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.font = `180px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 const cloudColor = getContrastingColor();
-                
+
                 clouds.forEach(cloud => {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
                     ctx.fillText('☁️', cloud.x + 3, cloud.y + 3);
@@ -371,7 +413,7 @@ function cloudsComeRollingIn() {
             drawClouds();
         }
     });
-    
+
     createToggleButton({
         icon: '☁️',
         className: 'cloud-toggle',
@@ -439,16 +481,16 @@ function isItBorked() {
 
 function blowItUp() {
     console.log("In 5... 4... 3... 2... 1...");
-    
+
     const selfDestructButton = document.createElement('button');
     selfDestructButton.id = 'selfDestructButton';
     selfDestructButton.innerText = '💣';
     selfDestructButton.className = 'deconstruct';
     selfDestructButton.classList.add('zen-control');
-    
+
     const zenContainer = createZenContainer();
     zenContainer.appendChild(selfDestructButton)
-    ;
+        ;
     selfDestructButton.addEventListener('click', () => {
         const getAllDescendants = (element) => {
             const descendants = [];
@@ -470,7 +512,7 @@ function blowItUp() {
             element.style.transition = 'transform 2s ease-in, opacity 2s ease-in';
             element.style.transform = `translate(${Math.random() * window.innerWidth - window.innerWidth / 2}px, ${window.innerHeight}px) rotate(${Math.random() * 360}deg)`;
         });
-        
+
         setTimeout(() => {
             location.reload();
         }, 6900);
