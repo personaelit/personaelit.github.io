@@ -193,11 +193,13 @@ a.broken-link {
 .zen-control {
     background-color: transparent; /* Fully transparent background */
     text-shadow: rgba(0, 0, 0, 0.2) 2px 2px;
-    font-size: 120px;
+    font-size: 60px;
     cursor: pointer;
     transition: transform 0.1s;
     border: none;
     outline: none;
+
+
 }
 
 /* Hover effect */
