@@ -190,9 +190,6 @@ function letItGrow() {
     });
 }
 
-
-
-
 function glitterRainbowSheen() {
     console.log("...reaching from a rainbow.");
 
@@ -442,7 +439,6 @@ function isItBorked() {
     });
 }
 
-
 function blowItUp() {
     console.log("In 5... 4... 3... 2... 1...");
     
@@ -595,7 +591,6 @@ function activateSlidableCards() {
         document.addEventListener("mouseup", handleDragEnd);
     });
 }
-
 
 function flagExternalLinks() {
     console.log("wave that flag.")
