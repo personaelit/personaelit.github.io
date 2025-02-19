@@ -69,9 +69,7 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
 
     if (localStorage.getItem(localStorageKey) === 'enabled') {
         canvas.style.display = 'block';
-    }    
-
-    button.addEventListener('click', toggleCanvas);
+    }
 }
 
 function reflect() {
