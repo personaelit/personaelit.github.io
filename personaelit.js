@@ -15,9 +15,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
     //reflect();
 });
 
-
-
-
 function createEffectCanvas({ id, zIndex, draw }) {
     const canvas = document.createElement('canvas');
     canvas.id = id;
@@ -53,7 +50,7 @@ function createZenContainer(){
     return zenContainer;
 }
 
-function createToggleButton({ icon, className, localStorageKey, canvasConfig }) {
+function createToggleButton({ icon, className, localStorageKey, canvas }) {
     const button = document.createElement('button');
     button.innerText = icon;
     button.className = className;
@@ -62,40 +59,19 @@ function createToggleButton({ icon, className, localStorageKey, canvasConfig }) 
     const zenContainer = createZenContainer();
     zenContainer.appendChild(button);
 
-    let canvas = null;
-    let animationFrameId = null;
-
-    function startEffect() {
-        if (!canvas) {
-            canvas = createEffectCanvas(canvasConfig);
-            document.body.appendChild(canvas);
-        }
-        localStorage.setItem(localStorageKey, 'enabled');
-    }
-
-    function stopEffect() {
-        if (canvas) {
-            cancelAnimationFrame(animationFrameId); // Stop animations
-            canvas.remove();
-            canvas = null;
-        }
-        localStorage.setItem(localStorageKey, 'disabled');
-    }
-
     function toggleCanvas() {
-        if (canvas) {
-            stopEffect();
-        } else {
-            startEffect();
-        }
+        const isActive = canvas.style.display === 'block';
+        canvas.style.display = isActive ? 'none' : 'block';
+        localStorage.setItem(localStorageKey, isActive ? 'disabled' : 'enabled');
     }
 
     button.addEventListener('click', toggleCanvas);
 
-    // Restore state from localStorage
     if (localStorage.getItem(localStorageKey) === 'enabled') {
-        startEffect();
-    }
+        canvas.style.display = 'block';
+    }    
+
+    button.addEventListener('click', toggleCanvas);
 }
 
 function reflect() {
