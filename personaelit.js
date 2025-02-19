@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     cloudsComeRollingIn();
     glitterRainbowSheen();
     letItGrow();
-    reflect();
+    //reflect();
 });
 
 
