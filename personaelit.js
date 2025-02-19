@@ -53,7 +53,7 @@ function createZenContainer(){
     return zenContainer;
 }
 
-function createToggleButton({ icon, className, localStorageKey, canvas }) {
+function createToggleButton({ icon, className, localStorageKey, canvasConfig }) {
     const button = document.createElement('button');
     button.innerText = icon;
     button.className = className;
@@ -62,16 +62,39 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
     const zenContainer = createZenContainer();
     zenContainer.appendChild(button);
 
+    let canvas = null;
+    let animationFrameId = null;
+
+    function startEffect() {
+        if (!canvas) {
+            canvas = createEffectCanvas(canvasConfig);
+            document.body.appendChild(canvas);
+        }
+        localStorage.setItem(localStorageKey, 'enabled');
+    }
+
+    function stopEffect() {
+        if (canvas) {
+            cancelAnimationFrame(animationFrameId); // Stop animations
+            canvas.remove();
+            canvas = null;
+        }
+        localStorage.setItem(localStorageKey, 'disabled');
+    }
+
     function toggleCanvas() {
-        const isActive = canvas.style.display === 'block';
-        canvas.style.display = isActive ? 'none' : 'block';
-        localStorage.setItem(localStorageKey, isActive ? 'disabled' : 'enabled');
+        if (canvas) {
+            stopEffect();
+        } else {
+            startEffect();
+        }
     }
 
     button.addEventListener('click', toggleCanvas);
 
+    // Restore state from localStorage
     if (localStorage.getItem(localStorageKey) === 'enabled') {
-        canvas.style.display = 'block';
+        startEffect();
     }
 }
 
