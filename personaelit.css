@@ -60,7 +60,8 @@ li {
 }
 
 #content p,
-#content h2 {
+#content h2, 
+#content h3 {
     margin: 21px;
     line-height: 2em;
 }
