@@ -31,25 +31,6 @@ function isItBorked() {
     });
 }
 
-function isItBorked() {
-    console.log("Brokedown palace.");
-    const links = document.querySelectorAll("a");
-
-    links.forEach(link => {
-        if (link.hostname === window.location.hostname) {
-            fetch(link.href, { method: 'HEAD' })
-                .then(response => {
-                    if (response.status === 404) {
-                        link.classList.add("broken-link");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking link:', error);
-                    link.classList.add("broken-link");
-                });
-        }
-    });
-}
 </code>
 </pre>
 
