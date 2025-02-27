@@ -38,7 +38,7 @@ Thankfully, there are enough [drops in my knowledge bucket](../Your-Knowledge/) 
 
 ### Client Side
 
-The client side was easy enough. Just add a scitp reference to https://www.google.com/recaptcha/api.js and the following scritpt:
+The client side was easy enough. Just add a script reference to https://www.google.com/recaptcha/api.js and the following script:
 
 <pre>
 <code class="language-html">
@@ -53,7 +53,7 @@ And some attributes to the button:
 <pre>
 <code class="language-html">
 &lt;button 
-	type="submit" c
+	type="submit"
 	class="g-recaptcha"
 	data-sitekey="recaptcha-key" 
 	data-callback='onSubmit'
