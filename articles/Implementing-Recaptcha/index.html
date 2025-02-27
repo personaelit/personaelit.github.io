@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Implementing reCAPTCHA</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="My experience implementing reCAPTCHA for a contact form.">
+    <meta name="author" content="James Smits">
+    <meta property="og:title" content="Implementing reCAPTCHA" />
+    <meta property="og:description" content="My experience implementing reCAPTCHA for a contact form." />
+    <meta property="og:image" content="header.png" />
+    <meta property="og:url" content="https://personaelit.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="personaelit" />
+    <link rel="stylesheet" href="../../personaelit.css">
+    <link rel="stylesheet" href="../article-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-powershell.min.js"></script>
+    <script defer data-domain="personaelit.com" src="https://plausible.io/js/script.hash.outbound-links.js"></script>
+    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+    <script src="../../personaelit.js"></script>
+</head>
+
+<body>
+    <nav class="article-nav">
+        <a href="../">../</a>
+    </nav>
+    <header class="article-header">
+        <h1 id="title">My Experience Implementing reCAPTCHA</h1>
+        <div id="subtitle">human or computer? not even sure anymore.</div>
+        <div id="publish-date">2025-02-27</div>
+    </header>
+    <main id="content" class="article">
+        <div class="clipped-image">
+            <img src="header.png" alt="A red-headed woman in profile nose to nose with a humanoid robot." />
+        </div>
+       <p>I have a contact form that has been dormant, but recently gained more prominence, and with that prominence came... you guessed it, SPAM.</p>
+<p>Here are the steps I went through to create a reCAPTCHA to prevent the SPAM.</p>
+<p>I already have a reCAPTCHA account set up with Google.</p>
+<p>I went to <a href="https://www.google.com/recaptcha/admin/create">https://www.google.com/recaptcha/admin/create</a> to create the reCAPTCHA, chose v3, ad entered my domain.</p>
+<aside>
+The main difference between **reCAPTCHA v2** and **reCAPTCHA v3** is how they assess and challenge user interactions:
+<ul>
+<li><strong>reCAPTCHA v2</strong>: Requires user interaction. It presents a checkbox (&quot;I'm not a robot&quot;) or a challenge (like selecting images) if the interaction seems suspicious.</li>
+<li><strong>reCAPTCHA v3</strong>: Works invisibly in the background. It assigns a <strong>risk score (0.0 to 1.0)</strong> based on user behavior, allowing developers to decide when to block or challenge a user.</li>
+</ul>
+</aside>
+<p>On the next page, I copied my keys and stored them safely.</p>
+<h2 id="on-to-implementation">On to Implementation</h2>
+<p>To be frank, I find google docs ambiguous, indistinct, and generally just shoddy, but here they are anyway:</p>
+<ul>
+<li><a href="https://developers.google.com/recaptcha/docs/v3">Client Side</a></li>
+<li><a href="https://developers.google.com/recaptcha/docs/verify">Server Side</a></li>
+</ul>
+<p>Thankfully, there are enough <a href="../Your-Knowledge/">drops in my knowledge bucket</a> to figure out the details.</p>
+<h3 id="client-side">Client Side</h3>
+<p>The client side was easy enough. Just add a scitp reference to <a href="https://www.google.com/recaptcha/api.js">https://www.google.com/recaptcha/api.js</a> and the following scritpt:</p>
+<pre>
+<code class="language-html">
+function onSubmit(token) {
+	document.getElementById("contact-form").submit();
+}
+</code>
+</pre>
+<p>And some attributes to the button:</p>
+<pre>
+<code class="language-html">
+&lt;button 
+	type="submit" c
+	class="g-recaptcha"
+	data-sitekey="recaptcha-key" 
+	data-callback='onSubmit'
+	data-action='submit'&gt;
+	Submit
+&lt;/button&gt;
+</code>
+</pre>
+<h3 id="server-side">Server Side</h3>
+<p>Server side was also fairly straight forward. Just send the response along to Google with your secret key, and return true or false based on the score provided.</p>
+<pre>
+<code class="language-javascript">
+
+async function isHuman(captchaResponse) {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    try {
+        const res = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                secret: secretKey,
+                response: captchaResponse
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            return false;
+        }
+        
+        return data.score >= 0.7; // Accept only high-confidence requests
+        
+    } catch (error) {
+        console.error('Error validating captcha:', error);
+        return false;
+    }
+}
+</code>
+</pre>
+<p>Then just check the humanness in the form post.</p>
+<pre>
+<code class="language-javascript">
+    if (!isHuman(req.body['g-recaptcha-response']))
+        return res.redirect('/?error=Captcha validation failed');
+</code>
+</pre>
+<aside>
+**reCAPTCHA v3**: Uses a score (0.0 to 1.0) instead of a challenge-response. Typically:
+<ul>
+<li>Scores <strong>≥ 0.7</strong> are considered human.</li>
+<li>Scores <strong>≤ 0.3</strong> are likely bots.</li>
+<li>Scores in <strong>0.3 - 0.7 range</strong> might need additional verification.</li>
+</ul>
+</aside>
+<p>So there ya go.  My experience implementing reCAPTCHA.  Easy-breezy.</p>
+
+    </main>
+    <nav class="article-nav">
+        <a href="../">../</a>
+    </nav>
+</body>
+
+</html>
