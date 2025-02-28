@@ -13,7 +13,36 @@ window.addEventListener('DOMContentLoaded', (event) => {
     glitterRainbowSheen();
     letItGrow();
     launchRocket();
+    activateRandomCanvasIfNeeded();
 });
+
+function activateRandomCanvasIfNeeded() {
+    const canvasEffects = [
+        { key: 'rocket-mode', id: 'rocket-canvas' },
+        { key: 'flower-mode', id: 'flower-canvas' },
+        { key: 'sheen-mode', id: 'sheen-canvas' },
+        { key: 'rain-mode', id: 'rain-canvas' },
+        { key: 'sun-mode', id: 'sun-canvas' },
+        { key: 'cloud-mode', id: 'cloud-canvas' }
+    ];
+
+    // Check if any canvas effect key exists in localStorage
+    const hasCanvasKeys = canvasEffects.some(effect => localStorage.getItem(effect.key) !== null);
+
+    if (!hasCanvasKeys) {
+        // No keys exist, pick a random effect
+        const randomEffect = canvasEffects[Math.floor(Math.random() * canvasEffects.length)];
+
+        // Set the effect as enabled in localStorage
+        localStorage.setItem(randomEffect.key, 'enabled');
+
+        // Directly show the canvas without adding an extra button
+        const canvas = document.getElementById(randomEffect.id);
+        if (canvas) {
+            canvas.style.display = 'block';
+        }
+    }
+}
 
 function createEffectCanvas({ id, zIndex, draw }) {
     const canvas = document.createElement('canvas');
