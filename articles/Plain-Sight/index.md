@@ -1,7 +1,7 @@
 --- 
 title: "Hidden in Plain Sight"
 author: "James Smits"
-description: "You ever look straight as something for so long that you don't even see it anymore?"
+description: "You ever look straight at something for so long that you don't even see it anymore?"
 heading: "Hidden in Plain Sight"
 subtitle: "plane site?"
 header-image-alt-text: "A silhouette of Alice surround by near mirror images of psychedelic rainbows of color."
