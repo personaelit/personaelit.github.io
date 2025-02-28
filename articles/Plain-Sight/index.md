@@ -25,7 +25,7 @@ The word is meaningless.  [Like roads](https://www.youtube.com/watch?v=KT3vOCWA-
 
 [Gestaltzerfall](https://en.wikipedia.org/wiki/Gestaltzerfall) 
 
-Kind of like semantic satiation but for real physical objects. I have to admit, I am more confused after reading that wiki than I was beforehand. (Is there a word for that?) Is confusionthe [seed of knowledge](../Seed-of-Knowledge)?
+Kind of like semantic satiation but for real physical objects. I have to admit, I am more confused after reading that wiki than I was beforehand. (Is there a word for that?) Is confusion the [seed of knowledge](../Seed-of-Knowledge)?
 
 ## Scotoma
 
