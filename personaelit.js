@@ -13,8 +13,57 @@ window.addEventListener('DOMContentLoaded', (event) => {
     glitterRainbowSheen();
     letItGrow();
     launchRocket();
+    activateSpotlight();
     activateRandomCanvasIfNeeded();
 });
+
+function activateSpotlight() {
+    console.log("Let there be light.");
+
+    const canvas = createEffectCanvas({
+        id: 'spotlight-canvas',
+        zIndex: '3000',
+        draw: (ctx, canvas) => {
+            let mouseX = canvas.width / 2;
+            let mouseY = canvas.height / 2;
+            const spotlightRadius = Math.min(canvas.width, canvas.height) / 5; // Spotlight size
+
+            function drawSpotlight() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Create a full-screen dark overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Create the spotlight effect
+                const gradient = ctx.createRadialGradient(mouseX, mouseY, spotlightRadius / 2, mouseX, mouseY, spotlightRadius);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, .01)'); // Bright center
+                gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.8)'); // Soft fade-out
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 1)'); // Blends into darkness
+
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                requestAnimationFrame(drawSpotlight);
+            }
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+            });
+
+            drawSpotlight();
+        }
+    });
+
+    createToggleButton({
+        icon: '🔦',
+        className: 'spotlight-toggle',
+        localStorageKey: 'spotlight-mode',
+        canvas,
+    });
+}
 
 function activateRandomCanvasIfNeeded() {
     const canvasEffects = [
