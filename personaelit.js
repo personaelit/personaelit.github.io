@@ -53,6 +53,14 @@ function activateSpotlight() {
                 mouseY = event.clientY;
             });
 
+            document.addEventListener('touchmove', (event) => {
+                if (event.touches.length > 0) {
+                    mouseX = event.touches[0].clientX;
+                    mouseY = event.touches[0].clientY;
+                }
+                event.preventDefault(); // Prevent scrolling while dragging
+            }, { passive: false });
+
             drawSpotlight();
         }
     });
@@ -64,6 +72,7 @@ function activateSpotlight() {
         canvas,
     });
 }
+
 
 function activateRandomCanvasIfNeeded() {
     const canvasEffects = [
