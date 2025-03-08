@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Coming at it Sideways</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="When solving a problem literally went sideways.">
+    <meta name="author" content="James Smits">
+    <meta property="og:title" content="Coming at it Sideways" />
+    <meta property="og:description" content="When solving a problem literally went sideways." />
+    <meta property="og:image" content="header.png" />
+    <meta property="og:url" content="https://personaelit.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="personaelit" />
+    <link rel="stylesheet" href="../../personaelit.css">
+    <link rel="stylesheet" href="../article-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-powershell.min.js"></script>
+    <script defer data-domain="personaelit.com" src="https://plausible.io/js/script.hash.outbound-links.js"></script>
+    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+    <script src="../../personaelit.js"></script>
+</head>
+
+<body>
+    <nav class="article-nav">
+        <a href="../">../</a>
+    </nav>
+    <header class="article-header">
+        <h1 id="title">Sideways</h1>
+        <div id="subtitle">great movie btw</div>
+        <div id="publish-date">2025-03-04</div>
+    </header>
+    <main id="content" class="article">
+        <div class="clipped-image">
+            <img src="header.png" alt="" />
+        </div>
+       <p>I found myself wrestling with the unenviable task of converting sprawling HTML tables into polished marketing PDFs. The challenge? Condensing enormous tables into the limited real estate of a printable PDF—without losing quality. Each table contained 5 columns of valuable information, followed by 6 columns of hyperlinks with hundreds of rows going well below the fold. Complicating matters, there were 5 columns of useful information followed by 6 columns of links. Links that would be useless in a PDF as hyperlinks don't work that great in print :).</p>
+<p>Enter a scrappy yet effective solution: manipulate the DOM with JavaScript injected right through the browser's dev tools.</p>
+<p>First I needed to get rid of those link columns.  They were after a column with the header &quot;Poles&quot;.</p>
+<pre>
+<code class="language-javascript">
+(() => {
+    const table = document.querySelector(".ReferencePageTable");
+
+    const headers = table.querySelectorAll("th");
+    let polesIndex = -1;
+
+    headers.forEach((th, index) => {
+        if (th.textContent.trim().toLowerCase() === "poles") {
+            polesIndex = index;
+        }
+    });
+
+    // Remove columns after "Poles"
+    table.querySelectorAll("tr").forEach(row => {
+        row.querySelectorAll("td, th").forEach((cell, index) => {
+            if (index >= polesIndex) {
+                cell.remove();
+            }
+        });
+    });
+})();
+</code>
+</pre>
+<p>This removed all the link columns revealing just the columns that I needed.</p>
+<p>So far so good.</p>
+<p>Now I needed to break the table into smaller chunks.  I noticed that voltage would be a great characteristic to group by.  I needed a filter:</p>
+<pre>
+<code class="language-javascript">
+(function() {
+    // Create filter container
+    const filterContainer = document.createElement('div');
+    filterContainer.style.marginBottom = '10px';
+    filterContainer.innerHTML = '&lt;label for="voltageFilter"&gt;Filter by Voltage: &lt;/label&gt;';
+    
+    // Create dropdown filter
+    const voltageFilter = document.createElement('select');
+    voltageFilter.id = 'voltageFilter';
+    voltageFilter.innerHTML = '&lt;option value=""&gt;All&lt;/option&gt;';
+    
+    // Get all voltage values from the table
+    const table = document.querySelector('.ReferencePageTable');
+    const rows = table.querySelectorAll('tbody tr');
+    const voltageSet = new Set();
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 1) {
+            const voltageCell = cells[1].textContent.trim();
+            if (voltageCell) {
+                voltageSet.add(voltageCell);
+            }
+        }
+    });
+    
+    // Populate the dropdown with unique voltage values
+    Array.from(voltageSet).sort().forEach(voltage => {
+        const option = document.createElement('option');
+        option.value = voltage;
+        option.textContent = voltage;
+        voltageFilter.appendChild(option);
+    });
+    
+    filterContainer.appendChild(voltageFilter);
+    
+    // Insert the filter above the table
+    table.parentNode.insertBefore(filterContainer, table);
+    
+    // Add event listener to filter rows based on selected voltage
+    voltageFilter.addEventListener('change', function() {
+        const selectedVoltage = this.value;
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1) {
+                const voltageCell = cells[1].textContent.trim();
+                if (selectedVoltage === '' || voltageCell === selectedVoltage) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    });
+})();
+</code>
+</pre>
+<p>Cut and paste into the dev tools console and bingo bango - a functioning filter on the page.</p>
+<aside>
+Editor's note: at one point the author may or may not have tried to put his screen in zoomed out portrait mode to see if he could capture the whole table at once.  Working a mouse with your head tilted 90 degrees is not for the faint of heart. 
+</aside>
+<p>To be forthright, I had AI write the scripts.  While I could have done the same, it's just so much faster.</p>
+
+    </main>
+    <nav class="article-nav">
+        <a href="../">../</a>
+    </nav>
+</body>
+
+</html>
