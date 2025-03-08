@@ -58,7 +58,7 @@ function activateSpotlight() {
                     mouseX = event.touches[0].clientX;
                     mouseY = event.touches[0].clientY;
                 }
-                event.preventDefault(); // Prevent scrolling while dragging
+                //event.preventDefault(); // Prevent scrolling while dragging
             }, { passive: false });
 
             drawSpotlight();
