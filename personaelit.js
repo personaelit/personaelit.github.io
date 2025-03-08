@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 
 function activateSpotlight() {
-    console.log("Let there be light.");
+    console.log("dark star rising");
 
     const canvas = createEffectCanvas({
         id: 'spotlight-canvas',
@@ -26,20 +26,20 @@ function activateSpotlight() {
         draw: (ctx, canvas) => {
             let mouseX = canvas.width / 2;
             let mouseY = canvas.height / 2;
-            const spotlightRadius = Math.min(canvas.width, canvas.height) / 5;
-
-            let spotlightActive = localStorage.getItem('spotlight-mode') === 'enabled';
+            const spotlightRadius = Math.min(canvas.width, canvas.height) / 5; // Spotlight size
 
             function drawSpotlight() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+                // Create a full-screen dark overlay
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                // Create the spotlight effect
                 const gradient = ctx.createRadialGradient(mouseX, mouseY, spotlightRadius / 2, mouseX, mouseY, spotlightRadius);
-                gradient.addColorStop(0, 'rgba(255, 255, 255, .01)');
-                gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.8)');
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
+                gradient.addColorStop(0, 'rgba(255, 255, 255, .01)'); // Bright center
+                gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.8)'); // Soft fade-out
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 1)'); // Blends into darkness
 
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.fillStyle = gradient;
@@ -48,24 +48,23 @@ function activateSpotlight() {
                 requestAnimationFrame(drawSpotlight);
             }
 
-            function handleTouchMove(event) {
-                if (spotlightActive) event.preventDefault();
-                const touch = event.touches[0];
-                mouseX = touch.clientX;
-                mouseY = touch.clientY;
-            }
-
             document.addEventListener('mousemove', (event) => {
                 mouseX = event.clientX;
                 mouseY = event.clientY;
             });
 
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchmove', (event) => {
+                if (event.touches.length > 0) {
+                    mouseX = event.touches[0].clientX;
+                    mouseY = event.touches[0].clientY;
+                }
+                if (canvas.style.display === 'block') { // Only prevent scrolling if the spotlight is active
+                    event.preventDefault();
+                }
+            }, { passive: false });
+            
 
             drawSpotlight();
-
-            // Update spotlight state on toggle
-            canvas.toggleSpotlight = (active) => spotlightActive = active;
         }
     });
 
@@ -76,6 +75,7 @@ function activateSpotlight() {
         canvas,
     });
 }
+
 
 function activateRandomCanvasIfNeeded() {
     const canvasEffects = [
@@ -153,19 +153,14 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
         const isActive = canvas.style.display === 'block';
         canvas.style.display = isActive ? 'none' : 'block';
         localStorage.setItem(localStorageKey, isActive ? 'disabled' : 'enabled');
-        document.body.style.overflow = !isActive && localStorageKey === 'spotlight-mode' ? 'hidden' : '';
     }
 
     button.addEventListener('click', toggleCanvas);
 
     if (localStorage.getItem(localStorageKey) === 'enabled') {
         canvas.style.display = 'block';
-        if (localStorageKey === 'spotlight-mode') {
-            document.body.style.overflow = 'hidden';
-        }
     }
 }
-
 
 function launchRocket() {
     console.log("Standing on the moon.");
