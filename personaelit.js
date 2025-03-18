@@ -175,13 +175,11 @@ function buyTheTicketTakeTheRide() {
     zenContainer.appendChild(magicMushroom);
 
     magicMushroom.addEventListener('click', () => {
-        document.body.classList.add("tripping");
         applyPsychedelicEffects();
     });
 
     setTimeout(() => {
         removePsychedelicEffects();
-        document.body.classList.remove("tripping");
     }, 6900); // Effects last 5 seconds
 
     function applyPsychedelicEffects() {
