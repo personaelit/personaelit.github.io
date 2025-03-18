@@ -176,11 +176,15 @@ function buyTheTicketTakeTheRide() {
 
     magicMushroom.addEventListener('click', () => {
         applyPsychedelicEffects();
-    });
 
-    setTimeout(() => {
-        removePsychedelicEffects();
-    }, 6900); // Effects last 5 seconds
+        clearTimeout(magicMushroom.dataset.timeoutId);
+
+        const timeoutId = setTimeout(() => {
+            removePsychedelicEffects();
+        }, 6900);
+        magicMushroom.dataset.timeoutId = timeoutId;
+
+    });
 
     function applyPsychedelicEffects() {
         document.querySelectorAll('*').forEach(element => {
