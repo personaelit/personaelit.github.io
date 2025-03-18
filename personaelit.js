@@ -15,6 +15,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     launchRocket();
     activateSpotlight();
     activateRandomCanvasIfNeeded();
+    buyTheTicketTakeTheRide();
 });
 
 function activateSpotlight() {
@@ -62,7 +63,7 @@ function activateSpotlight() {
                     event.preventDefault();
                 }
             }, { passive: false });
-            
+
 
             drawSpotlight();
         }
@@ -161,6 +162,42 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
         canvas.style.display = 'block';
     }
 }
+
+function buyTheTicketTakeTheRide() {
+    console.log("Buy the ticket, take the ride.");
+
+    const magicMushroom = document.createElement('button');
+    magicMushroom.innerText = '🍄';
+    magicMushroom.className = "mushroom-toggle";
+    magicMushroom.classList.add('zen-control');
+
+    const zenContainer = createZenContainer(); // Ensure this function exists
+    zenContainer.appendChild(magicMushroom);
+
+    magicMushroom.addEventListener('click', () => {
+        document.body.classList.add("tripping");
+        applyPsychedelicEffects();
+    });
+
+    setTimeout(() => {
+        removePsychedelicEffects();
+        document.body.classList.remove("tripping");
+    }, 6900); // Effects last 5 seconds
+
+    function applyPsychedelicEffects() {
+        document.querySelectorAll('*').forEach(element => {
+            element.style.animation = `psychedelicPulse ${Math.random() * 3 + 1}s infinite ease-in`;
+        });
+    }
+
+    function removePsychedelicEffects() {
+        document.querySelectorAll('*').forEach(element => {
+            element.style.animation = '';
+        });
+    }
+}
+
+
 
 function launchRocket() {
     console.log("Standing on the moon.");

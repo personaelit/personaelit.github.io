@@ -60,7 +60,7 @@ li {
 }
 
 #content p,
-#content h2, 
+#content h2,
 #content h3 {
     margin: 21px;
     line-height: 2em;
@@ -148,7 +148,8 @@ a:hover:not(.article a) {
     transform: scale(1.2) !important;
 }
 
-.external, .broken-link {
+.external,
+.broken-link {
     text-decoration: none;
 }
 
@@ -164,7 +165,7 @@ a:hover:not(.article a) {
 }
 
 a.broken-link {
-    color:#d63333;
+    color: #d63333;
 }
 
 .ripple {
@@ -187,12 +188,13 @@ a.broken-link {
     padding: 10px;
     text-align: center;
     max-height: 180px;
-    background-color: rgba(0,0,0,.2);
+    background-color: rgba(0, 0, 0, .2);
 }
 
 /* Button styles */
 .zen-control {
-    background-color: transparent; /* Fully transparent background */
+    background-color: transparent;
+    /* Fully transparent background */
     text-shadow: rgba(0, 0, 0, 0.2) 2px 2px;
     font-size: 60px;
     cursor: pointer;
@@ -211,13 +213,15 @@ a.broken-link {
 /* Smaller buttons on mobile */
 @media (max-width: 768px) {
     .zen-control {
-        font-size: 60px; /* Reduce font size */
+        font-size: 60px;
+        /* Reduce font size */
     }
 }
 
 @media (max-width: 480px) {
     .zen-control {
-        font-size: 40px; /* Further reduce size on very small screens */
+        font-size: 40px;
+        /* Further reduce size on very small screens */
     }
 }
 
@@ -239,5 +243,22 @@ a.broken-link {
     to {
         transform: scale(10);
         opacity: 0;
+    }
+}
+
+@keyframes psychedelicPulse {
+    0% {
+        filter: brightness(1) drop-shadow(0 0 4px rgba(255, 0, 255, 0.1));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: brightness(1.2) drop-shadow(0 0 8x rgba(116, 3, 131, 0.2));
+        transform: scale(1.3);
+    }
+
+    100% {
+        filter: brightness(1) drop-shadow(0 0 16px rgba(255, 0, 255, 0.3));
+        transform: scale(1);
     }
 }
