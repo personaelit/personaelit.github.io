@@ -199,8 +199,6 @@ function buyTheTicketTakeTheRide() {
     }
 }
 
-
-
 function launchRocket() {
     console.log("Standing on the moon.");
 
