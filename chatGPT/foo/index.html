@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3D Maze Raycaster</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Map (1 = wall, 0 = empty space)
+const map = [
+  [1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,1,1,0,0,1],
+  [1,0,1,0,0,0,1,0,0,1],
+  [1,0,1,1,1,0,1,1,0,1],
+  [1,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1]
+];
+const mapWidth = map[0].length;
+const mapHeight = map.length;
+
+// Player
+let posX = 1.5, posY = 1.5;
+let dirX = 1, dirY = 0;
+let planeX = 0, planeY = 0.66;
+const keys = {};
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Mouse look
+canvas.addEventListener('click', () => canvas.requestPointerLock());
+document.addEventListener('pointerlockchange', () => {
+  pointerLocked = document.pointerLockElement === canvas;
+});
+document.addEventListener('mousemove', e => {
+  if (document.pointerLockElement === canvas) {
+    const rot = -e.movementX * 0.002;
+    const oldDirX = dirX;
+    dirX = dirX * Math.cos(-rot) - dirY * Math.sin(-rot);
+    dirY = oldDirX * Math.sin(-rot) + dirY * Math.cos(-rot);
+    const oldPlaneX = planeX;
+    planeX = planeX * Math.cos(-rot) - planeY * Math.sin(-rot);
+    planeY = oldPlaneX * Math.sin(-rot) + planeY * Math.cos(-rot);
+  }
+});
+
+// Game loop
+function update(dt) {
+  const moveSpeed = dt * 0.003;
+  const rotSpeed = dt * 0.002;
+
+  if (keys['w']) {
+    if (map[Math.floor(posY)][Math.floor(posX + dirX * moveSpeed)] === 0) posX += dirX * moveSpeed;
+    if (map[Math.floor(posY + dirY * moveSpeed)][Math.floor(posX)] === 0) posY += dirY * moveSpeed;
+  }
+  if (keys['s']) {
+    if (map[Math.floor(posY)][Math.floor(posX - dirX * moveSpeed)] === 0) posX -= dirX * moveSpeed;
+    if (map[Math.floor(posY - dirY * moveSpeed)][Math.floor(posX)] === 0) posY -= dirY * moveSpeed;
+  }
+  if (keys['a']) {
+  const perpX = dirY;
+  const perpY = -dirX;
+  if (map[Math.floor(posY)][Math.floor(posX + perpX * moveSpeed)] === 0) posX += perpX * moveSpeed;
+  if (map[Math.floor(posY + perpY * moveSpeed)][Math.floor(posX)] === 0) posY += perpY * moveSpeed;
+}
+if (keys['d']) {
+  const perpX = -dirY;
+  const perpY = dirX;
+  if (map[Math.floor(posY)][Math.floor(posX + perpX * moveSpeed)] === 0) posX += perpX * moveSpeed;
+  if (map[Math.floor(posY + perpY * moveSpeed)][Math.floor(posX)] === 0) posY += perpY * moveSpeed;
+}
+}
+
+function drawScene() {
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, 0, width, height);
+
+  for (let x = 0; x < width; x++) {
+    const cameraX = 2 * x / width - 1;
+    const rayDirX = dirX + planeX * cameraX;
+    const rayDirY = dirY + planeY * cameraX;
+
+    let mapX = Math.floor(posX);
+    let mapY = Math.floor(posY);
+
+    const deltaDistX = Math.abs(1 / rayDirX);
+    const deltaDistY = Math.abs(1 / rayDirY);
+
+    let sideDistX, sideDistY;
+    let stepX, stepY;
+
+    if (rayDirX < 0) {
+      stepX = -1;
+      sideDistX = (posX - mapX) * deltaDistX;
+    } else {
+      stepX = 1;
+      sideDistX = (mapX + 1.0 - posX) * deltaDistX;
+    }
+    if (rayDirY < 0) {
+      stepY = -1;
+      sideDistY = (posY - mapY) * deltaDistY;
+    } else {
+      stepY = 1;
+      sideDistY = (mapY + 1.0 - posY) * deltaDistY;
+    }
+
+    let hit = 0, side;
+    while (hit === 0) {
+      if (sideDistX < sideDistY) {
+        sideDistX += deltaDistX;
+        mapX += stepX;
+        side = 0;
+      } else {
+        sideDistY += deltaDistY;
+        mapY += stepY;
+        side = 1;
+      }
+      if (map[mapY][mapX] > 0) hit = 1;
+    }
+
+    const perpWallDist = side === 0
+      ? (mapX - posX + (1 - stepX) / 2) / rayDirX
+      : (mapY - posY + (1 - stepY) / 2) / rayDirY;
+
+    const lineHeight = Math.floor(height / perpWallDist);
+    const drawStart = Math.max(0, -lineHeight / 2 + height / 2);
+    const drawEnd = Math.min(height, lineHeight / 2 + height / 2);
+
+    const shade = side === 1 ? 80 : 120;
+    ctx.strokeStyle = `rgb(${shade},${shade},${shade})`;
+    ctx.beginPath();
+    ctx.moveTo(x, drawStart);
+    ctx.lineTo(x, drawEnd);
+    ctx.stroke();
+  }
+}
+
+// Main loop
+let last = performance.now();
+function loop(now) {
+  const dt = now - last;
+  last = now;
+  update(dt);
+  drawScene();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
