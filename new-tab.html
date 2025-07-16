@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>StayOnline Dashboard</title>
+    <link rel="icon" href="https://www.stayonline.com/favicon.ico" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        /* === GLOBAL === */
+        body {
+            font-family: sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* === SEARCH === */
+        .search-box {
+            max-width: 500px;
+            margin: auto;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 1.1em;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border: none;
+            background-color: #0069bb;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* === QUICK LINKS === */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            max-width: 1000px;
+            margin: 20px auto;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-link .link-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .quick-link img {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .quick-link a {
+            color: #0069bb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .quick-link .delete-btn {
+            background: none;
+            border: none;
+            color: red;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* === MODAL === */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* === BLOCKS === */
+        .block {
+            position: absolute;
+            /* key change */
+            width: 300px;
+            padding: 20px;
+            padding-top: 35px;
+            /* make space for the X */
+            border: 1px solid black;
+            background-color: aliceblue;
+            cursor: move;
+            z-index: 5;
+        }
+
+
+        .block .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: red;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .block-title,
+        .block-content {
+            margin-bottom: 10px;
+            outline: none;
+            cursor: text;
+        }
+
+        .block-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .block-date {
+            font-size: 12px;
+            color: gray;
+        }
+
+        .block-favorite,
+        .block-recycle {
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .block-favorited {
+            color: gold;
+        }
+
+        .block-recycled {
+            color: green;
+        }
+
+        #controls {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>StayOnline SKU Search</h1>
+
+    <div class="search-box">
+        <input type="text" id="skuInput" placeholder="Enter SKU..." autofocus />
+        <button onclick="searchSKU()">Search</button>
+    </div>
+
+    <div id="controls">
+        <button onclick="openModal()">+ Add Quick Link</button>
+        <button onclick="createBlock()">+ Sticky Note</button>
+    </div>
+
+    <div class="quick-links" id="quickLinksContainer"></div>
+
+    <div id="recentSearches" style="max-width: 500px; margin: 0 auto 20px; font-size: 0.95em;"></div>
+
+    <div class="modal" id="linkModal">
+        <div class="modal-content">
+            <input type="text" id="linkUrl" placeholder="URL (https://...)" />
+            <input type="text" id="linkText" placeholder="Link Text" />
+            <input type="text" id="linkFavicon" placeholder="Favicon URL (optional)" />
+            <button onclick="saveLink()">Save</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const quickLinksKey = "quickLinks";
+        const blocksKey = "stickyBlocks";
+
+        const searchKey = "recentSkus";
+
+        function saveRecentSearch(sku) {
+            let history = JSON.parse(localStorage.getItem(searchKey)) || [];
+            history = [sku, ...history.filter(s => s !== sku)].slice(0, 10);
+            localStorage.setItem(searchKey, JSON.stringify(history));
+            renderRecentSearches();
+        }
+
+        function renderRecentSearches() {
+            const container = document.getElementById("recentSearches");
+            const history = JSON.parse(localStorage.getItem(searchKey)) || [];
+            if (history.length === 0) {
+                container.innerHTML = "";
+                return;
+            }
+
+            container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(sku =>
+                `<a href="#" onclick="searchSKU('${sku}')">${sku}</a>`
+            ).join(" • ")}`;
+        }
+
+
+        const defaultLinks = [
+            { url: "https://www.stayonline.com", text: "StayOnline", favicon: "https://d2qu3zjd0up66m.cloudfront.net/images/favicon-32x32.png" },
+            { url: "https://stay.mycloudatwork.com/auth/login/page", text: "X3", favicon: "https://stay.mycloudatwork.com/favicon.ico" },
+            { url: "https://stayonline3.mycimcloud.com/", text: "Worker Portal", favicon: "https://stayonline3.mycimcloud.com/gfx/cimcloud-favicon/favicon-32x32.png" },
+            { url: "https://extranet.websitepipeline.com/dashboard.asp", text: "Extranet", favicon: "https://extranet.websitepipeline.com/favicon.ico" },
+            { url: "https://www.google.com/", text: "Google", favicon: "https://www.google.com/favicon.ico" },
+            { url: "https://www.perplexity.ai/", text: "Perplexity", favicon: "https://www.perplexity.ai/favicon.ico" },
+            { url: "https://claude.ai/new", text: "Claude", favicon: "https://claude.ai/favicon.ico" },
+            { url: "https://chatgpt.com/", text: "ChatGPT", favicon: "https://chatgpt.com/favicon.ico" }
+        ];
+
+        function loadLinks() {
+            const links = JSON.parse(localStorage.getItem(quickLinksKey)) || defaultLinks;
+            renderLinks(links);
+        }
+
+        function renderLinks(links) {
+            const container = document.getElementById("quickLinksContainer");
+            container.innerHTML = "";
+            links.forEach((link, i) => {
+                const div = document.createElement("div");
+                div.className = "quick-link";
+                div.innerHTML = `
+          <div class="link-info">
+            <img src="${link.favicon || getFavicon(link.url)}" alt="icon" />
+            <a href="${link.url}" target="_blank">${link.text}</a>
+          </div>
+          <button class="delete-btn" onclick="deleteLink(${i})">✕</button>
+        `;
+                container.appendChild(div);
+            });
+        }
+
+        function getFavicon(url) {
+            try { return new URL(url).origin + "/favicon.ico"; }
+            catch { return "https://www.stayonline.com/favicon.ico"; }
+        }
+
+        function openModal() {
+            document.getElementById("linkModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("linkModal").style.display = "none";
+        }
+
+        function saveLink() {
+            const url = document.getElementById("linkUrl").value.trim();
+            const text = document.getElementById("linkText").value.trim();
+            const favicon = document.getElementById("linkFavicon").value.trim();
+            if (!url || !text) return alert("URL and Text are required.");
+            const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
+            links.push({ url, text, favicon });
+            localStorage.setItem(quickLinksKey, JSON.stringify(links));
+            closeModal(); renderLinks(links);
+        }
+
+        function deleteLink(index) {
+            const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
+            links.splice(index, 1);
+            localStorage.setItem(quickLinksKey, JSON.stringify(links));
+            renderLinks(links);
+        }
+
+        function searchSKU(skuOverride) {
+            const sku = skuOverride || document.getElementById("skuInput").value.trim();
+            if (sku) {
+                const url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(sku)})`;
+                window.open(url, "_blank");
+                saveRecentSearch(sku);
+            }
+        }
+
+
+        // Sticky Blocks
+        function createBlock(data = null) {
+            const block = document.createElement("div");
+            block.className = "block";
+            block.style.left = (data?.x || Math.random() * window.innerWidth * 0.6) + "px";
+            block.style.top = (data?.y || Math.random() * window.innerHeight * 0.6) + "px";
+
+            const title = document.createElement("div");
+            title.className = "block-title";
+            title.textContent = data?.title || "Title...";
+            title.contentEditable = true;
+            title.addEventListener("input", saveBlocks);
+            block.appendChild(title);
+
+            const content = document.createElement("div");
+            content.className = "block-content";
+            content.textContent = data?.content || "Content...";
+            content.contentEditable = true;
+            content.addEventListener("input", saveBlocks);
+            block.appendChild(content);
+
+            const deleteBtn = document.createElement("a");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.textContent = "X";
+            deleteBtn.style.marginRight = "10px";
+            deleteBtn.onclick = () => {
+                block.remove();
+                saveBlocks();
+            };
+            block.appendChild(deleteBtn);
+
+            const date = document.createElement("div");
+            date.className = "block-date";
+            date.textContent = "Created: " + (data?.created || new Date().toLocaleString());
+            block.appendChild(date);
+
+            document.body.appendChild(block);
+
+            block.onmousedown = function (e) {
+                if (e.target.tagName === "BUTTON" || e.target.className.includes("delete-btn")) return;
+                let offsetX = e.clientX - block.getBoundingClientRect().left;
+                let offsetY = e.clientY - block.getBoundingClientRect().top;
+                document.onmousemove = function (e) {
+                    block.style.left = e.clientX - offsetX + "px";
+                    block.style.top = e.clientY - offsetY + "px";
+                };
+                document.onmouseup = () => {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                    saveBlocks();
+                };
+            };
+        }
+
+
+        function saveBlocks() {
+            const blocks = [...document.querySelectorAll(".block")].map(b => ({
+                x: parseFloat(b.style.left),
+                y: parseFloat(b.style.top),
+                title: b.querySelector(".block-title").textContent,
+                content: b.querySelector(".block-content").textContent,
+                created: b.querySelector(".block-date").textContent.replace("Created: ", "")
+            }));
+            localStorage.setItem(blocksKey, JSON.stringify(blocks));
+        }
+
+        function loadBlocks() {
+            const blocks = JSON.parse(localStorage.getItem(blocksKey) || "[]");
+            blocks.forEach(createBlock);
+        }
+
+        window.onload = () => {
+            loadLinks();
+            loadBlocks();
+            renderRecentSearches();
+        };
+
+    </script>
+
+    <canvas id="butterflyCanvas"
+        style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;"></canvas>
+    <button id="toggleButterflies"
+        style="position:fixed;bottom:20px;right:20px;z-index:1000;padding:10px;border:none;border-radius:6px;background:#0069bb;color:white;cursor:pointer;">🦋
+        Butterflies: Off</button>
+
+</body>
+
+<script>
+    const butterflyCanvas = document.getElementById("butterflyCanvas");
+    const toggleBtn = document.getElementById("toggleButterflies");
+    const ctx = butterflyCanvas.getContext("2d");
+    butterflyCanvas.width = window.innerWidth;
+    butterflyCanvas.height = window.innerHeight;
+
+    let butterflies = [];
+    let animationFrame;
+    let isRunning = false;
+
+    function createButterflies(count) {
+        const emojis = ["🦋", "🦋", "🦋", "🦋"];
+        return Array.from({ length: count }, () => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2,
+            emoji: emojis[Math.floor(Math.random() * emojis.length)]
+        }));
+    }
+
+    function drawButterflies() {
+        ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
+        ctx.font = "24px serif";
+        for (const b of butterflies) {
+            ctx.fillText(b.emoji, b.x, b.y);
+            b.x += b.vx;
+            b.y += b.vy;
+
+            if (b.x < 0 || b.x > window.innerWidth) b.vx *= -1;
+            if (b.y < 0 || b.y > window.innerHeight) b.vy *= -1;
+        }
+        animationFrame = requestAnimationFrame(drawButterflies);
+    }
+
+    toggleBtn.addEventListener("click", () => {
+        if (isRunning) {
+            cancelAnimationFrame(animationFrame);
+            ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
+            toggleBtn.textContent = "🦋 Butterflies: Off";
+        } else {
+            butterflies = createButterflies(20);
+            drawButterflies();
+            toggleBtn.textContent = "🦋 Butterflies: On";
+        }
+        isRunning = !isRunning;
+    });
+
+    window.addEventListener("resize", () => {
+        butterflyCanvas.width = window.innerWidth;
+        butterflyCanvas.height = window.innerHeight;
+    });
+</script>
+
+</html>
