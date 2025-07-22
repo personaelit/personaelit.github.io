@@ -198,11 +198,11 @@
 </head>
 
 <body>
-    <h1>StayOnline SKU Search</h1>
+    <h1>Search</h1>
 
     <div class="search-box">
         <input type="text" id="skuInput" placeholder="Enter SKU..." autofocus />
-        <button onclick="searchSKU()">Search</button>
+        <button onclick="search()">Search</button>
     </div>
 
     <div id="controls">
@@ -251,19 +251,8 @@
         }
 
 
-        const defaultLinks = [
-            { url: "https://www.stayonline.com", text: "StayOnline", favicon: "https://d2qu3zjd0up66m.cloudfront.net/images/favicon-32x32.png" },
-            { url: "https://stay.mycloudatwork.com/auth/login/page", text: "X3", favicon: "https://stay.mycloudatwork.com/favicon.ico" },
-            { url: "https://stayonline3.mycimcloud.com/", text: "Worker Portal", favicon: "https://stayonline3.mycimcloud.com/gfx/cimcloud-favicon/favicon-32x32.png" },
-            { url: "https://extranet.websitepipeline.com/dashboard.asp", text: "Extranet", favicon: "https://extranet.websitepipeline.com/favicon.ico" },
-            { url: "https://www.google.com/", text: "Google", favicon: "https://www.google.com/favicon.ico" },
-            { url: "https://www.perplexity.ai/", text: "Perplexity", favicon: "https://www.perplexity.ai/favicon.ico" },
-            { url: "https://claude.ai/new", text: "Claude", favicon: "https://claude.ai/favicon.ico" },
-            { url: "https://chatgpt.com/", text: "ChatGPT", favicon: "https://chatgpt.com/favicon.ico" }
-        ];
-
         function loadLinks() {
-            const links = JSON.parse(localStorage.getItem(quickLinksKey)) || defaultLinks;
+            const links = JSON.parse(localStorage.getItem(quickLinksKey));
             renderLinks(links);
         }
 
@@ -317,12 +306,12 @@
             renderLinks(links);
         }
 
-        function searchSKU(skuOverride) {
-            const sku = skuOverride || document.getElementById("skuInput").value.trim();
-            if (sku) {
-                const url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(sku)})`;
-                window.open(url, "_blank");
-                saveRecentSearch(sku);
+        function search(skuOverride) {
+            const query = skuOverride || document.getElementById("skuInput").value.trim();
+            if (query) {
+            const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            window.open(url, "_blank");
+            saveRecentSearch(query);
             }
         }
 
