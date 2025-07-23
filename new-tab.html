@@ -201,7 +201,7 @@
     <h1>Search</h1>
 
     <div class="search-box">
-        <input type="text" id="skuInput" placeholder="Enter SKU..." autofocus />
+        <input type="text" id="search" placeholder="Query..." autofocus onkeydown="if(event.key==='Enter'){search();}" />
         <button onclick="search()">Search</button>
     </div>
 
@@ -245,8 +245,8 @@
                 return;
             }
 
-            container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(sku =>
-                `<a href="#" onclick="searchSKU('${sku}')">${sku}</a>`
+            container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(query =>
+                `<a href="#" onclick="search('${query}')">${query}</a>`
             ).join(" • ")}`;
         }
 
@@ -306,12 +306,20 @@
             renderLinks(links);
         }
 
-        function search(skuOverride) {
-            const query = skuOverride || document.getElementById("skuInput").value.trim();
+        function search(searchQuery) {
+            const query = searchQuery || document.getElementById("search").value.trim();
             if (query) {
-            const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            window.open(url, "_blank");
-            saveRecentSearch(query);
+                let url;
+                if (query.includes("!p ")) {
+                    url = `https://www.perplexity.ai/search?q=${encodeURIComponent(query.replace("!p ", "").trim())}`;
+                } else if (query.includes("!s")){
+                    url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(query.replace("!s ", "").trim())})`;
+                }
+                else {
+                    url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                }
+                saveRecentSearch(query);
+                window.location = url;
             }
         }
 
