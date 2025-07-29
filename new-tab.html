@@ -201,8 +201,8 @@
     <h1>Search</h1>
 
     <div class="search-box">
-        <input type="text" id="search" placeholder="Query..." autofocus onkeydown="if(event.key==='Enter'){search();}" />
-        <button onclick="search()">Search</button>
+        <input type="text" id="search" placeholder="Query..." autofocus onkeydown="if(event.key==='Enter'){execSearch();}" />
+        <button onclick="execSearch()">Search</button>
     </div>
 
     <div id="controls">
@@ -228,11 +228,11 @@
         const quickLinksKey = "quickLinks";
         const blocksKey = "stickyBlocks";
 
-        const searchKey = "recentSkus";
+        const searchKey = "recentSearches";
 
-        function saveRecentSearch(sku) {
+        function saveRecentSearch(query) {
             let history = JSON.parse(localStorage.getItem(searchKey)) || [];
-            history = [sku, ...history.filter(s => s !== sku)].slice(0, 10);
+            history = [query, ...history.filter(s => s !== query)].slice(0, 10);
             localStorage.setItem(searchKey, JSON.stringify(history));
             renderRecentSearches();
         }
@@ -246,7 +246,7 @@
             }
 
             container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(query =>
-                `<a href="#" onclick="search('${query}')">${query}</a>`
+                `<a href="#" onclick="execSearch('${query}')">${query}</a>`
             ).join(" • ")}`;
         }
 
@@ -306,7 +306,7 @@
             renderLinks(links);
         }
 
-        function search(searchQuery) {
+        function execSearch(searchQuery) {
             const query = searchQuery || document.getElementById("search").value.trim();
             if (query) {
                 let url;
@@ -318,8 +318,8 @@
                 else {
                     url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
                 }
-                saveRecentSearch(query);
                 window.location = url;
+                saveRecentSearch(query);
             }
         }
 
