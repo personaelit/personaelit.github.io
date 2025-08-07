@@ -1,21 +1,25 @@
 window.addEventListener('DOMContentLoaded', (event) => {
-    startColorTransition();
+    //startColorTransition();
     stylizeLinks();
     flagExternalLinks();
     activateSlidableCards();
-    getRippled();
-    blowItUp();
-    isItBorked();
-    lightsOut();
-    hereComesTheSun();
-    letItRain();
-    cloudsComeRollingIn();
+    //     getRippled();
+    //     blowItUp();
+    //     isItBorked();
+    //     lightsOut();
+    //     hereComesTheSun();
+    //     letItRain();
+    //     cloudsComeRollingIn();
     glitterRainbowSheen();
-    letItGrow();
-    launchRocket();
-    activateSpotlight();
-    activateRandomCanvasIfNeeded();
-    buyTheTicketTakeTheRide();
+    document.querySelectorAll('.zen-control').forEach(btn => {
+        btn.style.display = 'none';
+        btn.click();
+    });
+    //     letItGrow();
+    //     launchRocket();
+    //     activateSpotlight();
+    //activateRandomCanvasIfNeeded();
+    //     buyTheTicketTakeTheRide();
 });
 
 function activateSpotlight() {
@@ -161,6 +165,7 @@ function createToggleButton({ icon, className, localStorageKey, canvas }) {
     if (localStorage.getItem(localStorageKey) === 'enabled') {
         canvas.style.display = 'block';
     }
+
 }
 
 function buyTheTicketTakeTheRide() {
@@ -391,6 +396,10 @@ function glitterRainbowSheen() {
         localStorageKey: 'sheen-mode',
         canvas,
     });
+
+
+
+
 }
 
 function letItRain() {

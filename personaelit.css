@@ -16,7 +16,7 @@
 body {
     font-family: 'Lucida Console, Courier New', Courier, monospace;
     font-size: larger;
-    background-color: #f5f5f5;
+    background-color: #df9f9f;
     margin-bottom: 42px;
     overflow-x: hidden;
     min-height: 100vh;
@@ -37,7 +37,7 @@ aside {
     transform: rotate(2deg);
     padding: 11px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-
+    
 }
 
 header,
@@ -51,7 +51,7 @@ pre {
 
 ul,
 ol {
-
+    
     margin: 10px 42px;
 }
 
@@ -124,12 +124,12 @@ blockquote {
     }
 }
 
-
+/* 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 1s linear, color 1s linear;
-}
+} */
 
 a:not(.article a) {
     display: inline-block;
