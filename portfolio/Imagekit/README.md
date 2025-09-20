@@ -1,2 +1,0 @@
-# imagekit
-Basic Image Editing

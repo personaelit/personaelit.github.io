@@ -1,8 +1,0 @@
-/* src/GameBoard.css */
-.game-board {
-    display: flex;
-    flex-wrap: wrap;
-    width: 440px;
-    margin: 0 auto;
-  }
-  
