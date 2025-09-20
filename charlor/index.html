@@ -78,9 +78,13 @@
             /* background set inline to rgba(color, alpha) */
         }
 
+        /* Default (desktop/tablet) HUD at top-left */
         .hud {
             position: fixed;
-            inset: 10px auto auto 10px;
+            top: 10px;
+            left: 10px;
+            right: auto;
+            bottom: auto;
             background: rgba(20, 26, 33, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.08);
             padding: 8px 10px;
@@ -89,6 +93,30 @@
             backdrop-filter: blur(4px);
             pointer-events: none;
         }
+
+        /* Mobile: move HUD to bottom */
+        @media (max-width: 768px) {
+            .hud {
+                top: auto;
+                bottom: 10px;
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                border-radius: 12px 12px 0 0;
+                width: 95%;
+                /* span most of the width */
+                max-width: 480px;
+                /* cap on larger phones */
+                text-align: center;
+            }
+
+            .hud .row {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+        }
+
 
         .hud .row {
             display: flex;
