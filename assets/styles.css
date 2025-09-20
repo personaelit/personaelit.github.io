@@ -1,0 +1,697 @@
+html,
+body {
+    height: 90%;
+    margin: 0;
+    /* reset */
+    padding: 0;
+    /* reset */
+}
+
+html {
+    overflow-y: auto;
+    /* always evaluate vertical scrolling */
+    scrollbar-gutter: stable;
+    /* reserve space even if no scroll */
+}
+
+
+
+
+/* ensure 100% works everywhere */
+body {
+    display: flex;
+    flex-direction: column;
+    padding: 5%;
+}
+
+.loading {
+    opacity: .7;
+    font-style: italic;
+    padding: 1rem 0;
+}
+
+.nav a {
+    margin-right: 1rem;
+    text-decoration: none;
+}
+
+.nav a.active {
+    font-weight: 600;
+    border-bottom: 2px solid currentColor;
+}
+
+main {
+    flex: 1 0 auto;
+    padding: 1.25rem;
+
+}
+
+:root {
+    --if-blue: #0069bb;
+    --bg: #0b0f14;
+    --surface: #121823;
+    --text: #e6edf3;
+    --muted: #9aa4b2;
+    --square-bg: #000;
+
+}
+
+:root {
+    --bg-color: #0b0f14;
+}
+
+/* default */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg: #f7f9fc;
+        --surface: #ffffff;
+        --text: #111827;
+        --muted: #4b5563;
+        --square-bg: #000;
+    }
+}
+
+/* Explicit theme overrides — these WIN over the media query */
+:root[data-theme="dark"] {
+    --muted: #0069bb;
+    --bg: #0b0f14;
+    --surface: #121823;
+    --text: #e6edf3;
+    --muted: #9aa4b2;
+    --square-bg: #fff;
+}
+
+:root[data-theme="light"] {
+    --muted: #0069bb;
+    --bg: #f7f9fc;
+    --surface: #ffffff;
+    --text: #111827;
+    --muted: #4b5563;
+}
+
+/* (Optional) help native form controls match */
+:root {
+    color-scheme: light dark;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+
+/* Typography */
+body {
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+}
+
+.mono,
+code,
+kbd {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Background vibe */
+body {
+    background-color: var(--bg-color);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    /* width: min(1100px, 92vw);
+    margin: 0 auto; */
+}
+
+
+/* Header */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: saturate(120%) blur(8px);
+    background: color-mix(in hsl, var(--bg) 85%, transparent);
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+    padding: 0 1.25rem;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+}
+
+/* Brand */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.toggle-square {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: var(--square-bg);
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+/* Nav links */
+.nav-links {
+    display: flex;
+    align-items: center;
+}
+
+.nav-links a {
+    margin-left: 18px;
+    font-weight: 600;
+    opacity: .9;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.nav-links a:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.nav-links a.is-active {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 2px solid var(--muted);
+}
+
+/* Theme toggle */
+.theme-toggle {
+    margin-left: 14px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: transparent;
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.theme-toggle:focus {
+    outline: 2px solid rgba(0, 105, 187, .5);
+    outline-offset: 2px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .nav-links a {
+        margin-left: 12px;
+    }
+}
+
+/* FOOTER */
+.site-footer {
+    /* margin-top: auto; */
+    /* key line */
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding: 32px 0 48px;
+    color: var(--muted);
+    background: color-mix(in hsl, var(--bg) 85%, transparent);
+    font-size: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.foot-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 20px;
+}
+
+.foot-left strong {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mantra {
+    margin: 6px 0 10px;
+    font-size: 13px;
+
+}
+
+.contact a {
+    color: var(--muted);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.contact a:hover {
+    text-decoration: underline;
+}
+
+.foot-right {
+    text-align: right;
+}
+
+.social {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.social a {
+    color: var(--text);
+    opacity: 0.85;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.social a:hover {
+    opacity: 1;
+    color: var(--muted);
+}
+
+.copyright {
+    font-size: 12px;
+
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .foot-grid {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+
+    .foot-right {
+        text-align: left;
+    }
+}
+
+#main-content {
+    background: color-mix(in hsl, var(--bg) 75%, transparent);
+}
+
+.btn {
+    display: inline-block;
+    color: var(--bg);
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out;
+    border: 2px solid var(--muted);
+}
+
+.btn:hover {
+
+    text-decoration: none;
+    color: var(--muted);
+}
+
+.btn-primary {
+    background: var(--surface);
+    color: var(--muted);
+}
+
+.btn-secondary {
+    color: var(--muted);
+    background: var(--surface);
+
+}
+
+.info {
+    background-color: var(--surface);
+    border-left: 4px solid var(--if-blue);
+    padding: 12px 16px;
+    margin: 20px 0;
+    color: var(--text);
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    color: var(--muted);
+    border-radius: 5px;
+    background-color: var(--bg);
+    padding: 4px 8px;
+    opacity: 0.8;
+}
+
+/* Hamburger button */
+.nav-toggle {
+    display: none;
+    border: 1px solid rgba(255, 255, 255, .15);
+    background: transparent;
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.nav-toggle:focus-visible {
+    outline: 2px solid rgba(0, 105, 187, .5);
+    outline-offset: 2px;
+}
+
+.nav-toggle-box {
+    display: inline-block;
+    width: 22px;
+    height: 16px;
+    position: relative;
+}
+
+.nav-toggle-bar,
+.nav-toggle-bar::before,
+.nav-toggle-bar::after {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: currentColor;
+    content: "";
+    transition: transform .2s ease, opacity .2s ease;
+}
+
+.nav-toggle-bar {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.nav-toggle-bar::before {
+    top: -6px;
+}
+
+.nav-toggle-bar::after {
+    top: 6px;
+}
+
+/* Mobile layout */
+@media (max-width: 780px) {
+    .nav {
+        gap: 10px;
+    }
+
+    .nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Collapse the links by default */
+    .nav-links {
+        display: block;
+        /* allow block flow when shown */
+        width: 100%;
+        background: color-mix(in hsl, var(--bg) 92%, transparent);
+        border: 1px solid rgba(255, 255, 255, .08);
+
+        padding: 10px;
+    }
+
+    /* Hidden state uses [hidden] attribute */
+    .nav-links[hidden] {
+        display: none !important;
+    }
+
+    .nav-links a,
+    .nav-links .theme-toggle {
+        display: block;
+        padding: 10px 8px;
+        margin: 0;
+        /* override desktop spacing */
+        width: 100%;
+        text-align: left;
+    }
+
+    /* When menu is open, animate to "X" */
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar::before {
+        transform: rotate(-90deg) translateX(-6px);
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar::after {
+        opacity: 0;
+    }
+}
+
+
+/* --- Off-canvas mobile nav --- */
+@media (max-width: 780px) {
+
+    /* Keep header compact */
+    .site-header .nav {
+        align-items: center;
+    }
+
+    /* Drawer panel */
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(320px, 86vw);
+        padding: 16px;
+        background: color-mix(in hsl, var(--bg) 96%, transparent);
+        border-left: 1px solid rgba(255, 255, 255, .08);
+        box-shadow: -16px 0 32px rgba(0, 0, 0, .35);
+        z-index: 1000;
+
+        /* slide-in baseline (hidden state uses transform off-screen) */
+        transform: translateX(100%);
+        transition: transform .25s ease;
+    }
+
+    /* Optional: page scrim (click to close) using a pseudo element */
+    .nav-links::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        /* full viewport */
+        opacity: 0;
+        pointer-events: none;
+        z-index: -1;
+        /* behind the panel */
+        transition: opacity .2s ease;
+    }
+
+    /* When the button says expanded=true, reveal the drawer */
+    .nav-toggle[aria-expanded="true"]+.nav-links {
+        transform: translateX(0);
+    }
+
+    .nav-toggle[aria-expanded="true"]+.nav-links::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* We no longer need hidden to collapse header height; it just controls render */
+    .nav-links[hidden] {
+        display: block;
+    }
+
+    /* allow it to exist off-canvas when closed */
+
+    /* Stack links nicely inside drawer */
+    .nav-links a,
+    .nav-links .theme-toggle {
+        display: block;
+        width: 100%;
+        padding: 12px 8px;
+        margin: 0;
+        text-align: left;
+    }
+
+    /* Hamburger visible on mobile */
+    .nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 1001;
+        /* above scrim */
+    }
+
+    /* Reduce motion preference */
+    @media (prefers-reduced-motion: reduce) {
+        .nav-links {
+            transition: none;
+        }
+
+        .nav-links::before {
+            transition: none;
+        }
+    }
+}
+
+/* Optional: prevent body scroll when menu open */
+body[data-menu-open="true"] {
+    overflow: hidden;
+}
+
+/* Mobile: center the headshot in flow */
+.headshot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.headshot img {
+    display: block;
+    width: clamp(160px, 28vw, 260px);
+    height: auto;
+    border-radius: 12px;
+    /* optional polish */
+}
+
+/* Desktop: float to upper-right of the text */
+@media (min-width: 781px) {
+    .headshot {
+        display: block;
+        /* reset the flex */
+        float: right;
+        margin: 0 0 16px 24px;
+        /* space from text (left & bottom) */
+    }
+
+    /* Clear the float after the section to keep layout intact */
+    .about::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}
+
+
+/* Pill lists */
+.pills {
+    max-width: 600px;
+    list-style: none;
+    margin: 16px 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    /* spacing between pills */
+}
+
+.pills li {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--muted);
+    white-space: nowrap;
+    transition: background-color .2s ease, color .2s ease;
+}
+
+.pills li:hover {
+    background-color: var(--surface);
+    color: var(--muted);
+    border-color: var(--if-blue);
+    cursor: default;
+}
+
+
+
+.headshot {
+    display: flex;
+    justify-content: center;
+    /* center image on mobile */
+    margin: 16px 0;
+}
+
+.headshot img {
+    display: block;
+    max-width: 200px;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    /* optional */
+}
+
+/* Desktop: float left with spacing */
+@media (min-width: 781px) {
+    .headshot {
+        float: left;
+        display: block;
+        /* reset flex */
+        margin: 0 24px 16px 0;
+        /* right & bottom spacing from text */
+    }
+}
+
+/* Icon paragraph wrapper */
+.methodology .with-icon {
+    position: relative;
+    padding-left: 80px;
+    /* space for icon */
+    padding-top: 20px;
+    margin-bottom: 1.5rem;
+}
+
+/* Shared icon style */
+.methodology .with-icon::before {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 48px;
+    color: var(--muted);
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+}
+
+/* Specific icons */
+.methodology .handshake::before {
+    content: "\f2b5";
+}
+
+/* handshake */
+.methodology .bolt::before {
+    content: "\f0e7";
+}
+
+/* bolt */
+.methodology .brain::before {
+    content: "\f5dc";
+}
+
+/* brain */
+
+.external::after {
+    font-family: "Font Awesome 6 Free";
+    content: "\f0ac";
+    font-weight: 900;
+    margin-left: 4px;
+}
+
+.mailto::after {
+    font-family: "Font Awesome 6 Free";
+    content: "\f0e0";
+    font-weight: 900;
+    margin-left: 4px;
+}
