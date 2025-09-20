@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ZPG Grid Globs</title>
+    <style>
+        :root {
+            --bg: #0b0f14;
+            --fg: #e6edf3;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            overflow: hidden;
+            /* pre is exactly viewport; no native scroll */
+        }
+
+        /* Viewport-sized pre (acts as the fixed grid plane) */
+        pre#world {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            white-space: pre;
+            /* keep line breaks, but we position chars absolutely */
+            user-select: none;
+        }
+
+        .char {
+            position: absolute;
+            /* snapped to cell */
+            line-height: 1;
+            /* we measure real line-height below */
+            pointer-events: none;
+            font-weight: 600;
+        }
+
+        /* “disabled” cells get a faint background veil */
+        .disabled-veil {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.06);
+            /* filled by width/height in JS to match a cell */
+        }
+
+        /* colored-disables tint the cell toward the winning color */
+        .tint-veil {
+            position: absolute;
+            pointer-events: none;
+            /* background set inline to rgba(color, alpha) */
+        }
+
+        .hud {
+            position: fixed;
+            inset: 10px auto auto 10px;
+            background: rgba(20, 26, 33, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+
+        .hud .row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .hud strong {
+            font-weight: 700;
+        }
+
+        .about-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(20, 26, 33, 0.7);
+            color: #e6edf3;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            display: grid;
+            place-items: center;
+        }
+
+        .about-btn:hover {
+            background: rgba(30, 36, 43, 0.8);
+        }
+
+        .modal[hidden] {
+            display: none;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .modal-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(720px, 92vw);
+            max-height: 80vh;
+            overflow: auto;
+            background: rgba(20, 26, 33, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header,
+        .modal-footer {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: none;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-body {
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .modal-close,
+        .modal-close-btn {
+            background: transparent;
+            color: #e6edf3;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 4px 10px;
+        }
+
+        .modal-close {
+            border: none;
+            font-size: 22px;
+            padding: 0 8px;
+        }
+
+        .modal-close:hover,
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+    </style>
+</head>
+
+<body>
+    <pre id="world"></pre>
+    <div class="hud">
+        <div class="row">
+            <div><strong>Rows×Cols:</strong> <span id="rc">–</span></div>
+            <div><strong>Population:</strong> <span id="pop">0</span></div>
+            <div><strong>Collisions:</strong> <span id="col">0</span></div>
+            <div><strong>Char-matches:</strong> <span id="cm">0</span></div>
+            <div><strong>Color-matches:</strong> <span id="km">0</span></div>
+        </div>
+    </div>
+    <!-- Info button -->
+    <button id="aboutBtn" class="about-btn" aria-label="About Charlor" title="About Charlor">ⓘ</button>
+
+    <!-- About modal -->
+    <div id="aboutModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+        <div class="modal-backdrop" data-close></div>
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2 id="aboutTitle">About Charlor</h2>
+                <button class="modal-close" aria-label="Close" data-close>&times;</button>
+            </header>
+            <div class="modal-body">
+                <p><strong>Charlor</strong> = <em>Char</em> + <em>Color</em>. A zero-player grid toy where colored
+                    characters (“globs”) write into (row, column) cells.</p>
+                <ul>
+                    <li><strong>Char match:</strong> If an incoming char hits the same char in a cell, that cell’s
+                        neighbors are <em>cleared</em> and <em>disabled</em>.</li>
+                    <li><strong>Color match:</strong> If the incoming color is near the existing color, the center +
+                        neighbors are <em>tinted</em> and <em>disabled</em>.</li>
+                    <li><strong>4 vs 8 neighbors:</strong> Toggle which neighbor function you call to change spread.
+                    </li>
+                    <li><strong>Hard Block:</strong> When ON, disabled cells can never accept writes (feature flag in
+                        the HUD or press <kbd>B</kbd>).</li>
+                </ul>
+                <p>Made to drift toward “heat death” (fully disabled board) unless you add decay/regen mechanics.</p>
+                <p style="opacity:.7">Tip: bump <code>BASE_FONT_PX</code> to go big; tweak color tolerance in
+                    <code>colorNear()</code> for more/less color matches.
+                </p>
+            </div>
+            <footer class="modal-footer">
+                <button class="modal-close-btn" data-close>Close</button>
+            </footer>
+        </div>
+    </div>
+
+
+    <script>
+        (() => {
+            const world = document.getElementById('world');
+            const HUD = {
+                rc: document.getElementById('rc'),
+                pop: document.getElementById('pop'),
+                col: document.getElementById('col'),
+                cm: document.getElementById('cm'),
+                km: document.getElementById('km'),
+            };
+
+            // --- Feature flags ---
+            const FLAGS = {
+                hardBlock: false, // false = current behavior; true = updated blocked Set behavior
+            };
+
+            // Persist & load from localStorage (optional)
+            try {
+                const saved = localStorage.getItem('zpg.flags');
+                if (saved) Object.assign(FLAGS, JSON.parse(saved));
+            } catch { }
+            function saveFlags() {
+                try { localStorage.setItem('zpg.flags', JSON.stringify(FLAGS)); } catch { }
+            }
+
+            // Mini toggle in HUD
+            const hudToggle = document.createElement('div');
+            hudToggle.style.marginTop = '6px';
+            hudToggle.innerHTML = `
+  <strong>Hard Block:</strong>
+  <span id="flagHard" style="padding:2px 6px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer;">
+    ${FLAGS.hardBlock ? 'ON' : 'OFF'}
+  </span>
+  <span style="opacity:.7;margin-left:8px">(press “B” to toggle)</span>
+`;
+            document.querySelector('.hud').appendChild(hudToggle);
+            document.getElementById('flagHard').onclick = () => {
+                FLAGS.hardBlock = !FLAGS.hardBlock;
+                document.getElementById('flagHard').textContent = FLAGS.hardBlock ? 'ON' : 'OFF';
+                saveFlags();
+            };
+            // Keyboard shortcut
+            window.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'b') {
+                    document.getElementById('flagHard').click();
+                }
+            });
+
+
+            // ===== Metrics: measure character cell size for current font/size =====
+            const BASE_FONT_PX = 32; // big. turn the dial here.
+            world.style.fontSize = BASE_FONT_PX + 'px';
+
+            function measureCell() {
+                const probe = document.createElement('span');
+                probe.textContent = 'M';
+                probe.style.visibility = 'hidden';
+                probe.style.position = 'absolute';
+                probe.style.left = '0';
+                probe.style.top = '0';
+                world.appendChild(probe);
+                const r = probe.getBoundingClientRect();
+                probe.remove();
+                // Height can be slightly larger than font-size due to metrics; lock to rect
+                return { cw: r.width, ch: r.height };
+            }
+
+            let { cw, ch } = measureCell();
+            let ROWS = Math.max(1, Math.floor(world.clientHeight / ch));
+            let COLS = Math.max(1, Math.floor(world.clientWidth / cw));
+            HUD.rc.textContent = `${ROWS}×${COLS}`;
+
+            function cellToXY(row, col) { return { x: col * cw, y: row * ch }; }
+
+            // ===== Grid state (sparse) =====
+            // key = "r,c" -> { ch, color, el, disabled }
+            const grid = new Map();
+            // Separate map for disabled veils so we can paint cells without text
+            const disabledVeils = new Map();
+            const tintVeils = new Map();
+            const blocked = new Set(); // only consulted when FLAGS.hardBlock === true
+
+
+            let population = 0, collisions = 0, charMatches = 0, colorMatches = 0;
+            function updateHUD() {
+                HUD.pop.textContent = population;
+                HUD.col.textContent = collisions;
+                HUD.cm.textContent = charMatches;
+                HUD.km.textContent = colorMatches;
+            }
+
+            // ===== Utilities =====
+            const rand = (min, max) => Math.random() * (max - min) + min;
+            const rint = (min, max) => Math.floor(rand(min, max + 1));
+            const choice = arr => arr[Math.floor(Math.random() * arr.length)];
+            const hsl = (h, s, l) => `hsl(${h} ${s}% ${l}%)`;
+
+            const syll = ["ba", "be", "bi", "bo", "bu", "za", "ze", "zi", "zo", "zu", "ka", "ke", "ki", "ko", "ku", "ra", "re", "ri", "ro", "ru", "xa", "xe", "xi", "xo", "xu", "ta", "te", "ti", "to", "tu", "na", "ne", "ni", "no", "nu", "pla", "plo", "gli", "tra", "zor", "vex", "kry", "qu", "th"];
+            const symbols = "!@#$%^&*()[]{}<>+=~";
+            function wordish(len) {
+                let out = "";
+                while (out.length < len) {
+                    if (Math.random() < 0.15) out += choice(symbols);
+                    else out += choice(syll);
+                    if (Math.random() < 0.2) out += choice(["", "-", "'"]);
+                }
+                return out.slice(0, len);
+            }
+
+            function randColor() {
+                return { h: rint(0, 359), s: rint(65, 95), l: rint(50, 75) }; // store numbers
+            }
+            function cssHSL(c) { return `hsl(${c.h} ${c.s}% ${c.l}%)`; }
+            function hueDelta(a, b) {
+                const d = Math.abs(a - b);
+                return Math.min(d, 360 - d);
+            }
+            function colorNear(a, b, tol = { h: 14, s: 20, l: 20 }) {
+                return hueDelta(a.h, b.h) <= tol.h &&
+                    Math.abs(a.s - b.s) <= tol.s &&
+                    Math.abs(a.l - b.l) <= tol.l;
+            }
+
+
+            function key(row, col) { return `${row},${col}`; }
+            function inBounds(row, col) { return row >= 0 && row < ROWS && col >= 0 && col < COLS; }
+
+            function ensureVeil(map, row, col, className) {
+                const k = key(row, col);
+                if (map.has(k)) return map.get(k);
+                const veil = document.createElement('div');
+                veil.className = className;
+                const { x, y } = cellToXY(row, col);
+                veil.style.left = x + 'px';
+                veil.style.top = y + 'px';
+                veil.style.width = cw + 'px';
+                veil.style.height = ch + 'px';
+                world.appendChild(veil);
+                map.set(k, veil);
+                return veil;
+            }
+
+            function disableCell(row, col) {
+                const k = key(row, col);
+
+                // Mark disabled if hard blocking
+                if (FLAGS.hardBlock) blocked.add(k);
+
+                // remove any existing char (works for both modes)
+                const cell = grid.get(k);
+                if (cell) {
+                    cell.el.remove();
+                    grid.delete(k);
+                    population--; updateHUD();
+                }
+
+                return ensureVeil(disabledVeils, row, col, 'disabled-veil');
+            }
+
+            function tintAndDisableCell(row, col, colorObj) {
+                disableCell(row, col);
+                const veil = ensureVeil(tintVeils, row, col, 'tint-veil');
+                veil.style.background = cssHSL(colorObj);
+                veil.style.opacity = '0.42';
+            }
+
+
+
+
+            const neighbors4 = (r, c) => [
+                [r - 1, c],
+                [r + 1, c],
+                [r, c - 1],
+                [r, c + 1],
+            ].filter(([rr, cc]) => inBounds(rr, cc));
+
+            function neighbors8(r, c) {
+                return [
+                    [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
+                    [r, c - 1], [r, c + 1],
+                    [r + 1, c - 1], [r + 1, c], [r + 1, c + 1],
+                ].filter(([rr, cc]) => inBounds(rr, cc));
+            }
+
+            // ===== Writing logic =====
+            function placeCharAt(row, col, ch, colorObj) {
+                if (!inBounds(row, col)) return false;
+                const k = key(row, col);
+
+                // NEW: hard block check (flagged)
+                if (FLAGS.hardBlock && blocked.has(k)) return false;
+
+                // Block if disabled
+                if (grid.get(k)?.disabled) return false;
+
+                if (grid.has(k)) {
+                    collisions++;
+                    const existing = grid.get(k);
+                    const charMatch = existing.ch === ch;
+                    const colorMatch = colorNear(existing.color, colorObj);
+
+                    if (colorMatch) {
+                        // Center + neighbors: tint + disable (clears any chars)
+                        tintAndDisableCell(row, col, colorObj);
+                        for (const [rr, cc] of neighbors8(row, col)) {
+                            tintAndDisableCell(rr, cc, colorObj);
+                        }
+                        colorMatches++;
+                    } else if (charMatch) {
+                        // Center + neighbors: plain disable (clears any chars)
+                        disableCell(row, col);
+                        for (const [rr, cc] of neighbors8(row, col)) {
+                            disableCell(rr, cc);
+                        }
+                        charMatches++;
+                    }
+
+                    updateHUD();
+                    return false; // don't overwrite collided cell
+                }
+
+
+                const el = document.createElement('span');
+                el.className = 'char';
+                el.textContent = ch;
+                el.style.color = cssHSL(colorObj);
+
+                const { x, y } = cellToXY(row, col);
+                el.style.left = x + 'px';
+                el.style.top = y + 'px';
+                world.appendChild(el);
+
+                grid.set(k, { ch, color: colorObj, el, disabled: false }); // store numeric color
+                population++;
+                updateHUD();
+                return true;
+            }
+
+
+            function placeGlob(startRow, startCol, lines, cols) {
+                for (let r = 0; r < lines; r++) {
+                    const text = wordish(rint(cols - 2, cols + 2));
+                    for (let c = 0; c < text.length; c++) {
+                        const ch = text[c];
+                        const colorObj = randColor();
+                        placeCharAt(startRow + r, startCol + c, ch, colorObj);
+                    }
+                }
+            }
+
+            // ===== Spawning behavior =====
+            const CONFIG = {
+                spawnEveryMs: 350,
+                linesMin: 2,
+                linesMax: 6,
+                colsBase: 12
+            };
+
+            function spawnRandomGlob() {
+                const lines = rint(CONFIG.linesMin, CONFIG.linesMax);
+                const cols = CONFIG.colsBase + rint(-3, 4);
+                const maxRow = Math.max(0, ROWS - lines);
+                const maxCol = Math.max(0, COLS - cols);
+                const row = rint(0, maxRow);
+                const col = rint(0, maxCol);
+                placeGlob(row, col, lines, cols);
+            }
+
+            // Initial seeds
+            for (let i = 0; i < 40; i++) spawnRandomGlob();
+            setInterval(spawnRandomGlob, CONFIG.spawnEveryMs);
+
+            // ===== Handle resize: recompute metrics and keep existing pixels pinned =====
+            window.addEventListener('resize', () => {
+                // Re-measure
+                ({ cw, ch } = measureCell());
+                const newROWS = Math.max(1, Math.floor(world.clientHeight / ch));
+                const newCOLS = Math.max(1, Math.floor(world.clientWidth / cw));
+                ROWS = newROWS; COLS = newCOLS;
+                HUD.rc.textContent = `${ROWS}×${COLS}`;
+
+                // Reposition all elements to the new cell geometry
+                for (const [k, cell] of grid.entries()) {
+                    const [r, c] = k.split(',').map(Number);
+                    const { x, y } = cellToXY(r, c);
+                    cell.el.style.left = x + 'px';
+                    cell.el.style.top = y + 'px';
+                }
+                for (const [k, veil] of disabledVeils.entries()) {
+                    const [r, c] = k.split(',').map(Number);
+                    const { x, y } = cellToXY(r, c);
+                    veil.style.left = x + 'px';
+                    veil.style.top = y + 'px';
+                    veil.style.width = cw + 'px';
+                    veil.style.height = ch + 'px';
+                }
+                for (const [k, veil] of tintVeils.entries()) {
+                    const [r, c] = k.split(',').map(Number);
+                    const { x, y } = cellToXY(r, c);
+                    veil.style.left = x + 'px';
+                    veil.style.top = y + 'px';
+                    veil.style.width = cw + 'px';
+                    veil.style.height = ch + 'px';
+                }
+            });
+
+            // About modal wiring
+            const aboutBtn = document.getElementById('aboutBtn');
+            const aboutModal = document.getElementById('aboutModal');
+            let lastFocus = null;
+
+            function openAbout() {
+                lastFocus = document.activeElement;
+                aboutModal.hidden = false;
+                // focus first close button for accessibility
+                const focusable = aboutModal.querySelector('[data-close]') || aboutModal;
+                focusable.focus();
+            }
+
+            function closeAbout() {
+                aboutModal.hidden = true;
+                if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+            }
+
+            aboutBtn.addEventListener('click', openAbout);
+            aboutModal.addEventListener('click', (e) => {
+                if (e.target.hasAttribute('data-close') || e.target.classList.contains('modal-backdrop')) {
+                    closeAbout();
+                }
+            });
+            window.addEventListener('keydown', (e) => {
+                if (!aboutModal.hidden && e.key === 'Escape') closeAbout();
+            });
+
+            // Optional: “?” hotkey opens About
+            window.addEventListener('keydown', (e) => {
+                if (e.key === '?' || (e.shiftKey && e.key === '/')) openAbout();
+            });
+
+
+        })();
+    </script>
+</body>
+
+</html>
