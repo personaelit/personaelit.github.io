@@ -174,6 +174,30 @@
         .modal-close-btn:hover {
             background: rgba(255, 255, 255, 0.06);
         }
+
+        .settings-group {
+            display: grid;
+            gap: 10px;
+        }
+
+        .setting {
+            display: grid;
+            gap: 6px;
+        }
+
+        .setting-label {
+            opacity: .9;
+        }
+
+        .setting-control {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        #fontSizeRange {
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -210,12 +234,36 @@
                     <li><strong>4 vs 8 neighbors:</strong> Toggle which neighbor function you call to change spread.
                     </li>
                     <li><strong>Hard Block:</strong> When ON, disabled cells can never accept writes (feature flag in
-                        the HUD or press <kbd>B</kbd>).</li>
+                        the HUD or press).</li>
                 </ul>
-                <p>Made to drift toward “heat death” (fully disabled board) unless you add decay/regen mechanics.</p>
-                <p style="opacity:.7">Tip: bump <code>BASE_FONT_PX</code> to go big; tweak color tolerance in
-                    <code>colorNear()</code> for more/less color matches.
-                </p>
+                
+                <hr style="border-color: rgba(255,255,255,.1); margin: 12px 0;">
+                <h3 style="margin:6px 0 8px; font-size: 15px;">Settings</h3>
+
+                <div class="settings-group">
+                    <div class="setting">
+                        <label class="setting-label">Neighborhood</label>
+                        <div class="setting-control">
+                            <label><input type="radio" name="neighborMode" value="N4"> 4-neighbors</label>
+                            <label><input type="radio" name="neighborMode" value="N8"> 8-neighbors</label>
+                        </div>
+                    </div>
+
+                    <div class="setting">
+                        <label class="setting-label" for="fontSizeRange">Font Size: <span id="fontSizeValue"></span>
+                            px</label>
+                        <input id="fontSizeRange" type="range" min="16" max="96" step="1" />
+                    </div>
+
+                    <div class="setting">
+                        <label class="setting-label">Hard Block</label>
+                        <div class="setting-control">
+                            <label><input type="checkbox" id="hardBlockCheck"> Disable cells permanently</label>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
             <footer class="modal-footer">
                 <button class="modal-close-btn" data-close>Close</button>
@@ -235,42 +283,39 @@
                 km: document.getElementById('km'),
             };
 
-            // --- Feature flags ---
+            // --- Feature flags & settings ---
             const FLAGS = {
-                hardBlock: false, // false = current behavior; true = updated blocked Set behavior
+                hardBlock: false,      // existing flag from earlier step
+                neighborhood: 'N4',    // 'N4' or 'N8'
+            };
+            const SETTINGS = {
+                fontPx: 32,            // live font size for the whole grid
             };
 
-            // Persist & load from localStorage (optional)
+
+
+
+
+            // Load persisted
             try {
-                const saved = localStorage.getItem('zpg.flags');
-                if (saved) Object.assign(FLAGS, JSON.parse(saved));
+                const f = JSON.parse(localStorage.getItem('zpg.flags') || '{}');
+                const s = JSON.parse(localStorage.getItem('zpg.settings') || '{}');
+                Object.assign(FLAGS, f);
+                Object.assign(SETTINGS, s);
             } catch { }
-            function saveFlags() {
-                try { localStorage.setItem('zpg.flags', JSON.stringify(FLAGS)); } catch { }
-            }
+
+            function saveFlags() { try { localStorage.setItem('zpg.flags', JSON.stringify(FLAGS)); } catch { } }
+            function saveSettings() { try { localStorage.setItem('zpg.settings', JSON.stringify(SETTINGS)); } catch { } }
+
+            // Apply font size to world
+            world.style.fontSize = SETTINGS.fontPx + 'px';
+
 
             // Mini toggle in HUD
             const hudToggle = document.createElement('div');
             hudToggle.style.marginTop = '6px';
-            hudToggle.innerHTML = `
-  <strong>Hard Block:</strong>
-  <span id="flagHard" style="padding:2px 6px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer;">
-    ${FLAGS.hardBlock ? 'ON' : 'OFF'}
-  </span>
-  <span style="opacity:.7;margin-left:8px">(press “B” to toggle)</span>
-`;
-            document.querySelector('.hud').appendChild(hudToggle);
-            document.getElementById('flagHard').onclick = () => {
-                FLAGS.hardBlock = !FLAGS.hardBlock;
-                document.getElementById('flagHard').textContent = FLAGS.hardBlock ? 'ON' : 'OFF';
-                saveFlags();
-            };
-            // Keyboard shortcut
-            window.addEventListener('keydown', (e) => {
-                if (e.key.toLowerCase() === 'b') {
-                    document.getElementById('flagHard').click();
-                }
-            });
+
+
 
 
             // ===== Metrics: measure character cell size for current font/size =====
@@ -393,19 +438,20 @@
 
 
 
-            const neighbors4 = (r, c) => [
-                [r - 1, c],
-                [r + 1, c],
-                [r, c - 1],
-                [r, c + 1],
-            ].filter(([rr, cc]) => inBounds(rr, cc));
-
+            function neighbors4(r, c) {
+                return [
+                    [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1],
+                ].filter(([rr, cc]) => inBounds(rr, cc));
+            }
             function neighbors8(r, c) {
                 return [
                     [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
                     [r, c - 1], [r, c + 1],
                     [r + 1, c - 1], [r + 1, c], [r + 1, c + 1],
                 ].filter(([rr, cc]) => inBounds(rr, cc));
+            }
+            function neighbors(r, c) {
+                return FLAGS.neighborhood === 'N8' ? neighbors8(r, c) : neighbors4(r, c);
             }
 
             // ===== Writing logic =====
@@ -428,14 +474,14 @@
                     if (colorMatch) {
                         // Center + neighbors: tint + disable (clears any chars)
                         tintAndDisableCell(row, col, colorObj);
-                        for (const [rr, cc] of neighbors8(row, col)) {
+                        for (const [rr, cc] of neighbors(row, col)) {
                             tintAndDisableCell(rr, cc, colorObj);
                         }
                         colorMatches++;
                     } else if (charMatch) {
                         // Center + neighbors: plain disable (clears any chars)
                         disableCell(row, col);
-                        for (const [rr, cc] of neighbors8(row, col)) {
+                        for (const [rr, cc] of neighbors(row, col)) {
                             disableCell(rr, cc);
                         }
                         charMatches++;
@@ -497,38 +543,39 @@
             setInterval(spawnRandomGlob, CONFIG.spawnEveryMs);
 
             // ===== Handle resize: recompute metrics and keep existing pixels pinned =====
-            window.addEventListener('resize', () => {
-                // Re-measure
-                ({ cw, ch } = measureCell());
-                const newROWS = Math.max(1, Math.floor(world.clientHeight / ch));
-                const newCOLS = Math.max(1, Math.floor(world.clientWidth / cw));
-                ROWS = newROWS; COLS = newCOLS;
-                HUD.rc.textContent = `${ROWS}×${COLS}`;
+            window.addEventListener('resize', remeasureAndRelayout);
 
-                // Reposition all elements to the new cell geometry
+
+            function remeasureAndRelayout() {
+                // re-measure cell
+                ({ cw, ch } = measureCell());
+                ROWS = Math.max(1, Math.floor(world.clientHeight / ch));
+                COLS = Math.max(1, Math.floor(world.clientWidth / cw));
+                HUD.rc.textContent = `${ROWS}×${COLS}`;
+                //remeasureAndRelayout();
+
+                // reposition existing chars
                 for (const [k, cell] of grid.entries()) {
                     const [r, c] = k.split(',').map(Number);
                     const { x, y } = cellToXY(r, c);
                     cell.el.style.left = x + 'px';
                     cell.el.style.top = y + 'px';
                 }
+                // resize/reposition veils
                 for (const [k, veil] of disabledVeils.entries()) {
                     const [r, c] = k.split(',').map(Number);
                     const { x, y } = cellToXY(r, c);
-                    veil.style.left = x + 'px';
-                    veil.style.top = y + 'px';
-                    veil.style.width = cw + 'px';
-                    veil.style.height = ch + 'px';
+                    veil.style.left = x + 'px'; veil.style.top = y + 'px';
+                    veil.style.width = cw + 'px'; veil.style.height = ch + 'px';
                 }
                 for (const [k, veil] of tintVeils.entries()) {
                     const [r, c] = k.split(',').map(Number);
                     const { x, y } = cellToXY(r, c);
-                    veil.style.left = x + 'px';
-                    veil.style.top = y + 'px';
-                    veil.style.width = cw + 'px';
-                    veil.style.height = ch + 'px';
+                    veil.style.left = x + 'px'; veil.style.top = y + 'px';
+                    veil.style.width = cw + 'px'; veil.style.height = ch + 'px';
                 }
-            });
+            }
+
 
             // About modal wiring
             const aboutBtn = document.getElementById('aboutBtn');
@@ -562,6 +609,56 @@
             window.addEventListener('keydown', (e) => {
                 if (e.key === '?' || (e.shiftKey && e.key === '/')) openAbout();
             });
+
+            // --- Settings controls ---
+            const neighborRadios = Array.from(document.querySelectorAll('input[name="neighborMode"]'));
+            const fontRange = document.getElementById('fontSizeRange');
+            const fontValue = document.getElementById('fontSizeValue');
+
+            // init UI from flags/settings
+            neighborRadios.forEach(r => r.checked = (r.value === FLAGS.neighborhood));
+            fontRange.value = SETTINGS.fontPx;
+            fontValue.textContent = SETTINGS.fontPx;
+
+            // events
+            neighborRadios.forEach(r => {
+                r.addEventListener('change', () => {
+                    if (!r.checked) return;
+                    FLAGS.neighborhood = r.value; // 'N4' or 'N8'
+                    saveFlags();
+                });
+            });
+
+            // Hard Block checkbox
+            const hardBlockCheck = document.getElementById('hardBlockCheck');
+            hardBlockCheck.checked = FLAGS.hardBlock;
+
+            hardBlockCheck.addEventListener('change', () => {
+                FLAGS.hardBlock = hardBlockCheck.checked;
+                saveFlags();
+            });
+
+            const modeBadge = document.createElement('div');
+            modeBadge.style.marginTop = '6px';
+            modeBadge.innerHTML = `<strong>Neighbors:</strong> <span id="neighborBadge">${FLAGS.neighborhood}</span>`;
+            document.querySelector('.hud').appendChild(modeBadge);
+
+            // keep it in sync when radios change:
+            const neighborBadge = document.getElementById('neighborBadge');
+            neighborRadios.forEach(r => r.addEventListener('change', () => neighborBadge.textContent = FLAGS.neighborhood));
+
+
+
+            fontRange.addEventListener('input', () => {
+                const v = parseInt(fontRange.value, 10);
+                SETTINGS.fontPx = v;
+                fontValue.textContent = v;
+
+                world.style.fontSize = v + 'px';
+                remeasureAndRelayout();
+                saveSettings();
+            });
+
 
 
         })();
