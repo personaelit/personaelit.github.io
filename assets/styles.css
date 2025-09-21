@@ -221,6 +221,9 @@ a:hover {
     .nav-links a {
         margin-left: 12px;
     }
+    body {
+        padding:0;
+    }
 }
 
 /* FOOTER */
