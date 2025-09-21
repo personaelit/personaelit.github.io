@@ -1,7 +1,5 @@
 window.addEventListener('DOMContentLoaded', (event) => {
-
-console.log("The Zen is upon us.");
-    getRippled();
+    console.log("The Zen is upon us.");
     blowItUp();
     isItBorked();
     lightsOut();
@@ -14,13 +12,9 @@ console.log("The Zen is upon us.");
     activateSpotlight();
     activateRandomCanvasIfNeeded();
     buyTheTicketTakeTheRide();
-    
-    // document.querySelectorAll('.zen-control').forEach(btn => {
-    //     //btn.style.display = 'none';
-    //     btn.click();
-    // });
-
 });
+
+
 
 function activateSpotlight() {
     console.log("dark star rising");
