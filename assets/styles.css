@@ -130,11 +130,6 @@ a:hover {
     text-decoration: underline;
 }
 
-.container {
-    /* width: min(1100px, 92vw);
-    margin: 0 auto; */
-}
-
 
 /* Header */
 .site-header {
@@ -685,6 +680,11 @@ body[data-menu-open="true"] {
 /* handshake */
 .methodology .bolt::before {
     content: "\f0e7";
+}
+
+/* seedling */
+.methodology .seedling::before {
+  content: "\f4d8"; 
 }
 
 /* bolt */
