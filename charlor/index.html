@@ -289,6 +289,7 @@
                     <div class="setting">
                         <label class="setting-label">Neighborhood</label>
                         <div class="setting-control">
+                            <label><input type="radio" name="neighborMode" value="N0"> None</label>
                             <label><input type="radio" name="neighborMode" value="N4"> 4-neighbors</label>
                             <label><input type="radio" name="neighborMode" value="N8"> 8-neighbors</label>
                         </div>
@@ -496,8 +497,14 @@
                 ].filter(([rr, cc]) => inBounds(rr, cc));
             }
             function neighbors(r, c) {
-                return FLAGS.neighborhood === 'N8' ? neighbors8(r, c) : neighbors4(r, c);
+                switch (FLAGS.neighborhood) {
+                    case 'N8': return neighbors8(r, c);
+                    case 'N4': return neighbors4(r, c);
+                    case 'N0': return [];
+                    default: return [];
+                }
             }
+
 
             // ===== Writing logic =====
             function placeCharAt(row, col, ch, colorObj) {

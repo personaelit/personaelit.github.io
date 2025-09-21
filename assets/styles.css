@@ -258,6 +258,15 @@ a:hover {
 
 }
 
+.site-footer .meta.mantra {
+  grid-column: 1 / -1; /* make it span full grid width */
+  display: flex;
+  justify-content: center;   /* center the group as a whole */
+  gap: 2rem;                 /* spacing between items */
+  text-align: center;
+  margin-top: 1rem;
+}
+
 .contact a {
     color: var(--muted);
     font-weight: 600;
@@ -698,3 +707,78 @@ body[data-menu-open="true"] {
     font-weight: 900;
     margin-left: 4px;
 }
+#themeToggle {
+  width: 50px;
+  height: 24px;
+  border-radius: 12px;
+  background: #ccc;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* start position */
+  padding: 0 4px;
+  transition: background 0.3s;
+}
+#themeToggle.dark {
+  justify-content: flex-end; /* slide icon to right */
+  background: #555;
+}
+#themeToggle i {
+  font-size: 14px;
+  color: #fff;
+  transition: transform 0.3s;
+}
+
+/* Modern switch */
+.switch {
+  inline-size: 52px;
+  block-size: 28px;
+  border: 0;
+  padding: 2px;
+  border-radius: 999px;
+  background: #cbd5e1;              /* light track */
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  transition: background .25s ease;
+  outline: none;
+}
+
+.switch:is(:hover,:focus-visible) {
+  box-shadow: 0 0 0 3px rgba(0,105,187,.25); /* IF blue focus ring */
+}
+
+.switch__track {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.switch__thumb {
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translateX(0);
+  transition: transform .25s ease;
+  will-change: transform;
+}
+
+/* Dark (on) state */
+.switch.is-dark {
+  background: #475569;              /* dark track */
+}
+.switch.is-dark .switch__thumb {
+  transform: translateX(24px);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .switch, .switch__thumb { transition: none; }
+}
+
+
+

@@ -181,33 +181,62 @@ function initThemeToggle() {
     const KEY = 'theme';
     const el = document.documentElement;
     const btn = document.getElementById('themeToggle');
-    const metaEl = document.querySelector('.meta');
-    if (!btn || btn.dataset.bound) return; // guard
+    const metaEl = document.querySelector('.mantra');
+    if (!btn || btn.dataset.bound) return;
     btn.dataset.bound = '1';
 
-    // Button icon, using current attribute (set early in <head> script)
-    const current = el.getAttribute('data-theme') ||
-        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    btn.textContent = current === 'dark' ? '🌙' : '☀️';
-    metaEl.innerHTML = current === 'dark' ? metaEl.innerHTML.replace(/🖤/g, '🤍') : metaEl.innerHTML.replace(/🤍/g, '🖤');
+    // figure starting theme
+    const saved = localStorage.getItem(KEY);
+    const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const current = (el.getAttribute('data-theme') || saved || system);
 
+    // apply starting state
+    el.setAttribute('data-theme', current);
+    const isDark = current === 'dark';
+    btn.classList.toggle('is-dark', isDark);
+    btn.setAttribute('aria-pressed', String(isDark));
+    if (metaEl) {
+        metaEl.innerHTML = isDark
+            ? metaEl.innerHTML.replace(/🖤/g, '🤍')
+            : metaEl.innerHTML.replace(/🤍/g, '🖤');
+    }
 
+    // toggle click
     btn.addEventListener('click', () => {
         const next = el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         el.setAttribute('data-theme', next);
         localStorage.setItem(KEY, next);
-        btn.textContent = next === 'dark' ? '🌙' : '☀️';
-        metaEl.innerHTML = next === 'dark' ? metaEl.innerHTML.replace(/🖤/g, '🤍') : metaEl.innerHTML.replace(/🤍/g, '🖤');
+
+        const darkNow = next === 'dark';
+        btn.classList.toggle('is-dark', darkNow);
+        btn.setAttribute('aria-pressed', String(darkNow));
+
+        if (metaEl) {
+            metaEl.innerHTML = darkNow
+                ? metaEl.innerHTML.replace(/🖤/g, '🤍')
+                : metaEl.innerHTML.replace(/🤍/g, '🖤');
+        }
     });
 
-    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    // follow system changes only if user hasn't explicitly chosen
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
         if (!localStorage.getItem(KEY)) {
             const next = e.matches ? 'dark' : 'light';
             el.setAttribute('data-theme', next);
-            btn.textContent = next === 'dark' ? '🌙' : '☀️';
+
+            const darkNow = next === 'dark';
+            btn.classList.toggle('is-dark', darkNow);
+            btn.setAttribute('aria-pressed', String(darkNow));
+
+            if (metaEl) {
+                metaEl.innerHTML = darkNow
+                    ? metaEl.innerHTML.replace(/🖤/g, '🤍')
+                    : metaEl.innerHTML.replace(/🤍/g, '🖤');
+            }
         }
     });
 }
+
 
 function startColorTransition() {
     console.log("transition init.");
