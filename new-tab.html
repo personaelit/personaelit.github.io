@@ -9,191 +9,244 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
-        /* === GLOBAL === */
-        body {
-            font-family: sans-serif;
-            background: #f9f9f9;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
-        }
+/* === GLOBAL === */
+body {
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(135deg, #f9f9f9, #eef3f9);
+    margin: 0;
+    padding: 20px;
+    overflow-x: hidden;
+    color: #222;
+}
 
-        h1 {
-            margin-bottom: 20px;
-            text-align: center;
-            width: 100%;
-        }
+h1 {
+    margin-bottom: 24px;
+    text-align: center;
+    width: 100%;
+    font-size: 2.2rem;
+    color: #0069bb;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
 
-        /* === SEARCH === */
-        .search-box {
-            max-width: 500px;
-            margin: auto;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
+/* === SEARCH === */
+.search-box {
+    max-width: 600px;
+    margin: auto;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
 
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            font-size: 1.1em;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
+input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 1.05em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    transition: border 0.2s, box-shadow 0.2s;
+}
 
-        button {
-            padding: 10px 20px;
-            font-size: 1.1em;
-            border: none;
-            background-color: #0069bb;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+input[type="text"]:focus {
+    outline: none;
+    border-color: #0069bb;
+    box-shadow: 0 0 0 3px rgba(0,105,187,0.2);
+}
 
-        button:hover {
-            background-color: #0056b3;
-        }
+button {
+    padding: 12px 20px;
+    font-size: 1.05em;
+    border: none;
+    background: linear-gradient(135deg, #0069bb, #0056b3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
 
-        /* === QUICK LINKS === */
-        .quick-links {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            max-width: 1000px;
-            margin: 20px auto;
-        }
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
 
-        .quick-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
 
-        .quick-link .link-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
+/* === QUICK LINKS === */
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    max-width: 1100px;
+    margin: 20px auto;
+}
 
-        .quick-link img {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
+.quick-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #e0e4ea;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
 
-        .quick-link a {
-            color: #0069bb;
-            text-decoration: none;
-            font-weight: bold;
-        }
+.quick-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
 
-        .quick-link .delete-btn {
-            background: none;
-            border: none;
-            color: red;
-            font-size: 16px;
-            cursor: pointer;
-        }
+.quick-link .link-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
 
-        /* === MODAL === */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
+.quick-link img {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+}
 
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 400px;
-        }
+.quick-link a {
+    color: #0069bb;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
 
-        .modal-content input {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 8px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+.quick-link a:hover {
+    color: #0056b3;
+}
 
-        /* === BLOCKS === */
-        .block {
-            position: absolute;
-            /* key change */
-            width: 300px;
-            padding: 20px;
-            padding-top: 35px;
-            /* make space for the X */
-            border: 1px solid black;
-            background-color: aliceblue;
-            cursor: move;
-            z-index: 5;
-        }
+.quick-link .delete-btn {
+    background: none;
+    border: none;
+    color: #d33;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
 
+.quick-link .delete-btn:hover {
+    transform: scale(1.2);
+}
 
-        .block .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: none;
-            border: none;
-            color: red;
-            font-size: 16px;
-            cursor: pointer;
-        }
+/* === MODAL === */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 20, 40, 0.55);
+    backdrop-filter: blur(6px);
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease;
+}
 
-        .block-title,
-        .block-content {
-            margin-bottom: 10px;
-            outline: none;
-            cursor: text;
-        }
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
 
-        .block-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
+.modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
 
-        .block-date {
-            font-size: 12px;
-            color: gray;
-        }
+.modal-content input {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border 0.2s;
+}
 
-        .block-favorite,
-        .block-recycle {
-            cursor: pointer;
-            margin-right: 10px;
-        }
+.modal-content input:focus {
+    border-color: #0069bb;
+    outline: none;
+}
 
-        .block-favorited {
-            color: gold;
-        }
+/* === BLOCKS (Sticky Notes) === */
+.block {
+    position: absolute;
+    width: 300px;
+    padding: 20px;
+    padding-top: 35px;
+    border: 1px solid #ddd;
+    background-color: #fffbea;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    cursor: move;
+    z-index: 5;
+    transition: box-shadow 0.2s ease;
+}
 
-        .block-recycled {
-            color: green;
-        }
+.block:hover {
+    box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+}
 
-        #controls {
-            text-align: center;
-            margin-bottom: 10px;
-        }
+.block .delete-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: none;
+    border: none;
+    color: #d33;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.block .delete-btn:hover {
+    transform: scale(1.2);
+}
+
+.block-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.block-content {
+    font-size: 14px;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.block-date {
+    font-size: 11px;
+    color: #777;
+}
+
+/* === CONTROLS === */
+#controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#controls button {
+    margin: 0 5px;
+}
+
     </style>
 </head>
 
