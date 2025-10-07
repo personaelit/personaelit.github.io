@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <!-- Prevent zoom on mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- Prevent zoom on mobile -->
     <title>Streak - How high can you go?</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
@@ -12,30 +13,46 @@
 </head>
 
 <body>
-    <h1>Streak</h1>
-    <sub>How high can you go?</sub>
+    <main>
+        <header>
+            <h1>Streak</h1>
+            <sub>How high can you go?</sub>
+            <div id="meta">
+                <div id="date-display"></div>
+                <div id="countdown-display"></div>
+            </div>
+        </header>
 
-    <div id="date-display"></div>
-    <div id="countdown-display"></div>
-    <form id="task-form">
-        <input type="text" id="task-input" placeholder="Enter a new task">
-        <button type="submit">Add Task</button>
-    </form>
-    <div id="streak-display"></div>
-    <ul id="task-list"></ul>
-    <div id="percentage-display"></div>
-    <div id="progress-container">
-        <div id="progress-bar"></div>
-    </div>
-    <h2>Streak History</h2>
-    <canvas id="history-chart"></canvas> <!-- Add canvas for chart -->
-    <details id="about">
-        <summary>About</summary>
-        <p>Streak is a simple web app that helps you build good habits and break bad ones.</p>
-        <p>It's based on the idea of a streak, which is a sequence of days in a row that you complete a task.</p>
-        <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
-    </details>
+        <section>
+            <form id="task-form">
+                <input type="text" id="task-input" placeholder="Enter a new task">
+                <button type="submit">Add Task</button>
+            </form>
+
+            <div id="streak-display"></div>
+            <ul id="task-list"></ul>
+
+            <div id="percentage-display"></div>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+
+            <hr class="sep" />
+
+            <h2>Streak History</h2>
+            <canvas id="history-chart"></canvas>
+        </section>
+
+        <details id="about">
+            <summary>About</summary>
+            <p>Streak is a simple web app that helps you build good habits and break bad ones.</p>
+            <p>It's based on the idea of a streak, which is a sequence of days in a row that you complete a task.</p>
+            <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
+        </details>
+    </main>
+
     <script type="module" src="script.js"></script>
 </body>
+
 
 </html>
