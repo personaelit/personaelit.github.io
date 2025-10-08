@@ -1,24 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- Prevent zoom on mobile -->
+    <!-- Fix 1: Remove user-scalable=no and use maximum-scale instead -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Streak - How high can you go?</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Fix 2: Ensure input has proper font-size to prevent auto-zoom */
+        #task-input {
+            font-size: 16px !important; /* iOS won't auto-zoom if font-size >= 16px */
+        }
+        
+        /* Fix 3: Ensure input is interactive */
+        #task-input {
+            -webkit-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: default;
+        }
+    </style>
 </head>
-
 <body>
     <main>
         <header>
@@ -29,27 +40,31 @@
                 <div id="countdown-display"></div>
             </div>
         </header>
-
         <section>
             <form id="task-form">
-                <input type="text" id="task-input" placeholder="Enter a new task">
+                <!-- Fix 4: Add explicit attributes for iOS -->
+                <input 
+                    type="text" 
+                    id="task-input" 
+                    placeholder="Enter a new task"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="sentences"
+                    spellcheck="false"
+                    inputmode="text"
+                >
                 <button type="submit">Add Task</button>
             </form>
-
             <div id="streak-display"></div>
             <ul id="task-list"></ul>
-
             <div id="percentage-display"></div>
             <div id="progress-container">
                 <div id="progress-bar"></div>
             </div>
-
             <hr class="sep" />
-
             <h2>Streak History</h2>
             <canvas id="history-chart"></canvas>
         </section>
-
         <details id="about">
             <summary>About</summary>
             <p>Streak is a simple web app that helps you build good habits and break bad ones.</p>
@@ -59,7 +74,26 @@
     </main>
     <script src="badge.js" defer></script>
     <script src="script.js" defer></script>
+    
+    <!-- Fix 5: JavaScript fallback to force focus -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('task-input');
+            
+            // Add explicit click handler for iOS
+            input.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                setTimeout(() => {
+                    this.focus();
+                }, 0);
+            }, { passive: true });
+            
+            // Prevent any interference with focus
+            input.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.focus();
+            });
+        });
+    </script>
 </body>
-
-
 </html>
