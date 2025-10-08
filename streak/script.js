@@ -1,7 +1,7 @@
 // Streak — localStorage-powered habit tracker
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
+  navigator.serviceWorker.register('sw.js');
 }
 
 // Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".
