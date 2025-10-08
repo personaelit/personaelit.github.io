@@ -89,19 +89,18 @@ form#task-form {
   margin: 10px 0 6px;
 }
 
-#task-input {
-  flex: 1;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, .1);
-  background: #0d131b;
-  color: var(--ink);
-  outline: none;
-  font-size: 16px;
-  /* Critical for iOS - prevents auto-zoom */
+#task-input{
+  flex:1; 
+  padding:12px 14px; 
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.1); 
+  background:#0d131b; 
+  color:var(--ink);
+  outline:none;
+  font-size: 16px !important; /* Critical */
+  min-height: 44px;
   -webkit-appearance: none;
-  /* Remove iOS default styling */
-  appearance: none;
+  pointer-events: auto; /* Make sure this is here */
 }
 
 #task-input:focus {

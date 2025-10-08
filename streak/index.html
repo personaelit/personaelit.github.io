@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Fix 1: Remove user-scalable=no and use maximum-scale instead -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Streak - How high can you go?</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="manifest" href="/streak/manifest.json">
+    <link rel="apple-touch-icon" href="/streak/icons/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
@@ -17,16 +16,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Fix 2: Ensure input has proper font-size to prevent auto-zoom */
         #task-input {
-            font-size: 16px !important; /* iOS won't auto-zoom if font-size >= 16px */
+            font-size: 16px !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
+            pointer-events: auto !important;
         }
         
-        /* Fix 3: Ensure input is interactive */
-        #task-input {
-            -webkit-user-select: text;
-            user-select: text;
-            -webkit-touch-callout: default;
+        /* Ensure form doesn't block input */
+        #task-form {
+            pointer-events: auto !important;
         }
     </style>
 </head>
@@ -42,16 +42,12 @@
         </header>
         <section>
             <form id="task-form">
-                <!-- Fix 4: Add explicit attributes for iOS -->
                 <input 
                     type="text" 
                     id="task-input" 
+                    name="task"
                     placeholder="Enter a new task"
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="sentences"
-                    spellcheck="false"
-                    inputmode="text"
+                    enterkeyhint="done"
                 >
                 <button type="submit">Add Task</button>
             </form>
@@ -72,28 +68,49 @@
             <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
         </details>
     </main>
-    <script src="badge.js" defer></script>
-    <script src="script.js" defer></script>
     
-    <!-- Fix 5: JavaScript fallback to force focus -->
+    <!-- iOS PWA Keyboard Fix -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+    (function() {
+        // Wait for DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupInput);
+        } else {
+            setupInput();
+        }
+        
+        function setupInput() {
             const input = document.getElementById('task-input');
+            if (!input) return;
             
-            // Add explicit click handler for iOS
-            input.addEventListener('touchstart', function(e) {
-                e.stopPropagation();
+            // iOS PWA workaround: set readonly initially, then remove on touch
+            input.setAttribute('readonly', 'readonly');
+            input.style.opacity = '1'; // Keep it visible
+            
+            let hasInteracted = false;
+            
+            function enableInput(e) {
+                if (hasInteracted) return;
+                hasInteracted = true;
+                
+                // Remove readonly
+                input.removeAttribute('readonly');
+                
+                // Force focus after a tiny delay
                 setTimeout(() => {
-                    this.focus();
-                }, 0);
-            }, { passive: true });
+                    input.focus();
+                    input.click();
+                }, 10);
+            }
             
-            // Prevent any interference with focus
-            input.addEventListener('click', function(e) {
-                e.stopPropagation();
-                this.focus();
-            });
-        });
+            // Listen for user interaction
+            input.addEventListener('touchstart', enableInput, { once: true, passive: true });
+            input.addEventListener('click', enableInput, { once: true });
+        }
+    })();
     </script>
+    
+    <script src="badge.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
