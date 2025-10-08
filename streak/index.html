@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,13 +24,14 @@
             -webkit-touch-callout: default !important;
             pointer-events: auto !important;
         }
-        
+
         /* Ensure form doesn't block input */
         #task-form {
             pointer-events: auto !important;
         }
     </style>
 </head>
+
 <body>
     <main>
         <header>
@@ -42,13 +44,9 @@
         </header>
         <section>
             <form id="task-form">
-                <input 
-                    type="text" 
-                    id="task-input" 
-                    name="task"
-                    placeholder="Enter a new task"
-                    enterkeyhint="done"
-                >
+                <label for="task-input" style="flex: 1; display: block;">
+                    <input type="text" id="task-input" name="task" placeholder="Enter a task" enterkeyhint="done">
+                </label>
                 <button type="submit">Add Task</button>
             </form>
             <div id="streak-display"></div>
@@ -68,49 +66,50 @@
             <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
         </details>
     </main>
-    
+
     <!-- iOS PWA Keyboard Fix -->
     <script>
-    (function() {
-        // Wait for DOM
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupInput);
-        } else {
-            setupInput();
-        }
-        
-        function setupInput() {
-            const input = document.getElementById('task-input');
-            if (!input) return;
-            
-            // iOS PWA workaround: set readonly initially, then remove on touch
-            input.setAttribute('readonly', 'readonly');
-            input.style.opacity = '1'; // Keep it visible
-            
-            let hasInteracted = false;
-            
-            function enableInput(e) {
-                if (hasInteracted) return;
-                hasInteracted = true;
-                
-                // Remove readonly
-                input.removeAttribute('readonly');
-                
-                // Force focus after a tiny delay
-                setTimeout(() => {
-                    input.focus();
-                    input.click();
-                }, 10);
+        (function () {
+            // Wait for DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupInput);
+            } else {
+                setupInput();
             }
-            
-            // Listen for user interaction
-            input.addEventListener('touchstart', enableInput, { once: true, passive: true });
-            input.addEventListener('click', enableInput, { once: true });
-        }
-    })();
+
+            function setupInput() {
+                const input = document.getElementById('task-input');
+                if (!input) return;
+
+                // iOS PWA workaround: set readonly initially, then remove on touch
+                input.setAttribute('readonly', 'readonly');
+                input.style.opacity = '1'; // Keep it visible
+
+                let hasInteracted = false;
+
+                function enableInput(e) {
+                    if (hasInteracted) return;
+                    hasInteracted = true;
+
+                    // Remove readonly
+                    input.removeAttribute('readonly');
+
+                    // Force focus after a tiny delay
+                    setTimeout(() => {
+                        input.focus();
+                        input.click();
+                    }, 10);
+                }
+
+                // Listen for user interaction
+                input.addEventListener('touchstart', enableInput, { once: true, passive: true });
+                input.addEventListener('click', enableInput, { once: true });
+            }
+        })();
     </script>
-    
+
     <script src="badge.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
