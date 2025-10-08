@@ -47,50 +47,6 @@ const percentDisplay = $('#percentage-display');
 const progressBar = $('#progress-bar');
 const historyCanvas = $('#history-chart');
 
-// ---------- Chart Mode UI (Global vs Per-Task) ----------
-let chartModeSelect;
-
-function ensureChartModeUI() {
-    chartModeSelect = document.getElementById('chart-mode');
-    if (!chartModeSelect) {
-        chartModeSelect = document.createElement('select');
-        chartModeSelect.id = 'chart-mode';
-        chartModeSelect.style.margin = '8px 0';
-        chartModeSelect.style.display = 'block';
-        // Insert just before the chart canvas
-        historyCanvas.parentElement.insertBefore(chartModeSelect, historyCanvas);
-    }
-    refreshChartModeOptions();
-    chartModeSelect.addEventListener('change', () => updateChartData());
-}
-
-function refreshChartModeOptions() {
-    if (!chartModeSelect) return;           // ⬅️ guard
-    const prev = chartModeSelect.value;
-    chartModeSelect.innerHTML = '';
-
-    const optGlobal = document.createElement('option');
-    optGlobal.value = 'global';
-    optGlobal.textContent = '📈 Global Streak';
-    chartModeSelect.appendChild(optGlobal);
-
-    const byId = new Map(state.tasks.map(t => [t.id, t.text]));
-    for (const id of state.order) {
-        const name = byId.get(id);
-        if (!name) continue;
-        const o = document.createElement('option');
-        o.value = `task:${id}`;
-        o.textContent = `✅ ${name}`;
-        chartModeSelect.appendChild(o);
-    }
-
-    if (prev && [...chartModeSelect.options].some(o => o.value === prev)) {
-        chartModeSelect.value = prev;
-    } else {
-        chartModeSelect.value = 'global';
-    }
-}
-
 let chart;
 
 // ---------- Init ----------
@@ -98,17 +54,13 @@ init();
 
 async function init() {
     mountShell();
-    ensureChartModeUI();   // ⬅️ move this up
     renderTasks();
-    await BadgeManager.init();
-    updateForToday(false);
+    updateForToday(false); // compute progress; don't reward twice on load
     bootSortable();
     initChart();
     tickCountdown();
     setInterval(tickCountdown, 1000);
 }
-
-
 
 // ---------- UI Shell ----------
 function mountShell() {
@@ -150,45 +102,6 @@ function deleteTask(id) {
     updateForToday(false);
 }
 
-// ---------- Per-Task History Derivation ----------
-function lastNDatesKeys(n) {
-    // Build N keys ending today (YYYY-MM-DD, en-CA)
-    const arr = [];
-    const d = new Date();
-    for (let i = n - 1; i >= 0; i--) {
-        const dd = new Date(d);
-        dd.setDate(d.getDate() - i);
-        arr.push(dd.toLocaleDateString('en-CA'));
-    }
-    return arr;
-}
-
-function perTaskDailyDone(taskId, dateKeys) {
-    const doneMap = state.completions; // {dateKey: [ids]}
-    return dateKeys.map(k => {
-        const ids = doneMap[k] || [];
-        return ids.includes(taskId) ? 1 : 0;
-    });
-}
-
-function perTaskRunningStreak(taskId, dateKeys) {
-    const done = perTaskDailyDone(taskId, dateKeys);
-    const streaks = [];
-    let run = 0;
-    for (const v of done) {
-        if (v) run += 1; else run = 0;
-        streaks.push(run);
-    }
-    return streaks;
-}
-
-function last7Rate(taskId) {
-    const keys = lastNDatesKeys(7);
-    const done = perTaskDailyDone(taskId, keys);
-    const pct = Math.round((done.reduce((a, b) => a + b, 0) / keys.length) * 100);
-    return `${pct}%/7d`;
-}
-
 function renderTasks() {
     const today = todayKey();
     const doneSet = new Set(state.completions[today] || []);
@@ -227,20 +140,10 @@ function renderTasks() {
         delBtn.textContent = 'Delete';
         delBtn.addEventListener('click', () => deleteTask(id));
 
-        const meta = document.createElement('span');
-        meta.className = 'meta';
-        meta.style.opacity = '.7';
-        meta.style.marginLeft = '8px';
-        meta.style.fontSize = '0.85em';
-        meta.textContent = last7Rate(id);
-        label.appendChild(meta);
-
         actions.append(dragBtn, delBtn);
         li.append(cb, label, actions);
         list.appendChild(li);
     }
-
-    refreshChartModeOptions();
 }
 
 function toggleComplete(id, checked) {
@@ -392,38 +295,12 @@ function initChart() {
 }
 
 function makeChartData() {
-    const sel = chartModeSelect?.value || 'global';
-
-    if (sel === 'global') {
-        // existing global streak series (unchanged)
-        const labels = state.history.map(p => p.date.slice(5));
-        const data = state.history.map(p => p.streak);
-        return {
-            labels,
-            datasets: [{
-                label: 'Global Streak',
-                data,
-                fill: false,
-                tension: .25,
-                borderWidth: 2
-            }]
-        };
-    }
-
-    // Per-task: derive running streak per day across the last N points
-    const [, taskId] = sel.split(':');
-    const N = Math.max(7, SETTINGS.MAX_HISTORY_POINTS); // use at least a week
-    const dateKeys = lastNDatesKeys(N);
-    const labels = dateKeys.map(k => k.slice(5));
-    const data = perTaskRunningStreak(taskId, dateKeys);
-
-    // Show the task name in label
-    const taskName = (state.tasks.find(t => t.id === taskId)?.text) || 'Task';
-
+    const labels = state.history.map(p => p.date.slice(5)); // show MM-DD
+    const data = state.history.map(p => p.streak);
     return {
         labels,
         datasets: [{
-            label: `${taskName} — Running Streak`,
+            label: 'Streak',
             data,
             fill: false,
             tension: .25,
@@ -437,7 +314,6 @@ function updateChartData() {
     chart.data = makeChartData();
     chart.update();
 }
-
 
 // ---------- (Optional) Simple settings hook ----------
 // Example: set threshold via URL like ?threshold=0.75
