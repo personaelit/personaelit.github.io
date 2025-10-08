@@ -1,7 +1,7 @@
 // Streak — localStorage-powered habit tracker
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('sw.js');
 }
 
 // Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".
@@ -45,6 +45,7 @@ const streakDisplay = $('#streak-display');
 const list = $('#task-list');
 const percentDisplay = $('#percentage-display');
 const progressBar = $('#progress-bar');
+
 const historyCanvas = $('#history-chart');
 
 // ---------- Chart Mode UI (Global vs Per-Task) ----------
@@ -228,12 +229,13 @@ function renderTasks() {
         delBtn.addEventListener('click', () => deleteTask(id));
 
         const meta = document.createElement('span');
-        meta.className = 'meta';
+        meta.className = 'task-meta';   // was 'meta'
         meta.style.opacity = '.7';
         meta.style.marginLeft = '8px';
         meta.style.fontSize = '0.85em';
         meta.textContent = last7Rate(id);
         label.appendChild(meta);
+
 
         actions.append(dragBtn, delBtn);
         li.append(cb, label, actions);
@@ -252,6 +254,7 @@ function toggleComplete(id, checked) {
 
     // Recompute progress & possibly award streak
     updateForToday(true);
+    renderTasks();
 }
 
 // ---------- Progress / Streak ----------
