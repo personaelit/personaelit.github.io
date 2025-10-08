@@ -1,50 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- Prevent zoom on mobile -->
     <title>Streak - How high can you go?</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="/streak/manifest.json">
-    <link rel="apple-touch-icon" href="/streak/icons/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
-    <style>
-        /* Alternate input styling */
-        #task-input-wrapper {
-            flex: 1;
-            padding: 12px 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,.1);
-            background: #0d131b;
-            color: var(--ink);
-            outline: none;
-            font-size: 16px;
-            min-height: 44px;
-            line-height: 1.5;
-            cursor: text;
-            -webkit-user-select: text;
-            user-select: text;
-        }
-        
-        #task-input-wrapper:empty:before {
-            content: attr(data-placeholder);
-            color: #666;
-            pointer-events: none;
-        }
-        
-        #task-input-wrapper:focus {
-            box-shadow: 0 0 0 3px rgba(78,161,255,.25);
-            border-color: rgba(78,161,255,.4);
-        }
-    </style>
 </head>
+
 <body>
     <main>
         <header>
@@ -55,28 +29,27 @@
                 <div id="countdown-display"></div>
             </div>
         </header>
+
         <section>
             <form id="task-form">
-                <!-- Use contenteditable div instead of input -->
-                <div 
-                    id="task-input-wrapper"
-                    contenteditable="true"
-                    data-placeholder="Enter a new task"
-                    role="textbox"
-                    aria-label="Task input"
-                ></div>
+                <input type="text" id="task-input" placeholder="Enter a new task">
                 <button type="submit">Add Task</button>
             </form>
+
             <div id="streak-display"></div>
             <ul id="task-list"></ul>
+
             <div id="percentage-display"></div>
             <div id="progress-container">
                 <div id="progress-bar"></div>
             </div>
+
             <hr class="sep" />
+
             <h2>Streak History</h2>
             <canvas id="history-chart"></canvas>
         </section>
+
         <details id="about">
             <summary>About</summary>
             <p>Streak is a simple web app that helps you build good habits and break bad ones.</p>
@@ -84,36 +57,9 @@
             <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
         </details>
     </main>
-    
     <script src="badge.js"></script>
-    <script>
-    // Modify script.js form handling to work with contenteditable
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('task-form');
-        const inputWrapper = document.getElementById('task-input-wrapper');
-        
-        // Override the form submit to get text from contenteditable
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const text = (inputWrapper.textContent || '').trim();
-            if (!text) return;
-            
-            // Trigger the original addTask function
-            if (window.addTask) {
-                window.addTask(text);
-                inputWrapper.textContent = '';
-            }
-        });
-        
-        // Prevent multi-line input
-        inputWrapper.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                form.dispatchEvent(new Event('submit'));
-            }
-        });
-    });
-    </script>
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
+
+
 </html>
