@@ -26,10 +26,10 @@ body{
 
 main{
   width:min(900px,100%);
-  /* background:var(--card);
+  background:var(--card);
   border:1px solid rgba(255,255,255,.06);
   border-radius:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.35); */
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
   overflow: visible;
   height:100%;
   max-height: none;

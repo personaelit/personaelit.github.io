@@ -1,9 +1,4 @@
 // Streak — localStorage-powered habit tracker
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-
 // Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".
 const SETTINGS = {
     THRESHOLD: 0.5, // 50% of today's tasks must be checked to keep the streak
@@ -52,7 +47,7 @@ let chart;
 // ---------- Init ----------
 init();
 
-async function init() {
+function init() {
     mountShell();
     renderTasks();
     updateForToday(false); // compute progress; don't reward twice on load
@@ -171,8 +166,6 @@ function updateForToday(allowReward) {
         ? 'linear-gradient(90deg, var(--good), var(--accent))'
         : 'linear-gradient(90deg, var(--warn), var(--accent))';
 
-
-    BadgeManager.set(Math.max(0, total - done));
     maybeAwardStreak(pct, allowReward);
     renderStreak();
     updateChartData();
@@ -265,8 +258,6 @@ function tickCountdown() {
             renderTasks();
             updateForToday(false);
             dateDisplay.textContent = fmtLongDate(new Date());
-            BadgeManager.set(Math.max(0, state.tasks.length - (state.completions[todayKey()] || []).length));
-
         }, 1200);
     }
 }
