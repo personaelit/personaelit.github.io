@@ -55,6 +55,7 @@ form#task-form{
   flex:1; padding:12px 14px; border-radius:12px;
   border:1px solid rgba(255,255,255,.1); background:#0d131b; color:var(--ink);
   outline:none;
+  font-size: 16px;
 }
 #task-input:focus{box-shadow:var(--ring); border-color:rgba(78,161,255,.4)}
 button{
