@@ -263,42 +263,99 @@ function tickCountdown() {
 }
 
 // ---------- Chart ----------
+
+// ---------- Timeline helpers for per-task chart ----------
+function recentDays(n) {
+    const days = [];
+    const d = new Date();
+    for (let i = 0; i < n; i++) {
+        const k = d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+        days.push(k);
+        d.setDate(d.getDate() - 1);
+    }
+    return days.reverse();
+}
+
+function safeTaskLabel(t) {
+    // Keep labels short-ish; fallback to id tail if empty
+    const txt = (t.text || '').trim();
+    if (txt.length <= 24 && txt) return txt;
+    return (txt ? txt.slice(0, 21) + '…' : ('Task ' + t.id.slice(-4)));
+}
+
+
+
 function initChart() {
     const ctx = historyCanvas.getContext('2d');
     chart = new Chart(ctx, {
-        type: 'line',
-        data: makeChartData(),
+        data: makeChartData(), // mixed datasets
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { ticks: { color: '#a5b3c7', maxRotation: 0, autoSkip: true } },
-                y: { ticks: { color: '#a5b3c7', precision: 0 }, beginAtZero: true }
+                x: {
+                    stacked: true,
+                    ticks: { color: '#a5b3c7', maxRotation: 0, autoSkip: true }
+                },
+                y: {
+                    stacked: true, // stacks the bars; line uses same axis
+                    ticks: { color: '#a5b3c7', precision: 0 },
+                    beginAtZero: true,
+                    suggestedMax: Math.max(3, state.tasks.length) // headroom
+                }
             },
             plugins: {
-                legend: { display: false },
+                legend: { display: true },
                 tooltip: { mode: 'index', intersect: false }
             }
         }
     });
-    // Give the canvas some height
-    historyCanvas.parentElement.style.height = '220px';
+    historyCanvas.parentElement.style.height = '260px';
 }
 
+
 function makeChartData() {
-    const labels = state.history.map(p => p.date.slice(5)); // show MM-DD
-    const data = state.history.map(p => p.streak);
+    const days = recentDays(SETTINGS.MAX_HISTORY_POINTS);
+    const labels = days.map(k => k.slice(5)); // MM-DD
+
+    // --- per-task 0/1 bars ---
+    const taskById = new Map(state.tasks.map(t => [t.id, t]));
+    const perTaskDatasets = state.order
+        .filter(id => taskById.has(id))
+        .map(id => {
+            const t = taskById.get(id);
+            const data = days.map(k => {
+                const arr = state.completions[k] || [];
+                return arr.includes(id) ? 1 : 0;
+            });
+            return {
+                type: 'bar',
+                label: safeTaskLabel(t),
+                data,
+                stack: 'tasks',
+                borderWidth: 0,
+            };
+        });
+
+    // --- streak line aligned to the same days ---
+    const streakMap = new Map(state.history.map(p => [p.date, p.streak]));
+    const streakData = days.map(k => streakMap.has(k) ? streakMap.get(k) : null);
+
+    const streakDataset = {
+        type: 'line',
+        label: 'Streak',
+        data: streakData,
+        fill: false,
+        tension: 0.25,
+        borderWidth: 2
+    };
+
     return {
         labels,
-        datasets: [{
-            label: 'Streak',
-            data,
-            fill: false,
-            tension: .25,
-            borderWidth: 2
-        }]
+        datasets: [...perTaskDatasets, streakDataset]
     };
 }
+
 
 function updateChartData() {
     if (!chart) return;
