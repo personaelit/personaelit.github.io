@@ -24,20 +24,6 @@ body{
   display:flex; align-items:flex-start; justify-content:center; padding:48px 16px;
 }
 
-#task-input { font-size: 16px; }
-html { -webkit-text-size-adjust: 100%; }  /* keep Safari happy */
-form#task-form { position: relative; z-index: 1; pointer-events: auto; }
-header, main, section { transform: none; }
-#task-input {
-  -webkit-user-select: text;
-  caret-color: auto;
-  touch-action: manipulation;   /* hints no gesture handling is needed */
-}
-* { -webkit-tap-highlight-color: transparent; }
-body { display: block; padding: 0; }
-main { margin: 48px 16px; }
-
-
 main{
   width:min(900px,100%);
   /* background:var(--card);
