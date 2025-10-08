@@ -116,15 +116,21 @@ function mountShell() {
     const now = new Date();
     dateDisplay.textContent = fmtLongDate(now);
 
+    // Update selector for contenteditable
+    const inputWrapper = document.getElementById('task-input-wrapper');
+    
     form.addEventListener('submit', e => {
         e.preventDefault();
-        const text = (input.value || '').trim();
+        const text = (inputWrapper?.textContent || input?.value || '').trim();
         if (!text) return;
         addTask(text);
-        input.value = '';
+        if (inputWrapper) {
+            inputWrapper.textContent = '';
+        } else if (input) {
+            input.value = '';
+        }
     });
 }
-
 // ---------- Tasks ----------
 function addTask(text) {
     const id = crypto.randomUUID();

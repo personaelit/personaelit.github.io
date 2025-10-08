@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <title>Streak - How high can you go?</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="/streak/manifest.json">
@@ -17,21 +16,35 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
     <style>
-        #task-input {
-            font-size: 16px !important;
-            -webkit-user-select: text !important;
-            user-select: text !important;
-            -webkit-touch-callout: default !important;
-            pointer-events: auto !important;
+        /* Alternate input styling */
+        #task-input-wrapper {
+            flex: 1;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.1);
+            background: #0d131b;
+            color: var(--ink);
+            outline: none;
+            font-size: 16px;
+            min-height: 44px;
+            line-height: 1.5;
+            cursor: text;
+            -webkit-user-select: text;
+            user-select: text;
         }
-
-        /* Ensure form doesn't block input */
-        #task-form {
-            pointer-events: auto !important;
+        
+        #task-input-wrapper:empty:before {
+            content: attr(data-placeholder);
+            color: #666;
+            pointer-events: none;
+        }
+        
+        #task-input-wrapper:focus {
+            box-shadow: 0 0 0 3px rgba(78,161,255,.25);
+            border-color: rgba(78,161,255,.4);
         }
     </style>
 </head>
-
 <body>
     <main>
         <header>
@@ -44,9 +57,14 @@
         </header>
         <section>
             <form id="task-form">
-                <label for="task-input" style="flex: 1; display: block;">
-                    <input type="text" id="task-input" name="task" placeholder="Enter a task" enterkeyhint="done">
-                </label>
+                <!-- Use contenteditable div instead of input -->
+                <div 
+                    id="task-input-wrapper"
+                    contenteditable="true"
+                    data-placeholder="Enter a new task"
+                    role="textbox"
+                    aria-label="Task input"
+                ></div>
                 <button type="submit">Add Task</button>
             </form>
             <div id="streak-display"></div>
@@ -66,50 +84,36 @@
             <p>Don't worry, you don't have to complete all the tasks to keep the streak alive.</p>
         </details>
     </main>
-
-    <!-- iOS PWA Keyboard Fix -->
-    <script>
-        (function () {
-            // Wait for DOM
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', setupInput);
-            } else {
-                setupInput();
-            }
-
-            function setupInput() {
-                const input = document.getElementById('task-input');
-                if (!input) return;
-
-                // iOS PWA workaround: set readonly initially, then remove on touch
-                input.setAttribute('readonly', 'readonly');
-                input.style.opacity = '1'; // Keep it visible
-
-                let hasInteracted = false;
-
-                function enableInput(e) {
-                    if (hasInteracted) return;
-                    hasInteracted = true;
-
-                    // Remove readonly
-                    input.removeAttribute('readonly');
-
-                    // Force focus after a tiny delay
-                    setTimeout(() => {
-                        input.focus();
-                        input.click();
-                    }, 10);
-                }
-
-                // Listen for user interaction
-                input.addEventListener('touchstart', enableInput, { once: true, passive: true });
-                input.addEventListener('click', enableInput, { once: true });
-            }
-        })();
-    </script>
-
+    
     <script src="badge.js"></script>
+    <script>
+    // Modify script.js form handling to work with contenteditable
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('task-form');
+        const inputWrapper = document.getElementById('task-input-wrapper');
+        
+        // Override the form submit to get text from contenteditable
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = (inputWrapper.textContent || '').trim();
+            if (!text) return;
+            
+            // Trigger the original addTask function
+            if (window.addTask) {
+                window.addTask(text);
+                inputWrapper.textContent = '';
+            }
+        });
+        
+        // Prevent multi-line input
+        inputWrapper.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+    });
+    </script>
     <script src="script.js"></script>
 </body>
-
 </html>
