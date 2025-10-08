@@ -2,6 +2,20 @@
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    if (isStandalone) {
+        const inputEl = document.getElementById('task-input');
+        inputEl.addEventListener('focus', () => {
+            setTimeout(() => {
+                inputEl.scrollIntoView({ block: 'center' });
+                // little scroll jiggle helps iOS PWAs
+                window.scrollTo(0, window.scrollY + 1);
+                window.scrollTo(0, window.scrollY - 1);
+            }, 50);
+        });
+    }
+
 }
 
 // Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".

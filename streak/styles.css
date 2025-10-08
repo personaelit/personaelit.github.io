@@ -34,6 +34,8 @@ header, main, section { transform: none; }
   touch-action: manipulation;   /* hints no gesture handling is needed */
 }
 * { -webkit-tap-highlight-color: transparent; }
+body { display: block; padding: 0; }
+main { margin: 48px 16px; }
 
 
 main{
