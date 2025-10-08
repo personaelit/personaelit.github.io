@@ -26,7 +26,8 @@ body{
 
 main{
   width:min(900px,100%);
-  overflow: scroll;
+  overflow: visible;
+  min-height: 100dvh;
 }
 
 header{
