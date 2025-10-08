@@ -1,11 +1,10 @@
 // Streak — localStorage-powered habit tracker
-// Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
 
-
+// Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".
 const SETTINGS = {
     THRESHOLD: 0.5, // 50% of today's tasks must be checked to keep the streak
     MAX_HISTORY_POINTS: 30
@@ -97,10 +96,11 @@ let chart;
 // ---------- Init ----------
 init();
 
-function init() {
+async function init() {
     mountShell();
     ensureChartModeUI();   // ⬅️ move this up
     renderTasks();
+    await BadgeManager.init();
     updateForToday(false);
     bootSortable();
     initChart();
@@ -268,10 +268,11 @@ function updateForToday(allowReward) {
         ? 'linear-gradient(90deg, var(--good), var(--accent))'
         : 'linear-gradient(90deg, var(--warn), var(--accent))';
 
+
+    BadgeManager.set(Math.max(0, total - done));
     maybeAwardStreak(pct, allowReward);
     renderStreak();
     updateChartData();
-    setTasksBadge(Math.max(0, total - done));
 }
 
 function maybeAwardStreak(pct, allowReward) {
@@ -361,6 +362,8 @@ function tickCountdown() {
             renderTasks();
             updateForToday(false);
             dateDisplay.textContent = fmtLongDate(new Date());
+            BadgeManager.set(Math.max(0, state.tasks.length - (state.completions[todayKey()] || []).length));
+
         }, 1200);
     }
 }
@@ -433,96 +436,6 @@ function updateChartData() {
     if (!chart) return;
     chart.data = makeChartData();
     chart.update();
-}
-
-// ---------- Badges (PWA App Badge + favicon fallback) ----------
-const BADGE_MAX = 99;
-
-async function setTasksBadge(remaining) {
-  // PWA App Badge (works for installed PWAs on most platforms)
-  try {
-    if ('setAppBadge' in navigator) {
-      if (remaining > 0) await navigator.setAppBadge(Math.min(remaining, BADGE_MAX));
-      else await navigator.clearAppBadge();
-    }
-  } catch {/* ignore */}
-  // Fallback to favicon badge for normal browser tabs
-  updateFaviconBadge(remaining);
-}
-
-let _origFaviconHref;
-
-function updateFaviconBadge(remaining) {
-  const link = getFaviconLink();
-  if (!link) return;
-
-  if (!_origFaviconHref) _origFaviconHref = link.href || makeBlankFavicon(link);
-
-  if (remaining > 0) {
-    generateFaviconBadge(_origFaviconHref, remaining).then(dataUrl => {
-      link.href = dataUrl;
-    });
-  } else {
-    // restore original favicon
-    link.href = _origFaviconHref;
-  }
-}
-
-function getFaviconLink() {
-  let link = document.querySelector('link[rel="icon"]');
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = 'icon';
-    link.type = 'image/png';
-    document.head.appendChild(link);
-  }
-  return link;
-}
-
-function makeBlankFavicon(link) {
-  // create a blank base so we can always draw something
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#0f172a'; // slate-ish
-  ctx.fillRect(0, 0, 64, 64);
-  link.href = c.toDataURL('image/png');
-  return link.href;
-}
-
-function generateFaviconBadge(src, count) {
-  const cap = count > BADGE_MAX ? '99+' : String(count);
-  return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const size = 64;
-      const cvs = document.createElement('canvas');
-      cvs.width = cvs.height = size;
-      const ctx = cvs.getContext('2d');
-
-      // base icon
-      ctx.drawImage(img, 0, 0, size, size);
-
-      // badge circle (top-right)
-      const r = 18, x = size - r + 4, y = r - 4;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = '#e11d48'; // rose-600
-      ctx.fill();
-
-      // badge text
-      ctx.font = 'bold 26px system-ui, -apple-system, Segoe UI, Roboto';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#fff';
-      ctx.fillText(cap, x, y + 1);
-
-      resolve(cvs.toDataURL('image/png'));
-    };
-    img.onerror = () => resolve(src); // fall back to original
-    img.src = src || makeBlankFavicon(getFaviconLink());
-  });
 }
 
 
