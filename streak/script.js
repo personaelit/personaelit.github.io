@@ -10,6 +10,12 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const todayKey = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
 const fmtLongDate = d => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+const keyFromDate = d => d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+const dateFromKey = k => {
+  const [y,m,d] = k.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
 
 function load(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -98,59 +104,72 @@ function deleteTask(id) {
 }
 
 function renderTasks() {
-    const today = todayKey();
-    const doneSet = new Set(state.completions[today] || []);
-    const map = new Map(state.tasks.map(t => [t.id, t]));
+  const today = todayKey();
+  const doneSet = new Set(state.completions[today] || []);
+  const map = new Map(state.tasks.map(t => [t.id, t]));
 
-    list.innerHTML = '';
-    for (const id of state.order) {
-        const t = map.get(id);
-        if (!t) continue;
+  list.innerHTML = '';
+  for (const id of state.order) {
+    const t = map.get(id);
+    if (!t) continue;
 
-        const li = document.createElement('li');
-        li.className = 'task';
-        li.dataset.id = id;
+    const li = document.createElement('li');
+    li.className = 'task';
+    li.dataset.id = id;
 
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = doneSet.has(id);
-        cb.addEventListener('change', () => toggleComplete(id, cb.checked));
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = doneSet.has(id);
+    cb.addEventListener('change', () => toggleComplete(id, cb.checked));
 
-        const label = document.createElement('div');
-        label.className = 'text';
-        label.textContent = t.text;
+    const label = document.createElement('div');
+    label.className = 'text';
+    label.textContent = t.text;
 
-        const actions = document.createElement('div');
-        actions.className = 'actions';
+    const actions = document.createElement('div');
+    actions.className = 'actions';
 
-        const dragBtn = document.createElement('button');
-        dragBtn.type = 'button';
-        dragBtn.className = 'icon';
-        dragBtn.title = 'Drag to reorder';
-        dragBtn.textContent = '↕';
+    // NEW: per-task streak badge
+    const badge = document.createElement('span');
+    badge.className = 'streak-badge';
+    const cur = currentTaskStreak(id);
+    const max = maxTaskStreak(id);
+    badge.textContent = `🔥 ${cur}`;
+    badge.title = `Current streak: ${cur} • Max: ${max}`;
 
-        const delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.className = 'delete';
-        delBtn.textContent = 'Delete';
-        delBtn.addEventListener('click', () => deleteTask(id));
+    const dragBtn = document.createElement('button');
+    dragBtn.type = 'button';
+    dragBtn.className = 'icon';
+    dragBtn.title = 'Drag to reorder';
+    dragBtn.textContent = '↕';
 
-        actions.append(dragBtn, delBtn);
-        li.append(cb, label, actions);
-        list.appendChild(li);
-    }
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'delete';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', () => deleteTask(id));
+
+    actions.append(badge, dragBtn, delBtn); // ⟵ include badge
+    li.append(cb, label, actions);
+    list.appendChild(li);
+  }
 }
+
 
 function toggleComplete(id, checked) {
-    const key = todayKey();
-    const set = new Set(state.completions[key] || []);
-    if (checked) set.add(id); else set.delete(id);
-    state.completions[key] = [...set];
-    save('streak.completions', state.completions);
+  const key = todayKey();
+  const set = new Set(state.completions[key] || []);
+  if (checked) set.add(id); else set.delete(id);
+  state.completions[key] = [...set];
+  save('streak.completions', state.completions);
 
-    // Recompute progress & possibly award streak
-    updateForToday(true);
+  // Re-render list so badges update immediately
+  renderTasks();
+
+  // Recompute progress & possibly award streak
+  updateForToday(true);
 }
+
 
 // ---------- Progress / Streak ----------
 function updateForToday(allowReward) {
@@ -281,6 +300,48 @@ function safeTaskLabel(t) {
     const txt = (t.text || '').trim();
     if (txt.length <= 24 && txt) return txt;
     return (txt ? txt.slice(0, 21) + '…' : ('Task ' + t.id.slice(-4)));
+}
+
+// ---- Date helpers ----
+const DAY_MS = 86_400_000;
+
+
+// Build a Set of dates where a task was completed
+function taskDateSet(taskId) {
+  const s = new Set();
+  for (const [k, arr] of Object.entries(state.completions)) {
+    if ((arr || []).includes(taskId)) s.add(k);
+  }
+  return s;
+}
+
+// Current streak for a task, counting back from today calendar-day by calendar-day
+function currentTaskStreak(taskId) {
+  const done = taskDateSet(taskId);
+  let count = 0;
+  let d = new Date(); // today, local time
+  while (done.has(keyFromDate(d))) {
+    count++;
+    d = new Date(d.getTime() - DAY_MS);
+  }
+  return count;
+}
+
+// Max streak for a task across history (strictly consecutive calendar days)
+function maxTaskStreak(taskId) {
+  const done = [...taskDateSet(taskId)].sort(); // YYYY-MM-DD sorts lexicographically correctly
+  let max = 0, run = 0, prev = null;
+  for (const k of done) {
+    if (!prev) {
+      run = 1;
+    } else {
+      const diffDays = Math.round((dateFromKey(k) - dateFromKey(prev)) / DAY_MS);
+      run = (diffDays === 1) ? run + 1 : 1;
+    }
+    if (run > max) max = run;
+    prev = k;
+  }
+  return max;
 }
 
 
