@@ -15,6 +15,8 @@ const dateFromKey = k => {
     const [y, m, d] = k.split('-').map(Number);
     return new Date(y, m - 1, d);
 };
+// ---- Date helpers ----
+const DAY_MS = 86_400_000;
 
 
 function load(key, fallback) {
@@ -355,8 +357,7 @@ function maybeUpdateTaskPB(taskId) {
 }
 
 
-// ---- Date helpers ----
-const DAY_MS = 86_400_000;
+
 
 
 // Build a Set of dates where a task was completed
