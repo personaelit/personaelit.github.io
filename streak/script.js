@@ -1,7 +1,7 @@
 // Streak — localStorage-powered habit tracker
 // Jim: tweak SETTINGS.THRESHOLD to require more/less completion for a "win".
 const SETTINGS = {
-    THRESHOLD: 0.5, // 50% of today's tasks must be checked to keep the streak
+    THRESHOLD: 0.75, // 50% of today's tasks must be checked to keep the streak
     MAX_HISTORY_POINTS: 30
 };
 
@@ -12,8 +12,8 @@ const todayKey = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
 const fmtLongDate = d => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 const keyFromDate = d => d.toLocaleDateString('en-CA'); // YYYY-MM-DD
 const dateFromKey = k => {
-  const [y,m,d] = k.split('-').map(Number);
-  return new Date(y, m - 1, d);
+    const [y, m, d] = k.split('-').map(Number);
+    return new Date(y, m - 1, d);
 };
 
 
@@ -30,7 +30,8 @@ const state = {
     streakCount: load('streak.count', 0),
     lastSuccessDate: load('streak.lastSuccessDate', null), // 'YYYY-MM-DD'
     history: load('streak.history', []), // [{date:'YYYY-MM-DD', streak: n}]
-    settings: load('streak.settings', { threshold: SETTINGS.THRESHOLD })
+    settings: load('streak.settings', { threshold: SETTINGS.THRESHOLD }),
+    taskPBs: load('streak.taskPBs', {}) // { [taskId]: { max:number, achievedOn:'YYYY-MM-DD' } }
 };
 
 // Ensure order contains all task ids
@@ -51,17 +52,36 @@ const historyCanvas = $('#history-chart');
 let chart;
 
 // ---------- Init ----------
+function backfillPBsFromHistory() {
+    let changed = false;
+    for (const t of state.tasks) {
+        const id = t.id;
+        const computedMax = maxTaskStreak(id);
+        const existing = getTaskPB(id).max;
+        if (computedMax && computedMax > (existing || 0)) {
+            // AchievedOn is unknown historically; store the latest day the run length was reached if you want,
+            // but simplest is to mark as today to avoid extra scanning:
+            state.taskPBs[id] = { max: computedMax, achievedOn: state.taskPBs[id]?.achievedOn ?? todayKey() };
+            changed = true;
+        }
+    }
+    if (changed) save('streak.taskPBs', state.taskPBs);
+}
+
 init();
 
+// In init():
 function init() {
     mountShell();
     renderTasks();
-    updateForToday(false); // compute progress; don't reward twice on load
+    backfillPBsFromHistory(); // <-- add this line (optional but recommended for first run)
+    updateForToday(false);
     bootSortable();
     initChart();
     tickCountdown();
     setInterval(tickCountdown, 1000);
 }
+
 
 // ---------- UI Shell ----------
 function mountShell() {
@@ -96,6 +116,12 @@ function deleteTask(id) {
     for (const [k, arr] of Object.entries(state.completions)) {
         state.completions[k] = arr.filter(x => x !== id);
     }
+
+    if (state.taskPBs[id]) {
+        delete state.taskPBs[id];
+        save('streak.taskPBs', state.taskPBs);
+    }
+
     save('streak.tasks', state.tasks);
     save('streak.order', state.order);
     save('streak.completions', state.completions);
@@ -104,70 +130,79 @@ function deleteTask(id) {
 }
 
 function renderTasks() {
-  const today = todayKey();
-  const doneSet = new Set(state.completions[today] || []);
-  const map = new Map(state.tasks.map(t => [t.id, t]));
+    const today = todayKey();
+    const doneSet = new Set(state.completions[today] || []);
+    const map = new Map(state.tasks.map(t => [t.id, t]));
 
-  list.innerHTML = '';
-  for (const id of state.order) {
-    const t = map.get(id);
-    if (!t) continue;
+    list.innerHTML = '';
+    for (const id of state.order) {
+        const t = map.get(id);
+        if (!t) continue;
 
-    const li = document.createElement('li');
-    li.className = 'task';
-    li.dataset.id = id;
+        const li = document.createElement('li');
+        li.className = 'task';
+        li.dataset.id = id;
 
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = doneSet.has(id);
-    cb.addEventListener('change', () => toggleComplete(id, cb.checked));
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = doneSet.has(id);
+        cb.addEventListener('change', () => toggleComplete(id, cb.checked));
 
-    const label = document.createElement('div');
-    label.className = 'text';
-    label.textContent = t.text;
+        const label = document.createElement('div');
+        label.className = 'text';
+        label.textContent = t.text;
 
-    const actions = document.createElement('div');
-    actions.className = 'actions';
+        const actions = document.createElement('div');
+        actions.className = 'actions';
 
-    // NEW: per-task streak badge
-    const badge = document.createElement('span');
-    badge.className = 'streak-badge';
-    const cur = currentTaskStreak(id);
-    const max = maxTaskStreak(id);
-    badge.textContent = `🔥 ${cur}`;
-    badge.title = `Current streak: ${cur} • Max: ${max}`;
+        const badge = document.createElement('span');
+        badge.className = 'streak-badge';
+        const cur = currentTaskStreak(id);
+        const max = maxTaskStreak(id);
+        const pb = getTaskPB(id).max || max; // if PB store was added later, fall back to computed max
+        const atPB = cur > 0 && cur === pb;
 
-    const dragBtn = document.createElement('button');
-    dragBtn.type = 'button';
-    dragBtn.className = 'icon';
-    dragBtn.title = 'Drag to reorder';
-    dragBtn.textContent = '↕';
+        // Visible text shows current streak; add 🏅 when at PB
+        badge.textContent = `${atPB ? '🏅' : '🔥'} ${cur}`;
 
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'delete';
-    delBtn.textContent = 'Delete';
-    delBtn.addEventListener('click', () => deleteTask(id));
+        // Rich hover info
+        const pbInfo = getTaskPB(id);
+        const when = pbInfo.achievedOn ? ` • PB set ${fmtLongDate(dateFromKey(pbInfo.achievedOn))}` : '';
+        badge.title = `Current streak: ${cur} • PB: ${pb}${when}`;
 
-    actions.append(badge, dragBtn, delBtn); // ⟵ include badge
-    li.append(cb, label, actions);
-    list.appendChild(li);
-  }
+        const dragBtn = document.createElement('button');
+        dragBtn.type = 'button';
+        dragBtn.className = 'icon';
+        dragBtn.title = 'Drag to reorder';
+        dragBtn.textContent = '↕';
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'delete';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', () => deleteTask(id));
+
+        actions.append(badge, dragBtn, delBtn); // ⟵ include badge
+        li.append(cb, label, actions);
+        list.appendChild(li);
+    }
 }
 
 
 function toggleComplete(id, checked) {
-  const key = todayKey();
-  const set = new Set(state.completions[key] || []);
-  if (checked) set.add(id); else set.delete(id);
-  state.completions[key] = [...set];
-  save('streak.completions', state.completions);
+    const key = todayKey();
+    const set = new Set(state.completions[key] || []);
+    if (checked) set.add(id); else set.delete(id);
+    state.completions[key] = [...set];
+    save('streak.completions', state.completions);
 
-  // Re-render list so badges update immediately
-  renderTasks();
+    maybeUpdateTaskPB(id);
 
-  // Recompute progress & possibly award streak
-  updateForToday(true);
+    // Re-render list so badges update immediately
+    renderTasks();
+
+    // Recompute progress & possibly award streak
+    updateForToday(true);
 }
 
 
@@ -302,46 +337,64 @@ function safeTaskLabel(t) {
     return (txt ? txt.slice(0, 21) + '…' : ('Task ' + t.id.slice(-4)));
 }
 
+function getTaskPB(taskId) {
+    return state.taskPBs[taskId] ?? { max: 0, achievedOn: null };
+}
+
+function maybeUpdateTaskPB(taskId) {
+    const computedMax = maxTaskStreak(taskId); // from your existing function
+    const prev = getTaskPB(taskId).max;
+    if (computedMax > prev) {
+        state.taskPBs[taskId] = { max: computedMax, achievedOn: todayKey() };
+        save('streak.taskPBs', state.taskPBs);
+        // celebrate per-task PB
+        if (window.confetti) {
+            confetti({ particleCount: 80, spread: 60, startVelocity: 30, scalar: 0.8, origin: { y: 0.75 } });
+        }
+    }
+}
+
+
 // ---- Date helpers ----
 const DAY_MS = 86_400_000;
 
 
 // Build a Set of dates where a task was completed
 function taskDateSet(taskId) {
-  const s = new Set();
-  for (const [k, arr] of Object.entries(state.completions)) {
-    if ((arr || []).includes(taskId)) s.add(k);
-  }
-  return s;
+    const s = new Set();
+    for (const [k, arr] of Object.entries(state.completions)) {
+        if ((arr || []).includes(taskId)) s.add(k);
+    }
+    return s;
 }
 
 // Current streak for a task, counting back from today calendar-day by calendar-day
 function currentTaskStreak(taskId) {
-  const done = taskDateSet(taskId);
-  let count = 0;
-  let d = new Date(); // today, local time
-  while (done.has(keyFromDate(d))) {
-    count++;
-    d = new Date(d.getTime() - DAY_MS);
-  }
-  return count;
+    const done = taskDateSet(taskId);
+    let count = 0;
+    let d = new Date(); // today, local time
+    while (done.has(keyFromDate(d))) {
+        count++;
+        d = new Date(d.getTime() - DAY_MS);
+    }
+    return count;
 }
 
 // Max streak for a task across history (strictly consecutive calendar days)
 function maxTaskStreak(taskId) {
-  const done = [...taskDateSet(taskId)].sort(); // YYYY-MM-DD sorts lexicographically correctly
-  let max = 0, run = 0, prev = null;
-  for (const k of done) {
-    if (!prev) {
-      run = 1;
-    } else {
-      const diffDays = Math.round((dateFromKey(k) - dateFromKey(prev)) / DAY_MS);
-      run = (diffDays === 1) ? run + 1 : 1;
+    const done = [...taskDateSet(taskId)].sort(); // YYYY-MM-DD sorts lexicographically correctly
+    let max = 0, run = 0, prev = null;
+    for (const k of done) {
+        if (!prev) {
+            run = 1;
+        } else {
+            const diffDays = Math.round((dateFromKey(k) - dateFromKey(prev)) / DAY_MS);
+            run = (diffDays === 1) ? run + 1 : 1;
+        }
+        if (run > max) max = run;
+        prev = k;
     }
-    if (run > max) max = run;
-    prev = k;
-  }
-  return max;
+    return max;
 }
 
 
