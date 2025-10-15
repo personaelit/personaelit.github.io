@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Be The Cube</title>
+<title>Tesseract: 4D Projection + Dalí Cross Net</title>
 <style>
   html,body{height:100%;margin:0;overflow:hidden}
   body{
@@ -11,406 +11,285 @@
     color:#e5e7eb; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial
   }
   #c{position:fixed; inset:0; width:100%; height:100%; display:block}
-
   .hud{
-    position:fixed; left:12px; top:12px; background:rgba(15,23,42,.7); border:1px solid rgba(255,255,255,.12);
-    border-radius:12px; padding:10px 12px; backdrop-filter:blur(6px); font-size:12px; max-width:580px
+    position:fixed; left:12px; top:12px; background:rgba(15,23,42,.7);
+    border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px;
+    backdrop-filter:blur(6px); font-size:12px; max-width:600px
   }
   .row{display:flex; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap}
   .row input[type="range"]{width:160px}
+  select,button{
+    background:#172033; color:#e5e7eb; border:1px solid rgba(255,255,255,.12); border-radius:10px;
+    padding:6px 10px; cursor:pointer
+  }
+  button:hover{background:#1c2942}
   .pill{display:inline-block; padding:4px 8px; border:1px solid rgba(255,255,255,.12); border-radius:999px; background:#101a2d}
-  .swatch{width:14px;height:14px;border-radius:4px;border:1px solid rgba(255,255,255,.25);display:inline-block;vertical-align:-2px;margin-right:6px}
-
-  .overlay{
-    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-    color:#e5e7eb; background:rgba(0,0,0,.35); backdrop-filter: blur(3px); cursor:pointer; user-select:none; font-size:18px
-  }
-
-  /* Crosshair */
-  .xh{
-    position:fixed; left:50%; top:50%; width:22px; height:22px; margin-left:-11px; margin-top:-11px;
-    pointer-events:none; opacity:.8; filter:drop-shadow(0 0 3px rgba(0,0,0,.7));
-  }
-  .xh svg{display:block}
-  .xh.inrange circle{stroke:#e6f2ff}
-  .xh:not(.inrange) circle{stroke:#7aa3ff}
 </style>
 
+<!-- Import map so examples/* can import "three" -->
 <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
 </script>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="overlay" id="overlay">Click to start • WASD move • Mouse look • Click blocks to destroy</div>
-
-<!-- Crosshair -->
-<div class="xh" id="xh">
-  <svg width="22" height="22" viewBox="0 0 22 22">
-    <circle cx="11" cy="11" r="8" fill="none" stroke-width="1.5"/>
-    <line x1="11" y1="0"  x2="11" y2="4"  stroke="#e5e7eb" stroke-width="1"/>
-    <line x1="11" y1="18" x2="11" y2="22" stroke="#e5e7eb" stroke-width="1"/>
-    <line x1="0"  y1="11" x2="4"  y2="11" stroke="#e5e7eb" stroke-width="1"/>
-    <line x1="18" y1="11" x2="22" y2="11" stroke="#e5e7eb" stroke-width="1"/>
-  </svg>
-</div>
 
 <div class="hud">
-  <div class="row"><strong>Be The Cube — Infinite Wrap + Click-to-Destroy</strong></div>
-  <div class="row">
-    <span class="pill">Absorbed: <span id="count">0</span></span>
-    <span class="pill"><span id="sw" class="swatch"></span>Your Hue</span>
-    <span class="pill">Speed: <span id="spdVal">4.0</span></span>
+  <div class="row"><strong>Tesseract Modes</strong>
+    <span class="pill">Mode:</span>
+    <select id="mode">
+      <option value="proj">4D Projection (wireframe)</option>
+      <option value="net">Dalí Cross Net (8 cubes)</option>
+    </select>
+    <button id="resetCam">Reset Camera</button>
   </div>
-  <div class="row">
-    Speed <input id="speed" type="range" min="1" max="12" step="0.1" value="4">
-    Radius <input id="radius" type="range" min="3" max="8" step="1" value="5">
-    Density <input id="density" type="range" min="1" max="3" step="1" value="1">
-    Opacity <input id="opacity" type="range" min="0.08" max="0.8" step="0.01" value="0.35">
+
+  <div id="projUI">
+    <div class="row">
+      Spin XW <input id="rxw" type="range" min="-2" max="2" step="0.01" value="0.6">
+      Spin YW <input id="ryw" type="range" min="-2" max="2" step="0.01" value="0.7">
+      Spin ZW <input id="rzw" type="range" min="-2" max="2" step="0.01" value="0.5">
+      Depth d <input id="depth" type="range" min="1.2" max="4" step="0.01" value="2.2">
+    </div>
+    <div class="row">
+      Edge Width <input id="ew" type="range" min="1" max="5" step="1" value="2">
+      Scale <input id="scale" type="range" min="0.5" max="2" step="0.01" value="1.2">
+      Fade Backfaces <input id="fade" type="checkbox" checked>
+    </div>
   </div>
-  <div class="row">
-    Fog <input id="fog" type="checkbox">
-    Auto-Carve Cells <input id="autocarve" type="checkbox" checked>
-    Trail <input id="trail" type="checkbox" checked>
-    Trail Len <input id="trailLen" type="range" min="50" max="1500" step="10" value="500">
-    Range <input id="range" type="range" min="2" max="12" step="0.1" value="5">
-  </div>
-  <div class="row">
-    <button id="reseed">Reseed Colors</button>
-    <button id="clearTrail">Clear Trail</button>
-    <button id="reset">Reset Pos</button>
+
+  <div id="netUI" style="display:none">
+    <div class="row">
+      Cube Opacity <input id="op" type="range" min="0.1" max="0.9" step="0.01" value="0.45">
+      Glow (Additive) <input id="glow" type="checkbox" checked>
+      Outline <input id="edges" type="checkbox" checked>
+    </div>
   </div>
 </div>
 
 <script type="module">
 import * as THREE from "three";
-import { PointerLockControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
+import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
-/* ---------- Renderer / Scene ---------- */
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 
 const scene = new THREE.Scene();
-
-/* ---------- Camera & FP Controls ---------- */
-const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.05, 700);
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.05, 1000);
+camera.position.set(4, 4, 8);
 scene.add(camera);
-camera.position.set(0,0,0);
 
-const controls = new PointerLockControls(camera, document.body);
-const overlay = document.getElementById('overlay');
-overlay.addEventListener('click', ()=> controls.lock());
-controls.addEventListener('lock', ()=> overlay.style.display = 'none');
-controls.addEventListener('unlock', ()=> overlay.style.display = 'flex');
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0,0,0);
 
-/* ---------- Lights ---------- */
-scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-dir.position.set(8,12,16);
+dir.position.set(6,10,12);
 scene.add(dir);
 
-/* ---------- UI ---------- */
-const ui = {
-  speed:   document.getElementById('speed'),
-  spdVal:  document.getElementById('spdVal'),
-  radius:  document.getElementById('radius'),
-  density: document.getElementById('density'),
-  fog:     document.getElementById('fog'),
-  opacity: document.getElementById('opacity'),
-  reseed:  document.getElementById('reseed'),
-  reset:   document.getElementById('reset'),
-  count:   document.getElementById('count'),
-  swatch:  document.getElementById('sw'),
-  autocarve: document.getElementById('autocarve'),
-  trail:     document.getElementById('trail'),
-  trailLen:  document.getElementById('trailLen'),
-  clearTrail: document.getElementById('clearTrail'),
-  range:   document.getElementById('range')
-};
-ui.spdVal.textContent = parseFloat(ui.speed.value).toFixed(1);
-
-/* ---------- Player Cube (inside-out) ---------- */
-const PLAYER_SIZE = 0.9;
-const playerGeom = new THREE.BoxGeometry(PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE);
-const playerMaterials = Array.from({length:6}, () =>
-  new THREE.MeshStandardMaterial({
-    color: 0xffffff, transparent:true, opacity:0.25,
-    roughness:0.2, metalness:0.1, side:THREE.BackSide,
-    blending:THREE.AdditiveBlending, depthWrite:false
-  })
-);
-const playerCube = new THREE.Mesh(playerGeom, playerMaterials);
-camera.add(playerCube);
-
-const playerColor = new THREE.Color(0x88ccff);
-function updateSwatch(c){ ui.swatch.style.background = `#${c.getHexString()}`; }
-updateSwatch(playerColor);
-
-/* ---------- World Parameters ---------- */
-const SIZE = 0.95, GAP = 1.05;
-const worldGeom = new THREE.BoxGeometry(SIZE, SIZE, SIZE);
-const cluster = new THREE.Group(); scene.add(cluster);
-
-// seedable palette
-let seedOffset = 0;
-function hash4i(x,y,z,w){
-  let h = x*374761393 + y*668265263 + z*2147483647 + w*1597334677;
-  h = (h ^ (h>>>13)) * 1274126177;
-  h = (h ^ (h>>>16)) >>> 0;
-  return h / 4294967296;
-}
-function colorFromXYZFace(ix,iy,iz,fi){
-  const c = new THREE.Color();
-  const h = hash4i(ix*3+fi, iy*5+fi, iz*7+fi, seedOffset);
-  const s = 0.55 + hash4i(ix+fi, iy-fi, iz+2*fi, seedOffset)*0.35;
-  const l = 0.45 + hash4i(ix-2*fi, 9+iy, iz-fi, seedOffset)*0.35;
-  c.setHSL(h, s, l);
-  return c;
-}
-function makeTranslucentMaterials(opacity, ix,iy,iz){
-  return Array.from({length:6}, (_,fi)=>
-    new THREE.MeshStandardMaterial({
-      color: colorFromXYZFace(ix,iy,iz,fi),
-      transparent:true, opacity,
-      roughness:0.25, metalness:0.15,
-      side:THREE.DoubleSide,
-      depthWrite:false,
-      blending:THREE.AdditiveBlending
-    })
-  );
-}
-
-/* ---------- Infinite Wrap Window + Carve State ---------- */
-function key(ix,iy,iz){ return `${ix},${iy},${iz}`; }
-const grid = new Map();     // active meshes in window
-const consumed = new Set(); // permanently removed cells
-let cx=0, cy=0, cz=0;
-
-function withinWindow(ix,iy,iz, R){
-  return Math.abs(ix - cx) <= R && Math.abs(iy - cy) <= R && Math.abs(iz - cz) <= R;
-}
-
-function ensureWindow(){
-  const R = parseInt(ui.radius.value, 10);
-  const D = parseInt(ui.density.value, 10);
-  const opacity = parseFloat(ui.opacity.value);
-
-  // Add missing (skip consumed)
-  for (let ix=cx-R; ix<=cx+R; ix+=D)
-  for (let iy=cy-R; iy<=cy+R; iy+=D)
-  for (let iz=cz-R; iz<=cz+R; iz+=D){
-    if (ix===0 && iy===0 && iz===0) continue;
-    const k = key(ix,iy,iz);
-    if (consumed.has(k) || grid.has(k)) continue;
-    const mats = makeTranslucentMaterials(opacity, ix,iy,iz);
-    const m = new THREE.Mesh(worldGeom, mats);
-    m.position.set(ix*GAP, iy*GAP, iz*GAP);
-    m.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(worldGeom),
-      new THREE.LineBasicMaterial({ color:0xffffff, opacity:.08, transparent:true })
-    ));
-    m.userData.ix = ix; m.userData.iy = iy; m.userData.iz = iz;
-    cluster.add(m);
-    grid.set(k, m);
-  }
-
-  // Remove far away
-  for (const [k,m] of grid){
-    if (!withinWindow(m.userData.ix, m.userData.iy, m.userData.iz, R)){
-      cluster.remove(m);
-      grid.delete(k);
-    }
-  }
-
-  scene.fog = ui.fog.checked ? new THREE.FogExp2(0x0a1224, 0.004) : null;
-}
-ensureWindow();
-
-/* ---------- Movement (look-directed) ---------- */
-const keysSet = new Set();
-addEventListener('keydown', e=>{ keysSet.add(e.code); });
-addEventListener('keyup',   e=>{ keysSet.delete(e.code); });
-
-function getMoveDir(){
-  const dir = new THREE.Vector3();
-  const forward = new THREE.Vector3(); camera.getWorldDirection(forward).normalize();
-  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
-
-  if (keysSet.has('KeyW') || keysSet.has('ArrowUp'))    dir.add(forward);
-  if (keysSet.has('KeyS') || keysSet.has('ArrowDown'))  dir.addScaledVector(forward, -1);
-  if (keysSet.has('KeyA') || keysSet.has('ArrowLeft'))  dir.addScaledVector(right, -1);
-  if (keysSet.has('KeyD') || keysSet.has('ArrowRight')) dir.add(right);
-  if (keysSet.has('Space')) dir.y += 1;
-  if (keysSet.has('ShiftLeft') || keysSet.has('ShiftRight')) dir.y -= 1;
-
-  return dir.normalize();
-}
-
-/* ---------- Absorb / Carve ---------- */
-let absorbedCount = 0;
-const playerColorAvg = playerColor.clone();
-function averageCubeColor(mesh){
-  const arr = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-  const c = new THREE.Color(0,0,0); arr.forEach(m=> c.add(m.color));
-  return c.multiplyScalar(1/arr.length);
-}
-function absorbCube(mesh){
-  const target = averageCubeColor(mesh);
-  playerColorAvg.lerp(target, 0.35);
-  playerMaterials.forEach(m=> m.color.copy(playerColorAvg));
-  updateSwatch(playerColorAvg);
-
-  const k = key(mesh.userData.ix, mesh.userData.iy, mesh.userData.iz);
-  consumed.add(k);
-  cluster.remove(mesh);
-  grid.delete(k);
-
-  absorbedCount++;
-  ui.count.textContent = absorbedCount.toString();
-}
-const absorbRadius = 0.75;
-
-function absorbNearby(pos){
-  const rx = Math.round(pos.x / GAP);
-  const ry = Math.round(pos.y / GAP);
-  const rz = Math.round(pos.z / GAP);
-  for (let ix=rx-1; ix<=rx+1; ix++)
-  for (let iy=ry-1; iy<=ry+1; iy++)
-  for (let iz=rz-1; iz<=rz+1; iz++){
-    const m = grid.get(key(ix,iy,iz));
-    if (m && m.position.distanceTo(pos) < absorbRadius){
-      absorbCube(m);
-    }
-  }
-}
-
-// Auto-carve on cell entry
-let lastCell = {x:0,y:0,z:0};
-function autoCarveAtCell(ix,iy,iz){
-  const k = key(ix,iy,iz);
-  if (consumed.has(k)) return;
-  const m = grid.get(k);
-  if (m){ absorbCube(m); } else { consumed.add(k); }
-}
-
-/* ---------- Trail (breadcrumbs) ---------- */
-const trailMaterial = new THREE.LineBasicMaterial({ color: 0x88ccff, transparent:true, opacity:0.7, depthWrite:false });
-let trailGeom = new THREE.BufferGeometry();
-let trailPositions = new Float32Array(3 * parseInt(ui.trailLen.value, 10));
-trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
-let trail = new THREE.Line(trailGeom, trailMaterial);
-scene.add(trail);
-let trailIndex = 0;
-function resetTrail(){
-  trailIndex = 0;
-  trailPositions.fill(0);
-  trailGeom.attributes.position.needsUpdate = true;
-}
-ui.clearTrail.addEventListener('click', resetTrail);
-function pushTrailPoint(v){
-  const maxPts = parseInt(ui.trailLen.value, 10);
-  if (trailPositions.length !== maxPts*3){
-    trailPositions = new Float32Array(3*maxPts);
-    trailGeom.dispose();
-    trailGeom = new THREE.BufferGeometry();
-    trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
-    scene.remove(trail);
-    trail = new THREE.Line(trailGeom, trailMaterial);
-    scene.add(trail);
-    trailIndex = 0;
-  }
-  const i = (trailIndex % maxPts) * 3;
-  trailPositions[i+0] = v.x; trailPositions[i+1] = v.y; trailPositions[i+2] = v.z;
-  trailIndex++;
-  trailGeom.setDrawRange(0, Math.min(trailIndex, maxPts));
-  trailGeom.attributes.position.needsUpdate = true;
-}
-ui.trail.addEventListener('change', ()=> { trail.visible = ui.trail.checked; });
-
-/* ---------- Raycaster: Click-to-Destroy ---------- */
-const raycaster = new THREE.Raycaster();
-const xhair = document.getElementById('xh');
-
-function pickTarget(maxDist){
-  // build a list of candidate meshes (cluster children)
-  const candidates = [];
-  grid.forEach(m => candidates.push(m));
-  raycaster.setFromCamera(new THREE.Vector2(0,0), camera); // straight ahead
-  const hits = raycaster.intersectObjects(candidates, true);
-  for (const hit of hits){
-    // find the top-level cube mesh (faces and edges can be picked)
-    let obj = hit.object;
-    while (obj && obj.parent !== cluster) obj = obj.parent;
-    if (!obj) continue;
-    // ignore if too far
-    if (camera.position.distanceTo(obj.position) <= maxDist){
-      return obj;
-    }
-  }
-  return null;
-}
-
-addEventListener('mousedown', (e)=>{
-  if (!controls.isLocked) return;
-  if (e.button !== 0) return; // left click only
-  const maxDist = parseFloat(ui.range.value);
-  const target = pickTarget(maxDist);
-  if (target){
-    absorbCube(target);
-  }
+const modeSel = document.getElementById('mode');
+const projUI = document.getElementById('projUI');
+const netUI  = document.getElementById('netUI');
+document.getElementById('resetCam').addEventListener('click', ()=>{
+  camera.position.set(4,4,8); controls.target.set(0,0,0); controls.update();
 });
 
-/* ---------- Resize ---------- */
+/* -------------------- 4D → 3D PROJECTED TESSERACT -------------------- */
+const projGroup = new THREE.Group(); scene.add(projGroup);
+
+const rxw = document.getElementById('rxw');
+const ryw = document.getElementById('ryw');
+const rzw = document.getElementById('rzw');
+const depth = document.getElementById('depth');
+const edgeWidth = document.getElementById('ew');
+const scaleUI = document.getElementById('scale');
+const fadeBack = document.getElementById('fade');
+
+// Hypercube vertices (±1 in 4 dims)
+const V4 = [];
+for (let a of [-1,1])
+for (let b of [-1,1])
+for (let c of [-1,1])
+for (let d of [-1,1]) V4.push([a,b,c,d]); // (x,y,z,w)
+
+// Edge list: pairs of indices that differ in exactly one bit
+const edges = [];
+for (let i=0;i<16;i++){
+  for (let j=i+1;j<16;j++){
+    const di = V4[i], dj = V4[j];
+    let diff=0;
+    for (let k=0;k<4;k++) if (di[k] !== dj[k]) diff++;
+    if (diff===1) edges.push([i,j]);
+  }
+}
+
+// Buffers for projected vertices
+let P3 = new Array(16).fill(0).map(()=> new THREE.Vector3());
+
+// Geometry + line object
+let lineGeo = new THREE.BufferGeometry();
+let lineMat = new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent:true, opacity:1, linewidth: 1 });
+let pos = new Float32Array(edges.length * 2 * 3); // 2 endpoints * 3 coords
+lineGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+let wire = new THREE.LineSegments(lineGeo, lineMat);
+projGroup.add(wire);
+
+// simple per-vertex color fade (front vs back based on camera)
+let colors = new Float32Array(edges.length * 2 * 3);
+lineGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+lineMat.vertexColors = true;
+
+// 4D rotation helper (rotates [x,y,z,w] in a plane AB by theta)
+function rot4(v, iA, iB, theta){
+  const c = Math.cos(theta), s = Math.sin(theta);
+  const a = v[iA], b = v[iB];
+  v[iA] = a*c - b*s;
+  v[iB] = a*s + b*c;
+  return v;
+}
+
+// project 4D point to 3D with perspective on w:
+// x' = x / (d - w), etc. (d > 1)
+function project4to3([x,y,z,w], d){
+  const denom = (d - w);
+  return new THREE.Vector3(x/denom, y/denom, z/denom);
+}
+
+function updateProjected(t){
+  // copy & rotate each vertex in 4D
+  const d = parseFloat(depth.value);
+  const sXW = parseFloat(rxw.value) * t;
+  const sYW = parseFloat(ryw.value) * t;
+  const sZW = parseFloat(rzw.value) * t;
+  const scale = parseFloat(scaleUI.value);
+
+  const v4r = V4.map(v => [...v]); // clone
+
+  for (let i=0;i<v4r.length;i++){
+    rot4(v4r[i], 0, 3, sXW); // XW plane
+    rot4(v4r[i], 1, 3, sYW); // YW plane
+    rot4(v4r[i], 2, 3, sZW); // ZW plane
+    const p = project4to3(v4r[i], d).multiplyScalar(scale);
+    P3[i].copy(p);
+  }
+
+  // write edges
+  const pArr = lineGeo.attributes.position.array;
+  const cArr = lineGeo.attributes.color.array;
+  let idx = 0, cidx = 0;
+
+  // compute a “facing” factor per vertex vs camera (for optional fade)
+  const fade = fadeBack.checked;
+  const camDir = new THREE.Vector3().copy(camera.position).normalize();
+
+  for (let e=0; e<edges.length; e++){
+    const [a,b] = edges[e];
+    const A = P3[a], B = P3[b];
+
+    pArr[idx++] = A.x; pArr[idx++] = A.y; pArr[idx++] = A.z;
+    pArr[idx++] = B.x; pArr[idx++] = B.y; pArr[idx++] = B.z;
+
+    const fA = fade ? Math.max(0.25, 0.5 + 0.5*A.clone().normalize().dot(camDir)) : 1.0;
+    const fB = fade ? Math.max(0.25, 0.5 + 0.5*B.clone().normalize().dot(camDir)) : 1.0;
+
+    // base color 0x9fd0ff, scaled by f
+    const ca = new THREE.Color(0x9fd0ff).multiplyScalar(fA);
+    const cb = new THREE.Color(0x9fd0ff).multiplyScalar(fB);
+    cArr[cidx++] = ca.r; cArr[cidx++] = ca.g; cArr[cidx++] = ca.b;
+    cArr[cidx++] = cb.r; cArr[cidx++] = cb.g; cArr[cidx++] = cb.b;
+  }
+  lineGeo.attributes.position.needsUpdate = true;
+  lineGeo.attributes.color.needsUpdate = true;
+
+  // line width (note: many browsers don’t vary gl line width; still exposing UI)
+  lineMat.linewidth = parseInt(edgeWidth.value, 10);
+}
+
+/* -------------------- DALÍ CROSS NET (8 CUBES) -------------------- */
+const netGroup = new THREE.Group(); scene.add(netGroup);
+
+// “Dalí cross–inspired” placement of 8 cubes (one center + a cross/stack)
+const NET_POS = [
+  [ 0, 0, 0], // center
+  [ 1, 0, 0], [-1, 0, 0],
+  [ 0, 1, 0], [ 0,-1, 0],
+  [ 0, 0, 1], [ 0, 0,-1],
+  [ 0, 2, 0]  // a “flap” extending upward
+];
+const UNIT = 1.02; // spacing
+
+function randomFaceColor(){
+  const c = new THREE.Color(); c.setHSL(Math.random(), 0.6+Math.random()*0.3, 0.5+Math.random()*0.3);
+  return c;
+}
+function buildNet(){
+  // clear
+  while (netGroup.children.length) netGroup.remove(netGroup.children[0]);
+
+  const opacity = parseFloat(document.getElementById('op').value);
+  const glow = document.getElementById('glow').checked;
+  const showEdges = document.getElementById('edges').checked;
+
+  NET_POS.forEach(([x,y,z])=>{
+    const geom = new THREE.BoxGeometry(1,1,1);
+    const mats = Array.from({length:6}, ()=> new THREE.MeshStandardMaterial({
+      color: randomFaceColor(), transparent:true, opacity,
+      roughness: glow ? 0.25 : 0.5,
+      metalness: glow ? 0.15 : 0.0,
+      blending: glow ? THREE.AdditiveBlending : THREE.NormalBlending,
+      side: THREE.DoubleSide,
+      depthWrite: !glow
+    }));
+    const cube = new THREE.Mesh(geom, mats);
+    cube.position.set(x*UNIT, y*UNIT, z*UNIT);
+    if (showEdges){
+      cube.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(geom),
+        new THREE.LineBasicMaterial({ color:0xffffff, opacity:0.15, transparent:true })
+      ));
+    }
+    netGroup.add(cube);
+  });
+}
+buildNet();
+
+/* -------------------- Mode Toggle -------------------- */
+function setMode(){
+  const m = modeSel.value;
+  const proj = (m === 'proj');
+  projGroup.visible = proj;
+  netGroup.visible = !proj;
+  projUI.style.display = proj ? '' : 'none';
+  netUI.style.display  = proj ? 'none' : '';
+}
+modeSel.addEventListener('change', setMode);
+setMode();
+
+document.getElementById('op').addEventListener('input', buildNet);
+document.getElementById('glow').addEventListener('change', buildNet);
+document.getElementById('edges').addEventListener('change', buildNet);
+
+/* -------------------- Loop -------------------- */
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(()=>{
+  const t = clock.getElapsedTime();
+  controls.update();
+  if (projGroup.visible){
+    updateProjected(t);
+  } else {
+    // gentle idle spin for the net
+    netGroup.rotation.y = t * 0.25;
+  }
+  renderer.render(scene, camera);
+});
+
 addEventListener('resize', ()=>{
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
-});
-
-/* ---------- Main Loop ---------- */
-const clock = new THREE.Clock();
-renderer.setAnimationLoop(()=>{
-  const dt = Math.min(0.033, clock.getDelta());
-
-  // move
-  if (controls.isLocked){
-    const dir = getMoveDir();
-    const speed = parseFloat(ui.speed.value);
-    camera.position.addScaledVector(dir, speed * dt);
-  }
-
-  // recenter window
-  const nx = Math.round(camera.position.x / GAP);
-  const ny = Math.round(camera.position.y / GAP);
-  const nz = Math.round(camera.position.z / GAP);
-  if (nx !== cx || ny !== cy || nz !== cz){
-    cx = nx; cy = ny; cz = nz;
-    ensureWindow();
-  }
-
-  // auto-carve on entering a new cell
-  if (ui.autocarve.checked){
-    if (nx !== lastCell.x || ny !== lastCell.y || nz !== lastCell.z){
-      autoCarveAtCell(nx, ny, nz);
-      lastCell = {x:nx, y:ny, z:nz};
-    }
-  }
-
-  // collide-consume nearby
-  absorbNearby(camera.position);
-
-  // trail
-  if (ui.trail.checked){
-    pushTrailPoint(camera.position);
-  }
-
-  // crosshair state (in range?)
-  const target = pickTarget(parseFloat(ui.range.value));
-  xhair.classList.toggle('inrange', !!target);
-
-  renderer.render(scene, camera);
 });
 </script>
 </body>
