@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Glass Cube Playground — 3×3×3</title>
+<style>
+  :root {
+    --panel-bg: rgba(15,23,42,.7);
+    --panel-bd: rgba(255,255,255,.12);
+    --txt: #e5e7eb;
+    --muted: #93a4b2;
+  }
+  html,body{height:100%;margin:0}
+  /* Nice gradient behind the transparent canvas */
+  body{
+    background: radial-gradient(1200px 800px at 70% 20%, #12223f 0%, #0b1426 55%, #070b14 100%);
+    color: var(--txt); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+  #c{position:fixed; inset:0; display:block; width:100%; height:100%}
+  .panel{
+    position:fixed; right:16px; top:16px; width:320px; max-width:90vw;
+    background: var(--panel-bg); border:1px solid var(--panel-bd); border-radius:14px;
+    padding:12px 12px 10px; backdrop-filter: blur(6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  .row{display:grid; grid-template-columns: 1fr auto; align-items:center; gap:10px; margin:8px 0}
+  .row > label{font-size:12px; color: var(--muted)}
+  .row > input[type="range"]{width:170px}
+  .row > input[type="checkbox"]{transform: translateY(1px)}
+  .row > select{background:#0f172a; color:var(--txt); border:1px solid var(--panel-bd); border-radius:8px; padding:6px 8px}
+  .title{font-weight:700; letter-spacing:.02em; margin-bottom:6px}
+  .bar{height:1px; background: var(--panel-bd); margin:8px 0}
+  .btns{display:flex; gap:8px; flex-wrap:wrap}
+  button{
+    background:#172033; color:var(--txt); border:1px solid var(--panel-bd); border-radius:10px;
+    padding:6px 10px; cursor:pointer
+  }
+  button:hover{background:#1c2942}
+  .tiny{font-size:12px; color:var(--muted); margin-top:4px}
+</style>
+
+<!-- Map bare "three" to CDN for OrbitControls' internal import -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="panel">
+  <div class="title">Glass Cube Playground</div>
+
+  <div class="row">
+    <label>Look</label>
+    <select id="look">
+      <option value="glass">Glass (Physical)</option>
+      <option value="glow">Glow (Additive)</option>
+    </select>
+  </div>
+
+  <div class="row"><label>Auto-Rotate</label><input id="autorot" type="checkbox" checked></div>
+  <div class="row"><label>Rotate Speed</label><input id="rotspeed" type="range" min="-1" max="1" step="0.01" value="0.15"></div>
+
+  <div class="bar"></div>
+  <div class="row"><label>Opacity</label><input id="opacity" type="range" min="0.05" max="1" step="0.01" value="0.35"></div>
+
+  <div id="glassParams">
+    <div class="row"><label>Transmission</label><input id="transmission" type="range" min="0" max="1" step="0.01" value="0.9"></div>
+    <div class="row"><label>Thickness</label><input id="thickness" type="range" min="0" max="3" step="0.05" value="1.2"></div>
+    <div class="row"><label>Clearcoat</label><input id="clearcoat" type="range" min="0" max="1" step="0.01" value="0.6"></div>
+    <div class="row"><label>IOR</label><input id="ior" type="range" min="1" max="2.333" step="0.001" value="1.5"></div>
+    <div class="row"><label>Roughness</label><input id="roughness" type="range" min="0" max="1" step="0.01" value="0.15"></div>
+    <div class="row"><label>Metalness</label><input id="metalness" type="range" min="0" max="1" step="0.01" value="0.0"></div>
+  </div>
+
+  <div id="glowParams" style="display:none">
+    <div class="row"><label>Roughness</label><input id="gRoughness" type="range" min="0" max="1" step="0.01" value="0.3"></div>
+    <div class="row"><label>Metalness</label><input id="gMetalness" type="range" min="0" max="1" step="0.01" value="0.2"></div>
+  </div>
+
+  <div class="bar"></div>
+  <div class="row"><label>Fog</label><input id="fogToggle" type="checkbox"></div>
+  <div class="row"><label>Fog Density</label><input id="fogDensity" type="range" min="0.0" max="0.02" step="0.0005" value="0.004"></div>
+
+  <div class="bar"></div>
+  <div class="btns">
+    <button id="randomize">🎲 Randomize Colors</button>
+    <button id="shuffle">🔁 Shuffle Layout</button>
+    <button id="resetCam">🎯 Reset Camera</button>
+  </div>
+  <div class="tiny">Drag to orbit • Scroll to zoom</div>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+
+/* ---------- Renderer / Scene / Camera ---------- */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(6, 6, 10);
+scene.add(camera);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0,0,0);
+
+/* ---------- Lights ---------- */
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+dir.position.set(5, 7, 10);
+scene.add(dir);
+
+/* ---------- Helpers ---------- */
+const SIZE = 0.95;
+const GAP  = 1.05;
+const geom = new THREE.BoxGeometry(SIZE, SIZE, SIZE);
+const cluster = new THREE.Group(); scene.add(cluster);
+
+// generate random HSL (nice brights)
+function randomColor(){
+  const c = new THREE.Color();
+  c.setHSL(Math.random(), 0.55 + Math.random()*0.35, 0.5 + Math.random()*0.3);
+  return c;
+}
+
+// material builders
+function makeGlassMaterials(opacity, {transmission, thickness, clearcoat, ior, roughness, metalness}){
+  return Array.from({length:6}, () =>
+    new THREE.MeshPhysicalMaterial({
+      color: randomColor(),
+      transparent: true,
+      opacity,
+      transmission,     // true glass
+      thickness,
+      roughness,
+      metalness,
+      clearcoat,
+      ior,
+      reflectivity: 0.5,
+      attenuationColor: 0xffffff,
+      attenuationDistance: 0.0,
+      side: THREE.DoubleSide
+    })
+  );
+}
+
+function makeGlowMaterials(opacity, {roughness, metalness}){
+  return Array.from({length:6}, () =>
+    new THREE.MeshStandardMaterial({
+      color: randomColor(),
+      transparent: true,
+      opacity,
+      roughness,
+      metalness,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    })
+  );
+}
+
+/* ---------- Build Grid ---------- */
+function buildGrid(materialFactory){
+  cluster.clear();
+  for (let x=-1; x<=1; x++)
+  for (let y=-1; y<=1; y++)
+  for (let z=-1; z<=1; z++){
+    const cube = new THREE.Mesh(geom, materialFactory());
+    cube.position.set(x*GAP, y*GAP, z*GAP);
+    // subtle outline
+    cube.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(geom),
+      new THREE.LineBasicMaterial({ color:0xffffff, opacity:0.14, transparent:true })
+    ));
+    cluster.add(cube);
+  }
+  cluster.rotation.set(-0.5, 0.8, 0);
+}
+
+/* ---------- UI State ---------- */
+const ui = {
+  look: document.getElementById('look'),
+  autorot: document.getElementById('autorot'),
+  rotspeed: document.getElementById('rotspeed'),
+  opacity: document.getElementById('opacity'),
+  transmission: document.getElementById('transmission'),
+  thickness: document.getElementById('thickness'),
+  clearcoat: document.getElementById('clearcoat'),
+  ior: document.getElementById('ior'),
+  roughness: document.getElementById('roughness'),
+  metalness: document.getElementById('metalness'),
+  gRoughness: document.getElementById('gRoughness'),
+  gMetalness: document.getElementById('gMetalness'),
+  fogToggle: document.getElementById('fogToggle'),
+  fogDensity: document.getElementById('fogDensity'),
+  randomize: document.getElementById('randomize'),
+  shuffle: document.getElementById('shuffle'),
+  resetCam: document.getElementById('resetCam'),
+  glassParams: document.getElementById('glassParams'),
+  glowParams: document.getElementById('glowParams')
+};
+
+function currentGlassParams(){
+  return {
+    transmission: parseFloat(ui.transmission.value),
+    thickness:    parseFloat(ui.thickness.value),
+    clearcoat:    parseFloat(ui.clearcoat.value),
+    ior:          parseFloat(ui.ior.value),
+    roughness:    parseFloat(ui.roughness.value),
+    metalness:    parseFloat(ui.metalness.value)
+  };
+}
+function currentGlowParams(){
+  return {
+    roughness:    parseFloat(ui.gRoughness.value),
+    metalness:    parseFloat(ui.gMetalness.value)
+  };
+}
+
+function rebuild(){
+  const opacity = parseFloat(ui.opacity.value);
+  if (ui.look.value === 'glass'){
+    buildGrid(()=> makeGlassMaterials(opacity, currentGlassParams()));
+    ui.glassParams.style.display = '';
+    ui.glowParams.style.display = 'none';
+  } else {
+    buildGrid(()=> makeGlowMaterials(opacity, currentGlowParams()));
+    ui.glassParams.style.display = 'none';
+    ui.glowParams.style.display = '';
+  }
+}
+rebuild();
+
+/* ---------- Live Updates ---------- */
+function forEachMaterial(fn){
+  cluster.traverse(o=>{
+    if (!(o instanceof THREE.Mesh)) return;
+    const arr = Array.isArray(o.material) ? o.material : [o.material];
+    arr.forEach(fn);
+  });
+}
+ui.opacity.addEventListener('input', ()=>{
+  const v = parseFloat(ui.opacity.value);
+  forEachMaterial(m=>{ m.opacity = v; m.needsUpdate = true; });
+});
+['transmission','thickness','clearcoat','ior','roughness','metalness'].forEach(id=>{
+  ui[id].addEventListener('input', ()=>{
+    if (ui.look.value!=='glass') return;
+    const p = currentGlassParams();
+    forEachMaterial(m=>{
+      if (!(m instanceof THREE.MeshPhysicalMaterial)) return;
+      m.transmission = p.transmission;
+      m.thickness    = p.thickness;
+      m.clearcoat    = p.clearcoat;
+      m.ior          = p.ior;
+      m.roughness    = p.roughness;
+      m.metalness    = p.metalness;
+      m.needsUpdate = true;
+    });
+  });
+});
+['gRoughness','gMetalness'].forEach(id=>{
+  ui[id].addEventListener('input', ()=>{
+    if (ui.look.value!=='glow') return;
+    const p = currentGlowParams();
+    forEachMaterial(m=>{
+      if (!(m instanceof THREE.MeshStandardMaterial)) return;
+      m.roughness = p.roughness;
+      m.metalness = p.metalness;
+      m.needsUpdate = true;
+    });
+  });
+});
+
+ui.look.addEventListener('change', rebuild);
+
+ui.randomize.addEventListener('click', ()=>{
+  // assign fresh colors per face
+  forEachMaterial(m=>{ m.color = randomColor(); m.needsUpdate = true; });
+});
+
+ui.shuffle.addEventListener('click', ()=>{
+  // tweak positions slightly and re-center
+  cluster.children.forEach((cube,i)=>{
+    const x = (i%3)-1, y = Math.floor(i/9)-0, z = Math.floor(i/3)%3 -1; // still 3×3×3 indexing
+    const jitter = 0.03;
+    cube.position.set((x*GAP)+(Math.random()*jitter*2-jitter),
+                      (y*GAP)+(Math.random()*jitter*2-jitter),
+                      (z*GAP)+(Math.random()*jitter*2-jitter));
+  });
+});
+
+ui.resetCam.addEventListener('click', ()=>{
+  camera.position.set(6,6,10);
+  controls.target.set(0,0,0);
+  controls.update();
+});
+
+/* ---------- Fog ---------- */
+function updateFog(){
+  if (ui.fogToggle.checked){
+    const density = parseFloat(ui.fogDensity.value);
+    scene.fog = new THREE.FogExp2(0x0a1224, density);
+  } else {
+    scene.fog = null;
+  }
+}
+ui.fogToggle.addEventListener('change', updateFog);
+ui.fogDensity.addEventListener('input', updateFog);
+
+/* ---------- Resize ---------- */
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ---------- Animate ---------- */
+let t = 0;
+renderer.setAnimationLoop(()=>{
+  controls.update();
+  if (ui.autorot.checked){
+    const speed = parseFloat(ui.rotspeed.value);
+    t += speed * 0.01;
+    cluster.rotation.y = t;
+    cluster.rotation.x = -0.5 + Math.sin(t*0.6)*0.1;
+  }
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
