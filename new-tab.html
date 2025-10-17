@@ -1,470 +1,653 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>StayOnline Dashboard</title>
-    <link rel="icon" href="https://www.stayonline.com/favicon.ico" type="image/x-icon" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <meta charset="UTF-8" />
+  <title>StayOnline Dashboard</title>
+  <link id="page-favicon" rel="icon" href="https://www.stayonline.com/favicon.ico" type="image/x-icon" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <style>
-/* === GLOBAL === */
-body {
-    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background: linear-gradient(135deg, #f9f9f9, #eef3f9);
-    margin: 0;
-    padding: 20px;
-    overflow-x: hidden;
-    color: #222;
-}
+  <style>
+    /* === THEME TOKENS === */
+    :root {
+      --if-blue: #0069bb;
+      --if-blue-dark: #0056b3;
 
-h1 {
-    margin-bottom: 24px;
-    text-align: center;
-    width: 100%;
-    font-size: 2.2rem;
-    color: #0069bb;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
+      /* Light (default) */
+      --bg: linear-gradient(135deg, #f9f9f9, #eef3f9);
+      --surface: #ffffff;
+      --surface-2: #f9fafb;
+      --text: #222;
+      --muted: #4b5563;
+      --border: #e0e4ea;
+      --shadow: 0 3px 8px rgba(0,0,0,0.05);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.12);
+      --inset: inset 0 1px 3px rgba(0,0,0,0.06);
+      --hero-text: var(--if-blue);
+      --modal-scrim: rgba(0, 20, 40, 0.55);
+      --sticky: #fffbea;
+      --badge: rgba(0,105,187,0.2);
+      color-scheme: light;
+    }
 
-/* === SEARCH === */
-.search-box {
-    max-width: 600px;
-    margin: auto;
-    display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
-}
+    /* Dark scheme via data attribute */
+    [data-theme="dark"] {
+      --bg: radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%);
+      --surface: #0f172a;
+      --surface-2: #0b1324;
+      --text: #e5e7eb;
+      --muted: #9aa3b2;
+      --border: #1f2937;
+      --shadow: 0 3px 10px rgba(0,0,0,0.4);
+      --shadow-lg: 0 10px 24px rgba(0,0,0,0.5);
+      --inset: inset 0 1px 3px rgba(255,255,255,0.04);
+      --hero-text: #8ecaff;
+      --modal-scrim: rgba(2, 6, 23, 0.65);
+      --sticky: #1f2937;
+      --badge: rgba(142, 202, 255, 0.18);
+      color-scheme: dark;
+    }
 
-input[type="text"] {
-    flex: 1;
-    padding: 12px 14px;
-    font-size: 1.05em;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
-    transition: border 0.2s, box-shadow 0.2s;
-}
+    /* Respect system preference by default; user toggle overrides via data-theme */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%);
+        --surface: #0f172a;
+        --surface-2: #0b1324;
+        --text: #e5e7eb;
+        --muted: #9aa3b2;
+        --border: #1f2937;
+        --shadow: 0 3px 10px rgba(0,0,0,0.4);
+        --shadow-lg: 0 10px 24px rgba(0,0,0,0.5);
+        --inset: inset 0 1px 3px rgba(255,255,255,0.04);
+        --hero-text: #8ecaff;
+        --modal-scrim: rgba(2, 6, 23, 0.65);
+        --sticky: #1f2937;
+        --badge: rgba(142, 202, 255, 0.18);
+        color-scheme: dark;
+      }
+    }
 
-input[type="text"]:focus {
-    outline: none;
-    border-color: #0069bb;
-    box-shadow: 0 0 0 3px rgba(0,105,187,0.2);
-}
+    /* === GLOBAL === */
+    html, body { height: 100%; }
+    body {
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      margin: 0;
+      padding: 20px;
+      overflow-x: hidden;
+      color: var(--text);
+    }
 
-button {
-    padding: 12px 20px;
-    font-size: 1.05em;
-    border: none;
-    background: linear-gradient(135deg, #0069bb, #0056b3);
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
+    h1 {
+      margin-bottom: 24px;
+      text-align: center;
+      width: 100%;
+      font-size: 2.2rem;
+      color: var(--hero-text);
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
 
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
+    /* === THEME TOGGLE === */
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1001;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
 
-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
+    /* === SEARCH === */
+    .search-box {
+      max-width: 600px;
+      margin: auto;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
 
-/* === QUICK LINKS === */
-.quick-links {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
-    max-width: 1100px;
-    margin: 20px auto;
-}
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 1.05em;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--inset);
+      background: var(--surface);
+      color: var(--text);
+      transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+    }
 
-.quick-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: white;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid #e0e4ea;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-    transition: transform 0.15s ease, box-shadow 0.2s ease;
-}
+    input[type="text"]::placeholder { color: var(--muted); }
 
-.quick-link:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-}
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--if-blue);
+      box-shadow: 0 0 0 3px var(--badge);
+    }
 
-.quick-link .link-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-}
+    button {
+      padding: 12px 20px;
+      font-size: 1.05em;
+      border: none;
+      background: linear-gradient(135deg, var(--if-blue), var(--if-blue-dark));
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
 
-.quick-link img {
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-}
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
 
-.quick-link a {
-    color: #0069bb;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s ease;
-}
+    button:active {
+      transform: translateY(0);
+    }
 
-.quick-link a:hover {
-    color: #0056b3;
-}
+    /* === QUICK LINKS === */
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      max-width: 1100px;
+      margin: 20px auto;
+    }
 
-.quick-link .delete-btn {
-    background: none;
-    border: none;
-    color: #d33;
-    font-size: 16px;
-    cursor: pointer;
-    transition: transform 0.15s ease;
-}
+    .quick-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
 
-.quick-link .delete-btn:hover {
-    transform: scale(1.2);
-}
+    .quick-link:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
 
-/* === MODAL === */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 10;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 20, 40, 0.55);
-    backdrop-filter: blur(6px);
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn 0.2s ease;
-}
+    .quick-link .link-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      color: var(--text);
+    }
 
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
+    .quick-link img {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      object-fit: cover;
+    }
 
-.modal-content {
-    background: white;
-    padding: 24px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 420px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
-}
+    .quick-link a {
+      color: var(--if-blue);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
 
-.modal-content input {
-    width: 100%;
-    margin-bottom: 12px;
-    padding: 10px;
-    font-size: 1em;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    transition: border 0.2s;
-}
+    .quick-link a:hover { color: var(--if-blue-dark); }
 
-.modal-content input:focus {
-    border-color: #0069bb;
-    outline: none;
-}
+    .quick-link .delete-btn {
+      background: none;
+      border: none;
+      color: #d33;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
 
-/* === BLOCKS (Sticky Notes) === */
-.block {
-    position: absolute;
-    width: 300px;
-    padding: 20px;
-    padding-top: 35px;
-    border: 1px solid #ddd;
-    background-color: #fffbea;
-    border-radius: 10px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-    cursor: move;
-    z-index: 5;
-    transition: box-shadow 0.2s ease;
-}
+    .quick-link .delete-btn:hover { transform: scale(1.2); }
 
-.block:hover {
-    box-shadow: 0 10px 22px rgba(0,0,0,0.2);
-}
+    /* === MODAL === */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      inset: 0;
+      background: var(--modal-scrim);
+      backdrop-filter: blur(6px);
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease;
+    }
 
-.block .delete-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: none;
-    border: none;
-    color: #d33;
-    font-size: 16px;
-    cursor: pointer;
-    transition: transform 0.15s ease;
-}
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 
-.block .delete-btn:hover {
-    transform: scale(1.2);
-}
+    .modal-content {
+      background: var(--surface);
+      color: var(--text);
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 420px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+    }
 
-.block-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 8px;
-}
+    .modal-content input {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--text);
+      transition: border 0.2s;
+    }
 
-.block-content {
-    font-size: 14px;
-    margin-bottom: 12px;
-    line-height: 1.4;
-}
+    .modal-content input:focus {
+      border-color: var(--if-blue);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--badge);
+    }
 
-.block-date {
-    font-size: 11px;
-    color: #777;
-}
+    /* === BLOCKS (Sticky Notes) === */
+    .block {
+      position: absolute;
+      width: 300px;
+      padding: 20px 20px 16px;
+      padding-top: 35px;
+      border: 1px solid var(--border);
+      background-color: var(--sticky);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      cursor: move;
+      z-index: 5;
+      transition: box-shadow 0.2s ease;
+      color: var(--text);
+    }
 
-/* === CONTROLS === */
-#controls {
-    text-align: center;
-    margin-bottom: 20px;
-}
+    .block .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: none;
+      border: none;
+      color: #d33;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
 
-#controls button {
-    margin: 0 5px;
-}
+    .block .delete-btn:hover { transform: scale(1.2); }
 
-    </style>
+    .block-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .block-content {
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .block-date {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    /* === CONTROLS === */
+    #controls { text-align: center; margin-bottom: 20px; }
+    #controls button { margin: 0 5px; }
+  </style>
 </head>
 
 <body>
-    <h1>Search</h1>
+  <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓 Theme</button>
 
-    <div class="search-box">
-        <input type="text" id="search" placeholder="Query..." autofocus onkeydown="if(event.key==='Enter'){execSearch();}" />
-        <button onclick="execSearch()">Search</button>
+  <h1>Search</h1>
+
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Query..." autofocus
+           onkeydown="if(event.key==='Enter'){execSearch();}" />
+    <button onclick="execSearch()">Search</button>
+  </div>
+
+  <div id="controls">
+    <button onclick="openModal()">+ Add Quick Link</button>
+    <button onclick="createBlock()">+ Sticky Note</button>
+  </div>
+
+  <div class="quick-links" id="quickLinksContainer"></div>
+
+  <div id="recentSearches" style="max-width: 500px; margin: 0 auto 20px; font-size: 0.95em;"></div>
+
+  <div class="modal" id="linkModal">
+    <div class="modal-content">
+      <input type="text" id="linkUrl" placeholder="URL (https://...)" />
+      <input type="text" id="linkText" placeholder="Link Text" />
+      <input type="text" id="linkFavicon" placeholder="Favicon URL (optional)" />
+      <button onclick="saveLink()">Save</button>
+      <button onclick="closeModal()">Cancel</button>
     </div>
+  </div>
 
-    <div id="controls">
-        <button onclick="openModal()">+ Add Quick Link</button>
-        <button onclick="createBlock()">+ Sticky Note</button>
-    </div>
+  <script>
+    /* =========================
+       THEME: system + toggle
+       ========================= */
+    const THEME_KEY = "soDashboard.theme";
+    const rootEl = document.documentElement;
+    const themeToggleBtn = document.getElementById("themeToggle");
 
-    <div class="quick-links" id="quickLinksContainer"></div>
-
-    <div id="recentSearches" style="max-width: 500px; margin: 0 auto 20px; font-size: 0.95em;"></div>
-
-    <div class="modal" id="linkModal">
-        <div class="modal-content">
-            <input type="text" id="linkUrl" placeholder="URL (https://...)" />
-            <input type="text" id="linkText" placeholder="Link Text" />
-            <input type="text" id="linkFavicon" placeholder="Favicon URL (optional)" />
-            <button onclick="saveLink()">Save</button>
-            <button onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
-
-    <script>
-        const quickLinksKey = "quickLinks";
-        const blocksKey = "stickyBlocks";
-
-        const searchKey = "recentSearches";
-
-        function saveRecentSearch(query) {
-            let history = JSON.parse(localStorage.getItem(searchKey)) || [];
-            history = [query, ...history.filter(s => s !== query)].slice(0, 10);
-            localStorage.setItem(searchKey, JSON.stringify(history));
-            renderRecentSearches();
+    function getSystemPrefersDark() {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    function applyTheme(theme) {
+      // theme = 'light' | 'dark' | null (system)
+      if (!theme) {
+        rootEl.removeAttribute("data-theme");
+        localStorage.removeItem(THEME_KEY);
+        return;
+      }
+      rootEl.setAttribute("data-theme", theme);
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "light" || saved === "dark") {
+        applyTheme(saved);
+      } else {
+        // follow system by default
+        applyTheme(null);
+      }
+      themeToggleBtn.addEventListener("click", () => {
+        const current = rootEl.getAttribute("data-theme");
+        if (!current) {
+          // currently following system; flip to explicit opposite of system
+          applyTheme(getSystemPrefersDark() ? "light" : "dark");
+        } else if (current === "light") {
+          applyTheme("dark");
+        } else if (current === "dark") {
+          applyTheme(null); // back to system
         }
+        themeToggleBtn.blur();
+      });
 
-        function renderRecentSearches() {
-            const container = document.getElementById("recentSearches");
-            const history = JSON.parse(localStorage.getItem(searchKey)) || [];
-            if (history.length === 0) {
-                container.innerHTML = "";
-                return;
-            }
+      // Live-update if following system (no data-theme attr)
+      if (!rootEl.getAttribute("data-theme") && window.matchMedia) {
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+          if (!localStorage.getItem(THEME_KEY)) {
+            applyTheme(null); // keep following system
+          }
+        });
+      }
+    }
 
-            container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(query =>
-                `<a href="#" onclick="execSearch('${query}')">${query}</a>`
-            ).join(" • ")}`;
-        }
+    /* ======================================
+       AVATAR/FAVICON: SVG fallback generator
+       ====================================== */
+    function hostnameFromUrl(url) {
+      try { return new URL(url).hostname; }
+      catch { return location.hostname; }
+    }
+    function pickColorFromString(str) {
+      // deterministic pastel-ish
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      const h = Math.abs(hash) % 360;
+      return `hsl(${h}, 65%, 55%)`;
+    }
+    function generateAvatarDataURL(urlOrHost, size = 64) {
+      const host = urlOrHost.includes(".") ? hostnameFromUrl("https://" + urlOrHost.replace(/^https?:\/\//, "")) : hostnameFromUrl(urlOrHost);
+      const initial = (host[0] || "•").toUpperCase();
+      const bg = pickColorFromString(host);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+           <defs>
+             <filter id="s">
+               <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.2"/>
+             </filter>
+           </defs>
+           <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 2}" fill="${bg}" filter="url(#s)"/>
+           <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+                 font-family="Inter,Segoe UI,Arial" font-size="${size*0.52}" fill="#fff">${initial}</text>
+         </svg>`;
+      return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+    }
 
+    // Check page favicon and replace if 404
+    function ensurePageFavicon() {
+      const link = document.getElementById("page-favicon");
+      if (!link || !link.href) return;
 
-        function loadLinks() {
-            const links = JSON.parse(localStorage.getItem(quickLinksKey));
-            renderLinks(links);
-        }
+      const testImg = new Image();
+      testImg.onload = () => { /* ok */ };
+      testImg.onerror = () => {
+        const host = location.hostname || "site";
+        link.href = generateAvatarDataURL(host, 64);
+      };
+      testImg.src = link.href;
+    }
 
-        function renderLinks(links) {
-            const container = document.getElementById("quickLinksContainer");
-            container.innerHTML = "";
-            links.forEach((link, i) => {
-                const div = document.createElement("div");
-                div.className = "quick-link";
-                div.innerHTML = `
-                <a href="${link.url}">
-                    <div class="link-info">
-                        <img src="${link.favicon || getFavicon(link.url)}" alt="icon" />
-                        ${link.text}
-                    </div>
-                </a>
-                <button class="delete-btn" onclick="deleteLink(${i})">✕</button>
-                `;
-                container.appendChild(div);
-            });
-        }
+    /* =========================
+       Existing app state/logic
+       ========================= */
+    const quickLinksKey = "quickLinks";
+    const blocksKey = "stickyBlocks";
+    const searchKey = "recentSearches";
 
-        function getFavicon(url) {
-            try { return new URL(url).origin + "/favicon.ico"; }
-            catch { return "https://www.stayonline.com/favicon.ico"; }
-        }
+    function saveRecentSearch(query) {
+      let history = JSON.parse(localStorage.getItem(searchKey)) || [];
+      history = [query, ...history.filter(s => s !== query)].slice(0, 10);
+      localStorage.setItem(searchKey, JSON.stringify(history));
+      renderRecentSearches();
+    }
 
-        function openModal() {
-            document.getElementById("linkModal").style.display = "flex";
-        }
+    function renderRecentSearches() {
+      const container = document.getElementById("recentSearches");
+      const history = JSON.parse(localStorage.getItem(searchKey)) || [];
+      if (history.length === 0) {
+        container.innerHTML = "";
+        return;
+      }
+      container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(query =>
+        `<a href="#" onclick="execSearch('${query.replace(/'/g, "\\'")}');return false;">${query}</a>`
+      ).join(" • ")}`;
+    }
 
-        function closeModal() {
-            document.getElementById("linkModal").style.display = "none";
-        }
+    function getFavicon(url) {
+      try { return new URL(url).origin + "/favicon.ico"; }
+      catch { return "https://www.stayonline.com/favicon.ico"; }
+    }
 
-        function saveLink() {
-            const url = document.getElementById("linkUrl").value.trim();
-            const text = document.getElementById("linkText").value.trim();
-            const favicon = document.getElementById("linkFavicon").value.trim();
-            if (!url || !text) return alert("URL and Text are required.");
-            const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
-            links.push({ url, text, favicon });
-            localStorage.setItem(quickLinksKey, JSON.stringify(links));
-            closeModal(); renderLinks(links);
-        }
+    function loadLinks() {
+      const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
+      renderLinks(links);
+    }
 
-        function deleteLink(index) {
-            const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
-            links.splice(index, 1);
-            localStorage.setItem(quickLinksKey, JSON.stringify(links));
-            renderLinks(links);
-        }
+    function renderLinks(links) {
+      const container = document.getElementById("quickLinksContainer");
+      container.innerHTML = "";
+      links.forEach((link, i) => {
+        const div = document.createElement("div");
+        div.className = "quick-link";
 
-        function execSearch(searchQuery) {
-            const query = searchQuery || document.getElementById("search").value.trim();
-            if (query) {
-                let url;
-                if (query.includes("!p ")) {
-                    url = `https://www.perplexity.ai/search?q=${encodeURIComponent(query.replace("!p ", "").trim())}`;
-                } else if (query.includes("!s")){
-                    url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(query.replace("!s ", "").trim())})`;
-                }
-                else {
-                    url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-                }
-                window.location = url;
-                saveRecentSearch(query);
-            }
-        }
+        const a = document.createElement("a");
+        a.href = link.url;
 
+        const info = document.createElement("div");
+        info.className = "link-info";
 
-        // Sticky Blocks
-        function createBlock(data = null) {
-            const block = document.createElement("div");
-            block.className = "block";
-            block.style.left = (data?.x || Math.random() * window.innerWidth * 0.6) + "px";
-            block.style.top = (data?.y || Math.random() * window.innerHeight * 0.6) + "px";
+        const img = document.createElement("img");
+        img.alt = "icon";
+        img.referrerPolicy = "no-referrer";
+        img.src = link.favicon || getFavicon(link.url);
 
-            const title = document.createElement("div");
-            title.className = "block-title";
-            title.textContent = data?.title || "Title...";
-            title.contentEditable = true;
-            title.addEventListener("input", saveBlocks);
-            block.appendChild(title);
-
-            const content = document.createElement("div");
-            content.className = "block-content";
-            content.textContent = data?.content || "Content...";
-            content.contentEditable = true;
-            content.addEventListener("input", saveBlocks);
-            block.appendChild(content);
-
-            const deleteBtn = document.createElement("a");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.textContent = "X";
-            deleteBtn.style.marginRight = "10px";
-            deleteBtn.onclick = () => {
-                block.remove();
-                saveBlocks();
-            };
-            block.appendChild(deleteBtn);
-
-            const date = document.createElement("div");
-            date.className = "block-date";
-            date.textContent = "Created: " + (data?.created || new Date().toLocaleString());
-            block.appendChild(date);
-
-            document.body.appendChild(block);
-
-            block.onmousedown = function (e) {
-                if (e.target.tagName === "BUTTON" || e.target.className.includes("delete-btn")) return;
-                let offsetX = e.clientX - block.getBoundingClientRect().left;
-                let offsetY = e.clientY - block.getBoundingClientRect().top;
-                document.onmousemove = function (e) {
-                    block.style.left = e.clientX - offsetX + "px";
-                    block.style.top = e.clientY - offsetY + "px";
-                };
-                document.onmouseup = () => {
-                    document.onmousemove = null;
-                    document.onmouseup = null;
-                    saveBlocks();
-                };
-            };
-        }
-
-
-        function saveBlocks() {
-            const blocks = [...document.querySelectorAll(".block")].map(b => ({
-                x: parseFloat(b.style.left),
-                y: parseFloat(b.style.top),
-                title: b.querySelector(".block-title").textContent,
-                content: b.querySelector(".block-content").textContent,
-                created: b.querySelector(".block-date").textContent.replace("Created: ", "")
-            }));
-            localStorage.setItem(blocksKey, JSON.stringify(blocks));
-        }
-
-        function loadBlocks() {
-            const blocks = JSON.parse(localStorage.getItem(blocksKey) || "[]");
-            blocks.forEach(createBlock);
-        }
-
-        window.onload = () => {
-            loadLinks();
-            loadBlocks();
-            renderRecentSearches();
+        // If favicon fails, swap to generated avatar
+        img.onerror = () => {
+          img.onerror = null;
+          img.src = generateAvatarDataURL(hostnameFromUrl(link.url), 22);
         };
 
-    </script>
+        const text = document.createElement("span");
+        text.textContent = link.text;
 
-    <canvas id="butterflyCanvas"
-        style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;"></canvas>
-    <button id="toggleButterflies"
-        style="position:fixed;bottom:20px;right:20px;z-index:1000;padding:10px;border:none;border-radius:6px;background:#0069bb;color:white;cursor:pointer;">🦋
-        Butterflies: Off</button>
+        info.appendChild(img);
+        info.appendChild(text);
+        a.appendChild(info);
 
-</body>
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "✕";
+        del.onclick = () => deleteLink(i);
 
-<script>
+        div.appendChild(a);
+        div.appendChild(del);
+
+        container.appendChild(div);
+      });
+    }
+
+    function openModal() {
+      document.getElementById("linkModal").style.display = "flex";
+    }
+    function closeModal() {
+      document.getElementById("linkModal").style.display = "none";
+    }
+
+    function saveLink() {
+      const url = document.getElementById("linkUrl").value.trim();
+      const text = document.getElementById("linkText").value.trim();
+      const favicon = document.getElementById("linkFavicon").value.trim();
+      if (!url || !text) return alert("URL and Text are required.");
+      const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
+      links.push({ url, text, favicon });
+      localStorage.setItem(quickLinksKey, JSON.stringify(links));
+      closeModal(); renderLinks(links);
+    }
+
+    function deleteLink(index) {
+      const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
+      links.splice(index, 1);
+      localStorage.setItem(quickLinksKey, JSON.stringify(links));
+      renderLinks(links);
+    }
+
+    function execSearch(searchQuery) {
+      const query = searchQuery || document.getElementById("search").value.trim();
+      if (query) {
+        let url;
+        if (query.includes("!p ")) {
+          url = `https://www.perplexity.ai/search?q=${encodeURIComponent(query.replace("!p ", "").trim())}`;
+        } else if (query.includes("!s")){
+          url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(query.replace("!s ", "").trim())})`;
+        } else {
+          url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+        }
+        saveRecentSearch(query);
+        window.location = url;
+      }
+    }
+
+    // Sticky Blocks
+    function createBlock(data = null) {
+      const block = document.createElement("div");
+      block.className = "block";
+      block.style.left = (data?.x || Math.random() * window.innerWidth * 0.6) + "px";
+      block.style.top = (data?.y || Math.random() * window.innerHeight * 0.6) + "px";
+
+      const title = document.createElement("div");
+      title.className = "block-title";
+      title.textContent = data?.title || "Title...";
+      title.contentEditable = true;
+      title.addEventListener("input", saveBlocks);
+      block.appendChild(title);
+
+      const content = document.createElement("div");
+      content.className = "block-content";
+      content.textContent = data?.content || "Content...";
+      content.contentEditable = true;
+      content.addEventListener("input", saveBlocks);
+      block.appendChild(content);
+
+      const deleteBtn = document.createElement("a");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "X";
+      deleteBtn.style.marginRight = "10px";
+      deleteBtn.onclick = () => { block.remove(); saveBlocks(); };
+      block.appendChild(deleteBtn);
+
+      const date = document.createElement("div");
+      date.className = "block-date";
+      date.textContent = "Created: " + (data?.created || new Date().toLocaleString());
+      block.appendChild(date);
+
+      document.body.appendChild(block);
+
+      block.onmousedown = function (e) {
+        if (e.target.className && String(e.target.className).includes("delete-btn")) return;
+        let offsetX = e.clientX - block.getBoundingClientRect().left;
+        let offsetY = e.clientY - block.getBoundingClientRect().top;
+        document.onmousemove = function (e) {
+          block.style.left = e.clientX - offsetX + "px";
+          block.style.top = e.clientY - offsetY + "px";
+        };
+        document.onmouseup = () => {
+          document.onmousemove = null;
+          document.onmouseup = null;
+          saveBlocks();
+        };
+      };
+    }
+
+    function saveBlocks() {
+      const blocks = [...document.querySelectorAll(".block")].map(b => ({
+        x: parseFloat(b.style.left),
+        y: parseFloat(b.style.top),
+        title: b.querySelector(".block-title").textContent,
+        content: b.querySelector(".block-content").textContent,
+        created: b.querySelector(".block-date").textContent.replace("Created: ", "")
+      }));
+      localStorage.setItem("stickyBlocks", JSON.stringify(blocks));
+    }
+
+    function loadBlocks() {
+      const blocks = JSON.parse(localStorage.getItem("stickyBlocks") || "[]");
+      blocks.forEach(createBlock);
+    }
+
+    // Boot
+    window.onload = () => {
+      initTheme();
+      ensurePageFavicon();
+      loadLinks();
+      loadBlocks();
+      renderRecentSearches();
+    };
+  </script>
+
+  <!-- Butterflies canvas + toggle (unchanged) -->
+  <canvas id="butterflyCanvas"
+    style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;"></canvas>
+  <button id="toggleButterflies"
+    style="position:fixed;bottom:20px;right:20px;z-index:1000;padding:10px;border:none;border-radius:6px;background:#0069bb;color:white;cursor:pointer;">🦋
+    Butterflies: Off</button>
+
+  <script>
     const butterflyCanvas = document.getElementById("butterflyCanvas");
     const toggleBtn = document.getElementById("toggleButterflies");
     const ctx = butterflyCanvas.getContext("2d");
@@ -476,47 +659,45 @@ button:active {
     let isRunning = false;
 
     function createButterflies(count) {
-        const emojis = ["🦋", "🦋", "🦋", "🦋"];
-        return Array.from({ length: count }, () => ({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            vx: (Math.random() - 0.5) * 2,
-            vy: (Math.random() - 0.5) * 2,
-            emoji: emojis[Math.floor(Math.random() * emojis.length)]
-        }));
+      const emojis = ["🦋", "🦋", "🦋", "🦋"];
+      return Array.from({ length: count }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        emoji: emojis[Math.floor(Math.random() * emojis.length)]
+      }));
     }
 
     function drawButterflies() {
-        ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
-        ctx.font = "24px serif";
-        for (const b of butterflies) {
-            ctx.fillText(b.emoji, b.x, b.y);
-            b.x += b.vx;
-            b.y += b.vy;
-
-            if (b.x < 0 || b.x > window.innerWidth) b.vx *= -1;
-            if (b.y < 0 || b.y > window.innerHeight) b.vy *= -1;
-        }
-        animationFrame = requestAnimationFrame(drawButterflies);
+      ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
+      ctx.font = "24px serif";
+      for (const b of butterflies) {
+        ctx.fillText(b.emoji, b.x, b.y);
+        b.x += b.vx; b.y += b.vy;
+        if (b.x < 0 || b.x > window.innerWidth) b.vx *= -1;
+        if (b.y < 0 || b.y > window.innerHeight) b.vy *= -1;
+      }
+      animationFrame = requestAnimationFrame(drawButterflies);
     }
 
     toggleBtn.addEventListener("click", () => {
-        if (isRunning) {
-            cancelAnimationFrame(animationFrame);
-            ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
-            toggleBtn.textContent = "🦋 Butterflies: Off";
-        } else {
-            butterflies = createButterflies(20);
-            drawButterflies();
-            toggleBtn.textContent = "🦋 Butterflies: On";
-        }
-        isRunning = !isRunning;
+      if (isRunning) {
+        cancelAnimationFrame(animationFrame);
+        ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
+        toggleBtn.textContent = "🦋 Butterflies: Off";
+      } else {
+        butterflies = createButterflies(20);
+        drawButterflies();
+        toggleBtn.textContent = "🦋 Butterflies: On";
+      }
+      isRunning = !isRunning;
     });
 
     window.addEventListener("resize", () => {
-        butterflyCanvas.width = window.innerWidth;
-        butterflyCanvas.height = window.innerHeight;
+      butterflyCanvas.width = window.innerWidth;
+      butterflyCanvas.height = window.innerHeight;
     });
-</script>
-
+  </script>
+</body>
 </html>
