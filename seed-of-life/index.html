@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seed of Life — ROYGBIV Disks (Canvas)</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: radial-gradient(1200px 800px at 70% 20%, #0b1221 0%, #070d19 55%, #060910 100%);
+      color: #e5e7eb; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      display: grid; place-items: center;
+    }
+    .wrap { width: min(94vw, 900px); }
+    header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+    h1 { font-size: clamp(1rem, 2vw, 1.25rem); margin: 0; font-weight: 600; opacity: .8; }
+    #c { width: 100%; aspect-ratio: 1 / 1; display:block; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.35); background: #0d1628; }
+    .controls { display:flex; gap:10px; align-items:center; font-size: .95rem; opacity:.9 }
+    input[type="range"] { width: 180px; }
+    .pill { padding: 6px 10px; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:rgba(255,255,255,.05); }
+    button { all: unset; cursor: pointer; padding: 6px 10px; border-radius: 999px; border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); }
+    button:hover { background: rgba(255,255,255,.12); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ROYGBIV Seed of Life — Semi‑transparent Disks</h1>
+      <div class="controls">
+        <label class="pill">Alpha
+          <input id="alpha" type="range" min="0.1" max="1" step="0.05" value="0.6" />
+        </label>
+        <button id="rotate">Rotate 15°</button>
+        <button id="reset">Reset</button>
+      </div>
+    </header>
+    <canvas id="c"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const alphaInput = document.getElementById('alpha');
+    const rotateBtn = document.getElementById('rotate');
+    const resetBtn = document.getElementById('reset');
+
+    let rotation = 0; // radians
+
+    function resize() {
+      // Handle high-DPI displays
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing space back to CSS pixels
+      draw();
+    }
+
+    function hsla(h, s = 85, l = 55, a = 0.6) {
+      return `hsla(${h} ${s}% ${l}% / ${a})`;
+    }
+
+    function drawSeed({ cx, cy, r, a }) {
+      // ROYGBIV hues
+      const colors = [
+        hsla(0, 85, 52, a),    // Red
+        hsla(30, 90, 55, a),   // Orange
+        hsla(55, 95, 55, a),   // Yellow
+        hsla(130, 65, 48, a),  // Green
+        hsla(220, 80, 56, a),  // Blue
+        hsla(275, 65, 52, a),  // Indigo
+        hsla(300, 70, 60, a),  // Violet
+      ];
+
+      // Positions: center + six around at 60° increments
+      const positions = [{ x: cx, y: cy }];
+      for (let k = 0; k < 6; k++) {
+        const ang = rotation + (Math.PI / 3) * k; // 0,60,120,...
+        positions.push({ x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang) });
+      }
+
+      // Draw
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = 1.25;
+      for (let i = 0; i < positions.length; i++) {
+        const p = positions[i];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = colors[i];
+        ctx.strokeStyle = 'rgba(255,255,255,.15)';
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    function draw() {
+      const { width: w, height: h } = canvas.getBoundingClientRect();
+      // Clear
+      ctx.clearRect(0, 0, w, h);
+
+      // Nice vignette
+      const g = ctx.createRadialGradient(w*0.7, h*0.3, 0, w*0.5, h*0.5, Math.max(w,h)*0.8);
+      g.addColorStop(0, 'rgba(255,255,255,0.04)');
+      g.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+
+      // Scale seed to canvas
+      const r = Math.min(w, h) * 0.22; // circle radius
+      const cx = w / 2;
+      const cy = h / 2;
+      const a = parseFloat(alphaInput.value);
+
+      drawSeed({ cx, cy, r, a });
+    }
+
+    // UI
+    alphaInput.addEventListener('input', draw);
+    rotateBtn.addEventListener('click', () => { rotation += Math.PI/12; draw(); });
+    resetBtn.addEventListener('click', () => { rotation = 0; alphaInput.value = 0.6; draw(); });
+
+    // Init
+    window.addEventListener('resize', resize);
+    resize();
+  </script>
+</body>
+</html>
