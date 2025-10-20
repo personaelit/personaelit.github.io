@@ -17,26 +17,43 @@
     #c { width: 100%; aspect-ratio: 1 / 1; display:block; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.35); background: #0d1628; }
     .controls { display:flex; gap:10px; align-items:center; font-size: .95rem; opacity:.9; flex-wrap: wrap; }
     input[type="range"] { width: 180px; }
-    .pill { padding: 6px 10px; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:rgba(255,255,255,.05); }
+    .pill { padding: 6px 10px; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:rgba(255,255,255,.05); display:flex; align-items:center; gap:8px; }
     button { all: unset; cursor: pointer; padding: 6px 10px; border-radius: 999px; border:1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); }
     button:hover { background: rgba(255,255,255,.12); }
-    .value { font-variant-numeric: tabular-nums; opacity:.8; margin-left:6px; }
+    .value { font-variant-numeric: tabular-nums; opacity:.8; margin-left:2px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    label.toggle { display:flex; align-items:center; gap:6px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>ROYGBIV Seed of Life — Semi‑transparent Disks</h1>
+      <h1>ROYGBIV Seed of Life — Semi-transparent Disks</h1>
       <div class="controls">
-        <label class="pill">Alpha
-          <input id="alpha" type="range" min="0.1" max="1" step="0.05" value="0.6" />
-        </label>
-        <label class="pill">Distance
-          <input id="distance" type="range" min="0" max="2" step="0.01" value="1" />
-          <span id="distanceVal" class="value">1.00×R</span>
-        </label>
-        <button id="rotate">Rotate 15°</button>
-        <button id="reset">Reset</button>
+        <div class="row">
+          <label class="pill">Alpha
+            <input id="alpha" type="range" min="0.1" max="1" step="0.05" value="0.6" />
+          </label>
+          <label class="pill">Distance
+            <input id="distance" type="range" min="0" max="2" step="0.01" value="1" />
+            <span id="distanceVal" class="value">1.00×R</span>
+          </label>
+          <label class="pill">Glow
+            <input id="glow" type="range" min="0" max="1" step="0.02" value="0.5" />
+          </label>
+        </div>
+        <div class="row">
+          <label class="pill toggle">
+            <input id="auto" type="checkbox" />
+            Auto-rotate
+          </label>
+          <label class="pill">Speed
+            <input id="speed" type="range" min="-180" max="180" step="1" value="30" />
+            <span id="speedVal" class="value">30°/s</span>
+          </label>
+          <button id="rotate">Rotate 15°</button>
+          <button id="reset">Reset</button>
+        </div>
       </div>
     </header>
     <canvas id="c"></canvas>
@@ -50,8 +67,13 @@
     const resetBtn = document.getElementById('reset');
     const distanceInput = document.getElementById('distance');
     const distanceVal = document.getElementById('distanceVal');
+    const glowInput = document.getElementById('glow');
+    const autoChk = document.getElementById('auto');
+    const speedInput = document.getElementById('speed');
+    const speedVal = document.getElementById('speedVal');
 
     let rotation = 0; // radians
+    let lastT = performance.now();
 
     function resize() {
       // Handle high-DPI displays
@@ -67,37 +89,71 @@
       return `hsla(${h} ${s}% ${l}% / ${a})`;
     }
 
-    function drawSeed({ cx, cy, circleR, offsetR, a }) {
-      // ROYGBIV hues
-      const colors = [
-        hsla(0, 85, 52, a),    // Red
-        hsla(30, 90, 55, a),   // Orange
-        hsla(55, 95, 55, a),   // Yellow
+    function getColors(a) {
+      return [
+        hsla(0,   85, 52, a),  // Red
+        hsla(30,  90, 55, a),  // Orange
+        hsla(55,  95, 55, a),  // Yellow
         hsla(130, 65, 48, a),  // Green
         hsla(220, 80, 56, a),  // Blue
         hsla(275, 65, 52, a),  // Indigo
         hsla(300, 70, 60, a),  // Violet
       ];
+    }
 
-      // Positions: center + six around at 60° increments, offset by offsetR
+    function positionsForSeed({ cx, cy, offsetR }) {
       const positions = [{ x: cx, y: cy }];
       for (let k = 0; k < 6; k++) {
         const ang = rotation + (Math.PI / 3) * k; // 0,60,120,...
         positions.push({ x: cx + offsetR * Math.cos(ang), y: cy + offsetR * Math.sin(ang) });
       }
+      return positions;
+    }
 
-      // Draw
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.lineWidth = 1.25;
-      for (let i = 0; i < positions.length; i++) {
-        const p = positions[i];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, circleR, 0, Math.PI * 2);
-        ctx.fillStyle = colors[i];
-        ctx.strokeStyle = 'rgba(255,255,255,.15)';
-        ctx.fill();
-        ctx.stroke();
+    function drawSeedLayer({ cx, cy, circleR, offsetR, a, mode = 'base', glowAmt = 0.5 }) {
+      const colors = getColors(a);
+      const positions = positionsForSeed({ cx, cy, offsetR });
+
+      ctx.save();
+
+      if (mode === 'glow') {
+        // Additive blurred pass, then a softer halo
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.filter = `blur(${12 + 24 * glowAmt}px)`;
+
+        for (let i = 0; i < positions.length; i++) {
+          const p = positions[i];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, circleR, 0, Math.PI * 2);
+          ctx.fillStyle = getColors(Math.min(0.65, a * (0.7 + glowAmt * 0.6)))[i];
+          ctx.fill();
+        }
+
+        // Subtle outer bloom
+        ctx.filter = `blur(${22 + 40 * glowAmt}px)`;
+        for (let i = 0; i < positions.length; i++) {
+          const p = positions[i];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, circleR * (1.02 + glowAmt * 0.06), 0, Math.PI * 2);
+          ctx.fillStyle = getColors(0.25 * glowAmt)[i];
+          ctx.fill();
+        }
+      } else {
+        // Crisp base circles with thin outline
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 1.25;
+        for (let i = 0; i < positions.length; i++) {
+          const p = positions[i];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, circleR, 0, Math.PI * 2);
+          ctx.fillStyle = colors[i];
+          ctx.strokeStyle = 'rgba(255,255,255,.15)';
+          ctx.fill();
+          ctx.stroke();
+        }
       }
+
+      ctx.restore();
     }
 
     function draw() {
@@ -120,22 +176,66 @@
       const cx = w / 2;
       const cy = h / 2;
       const a = parseFloat(alphaInput.value);
+      const glowAmt = parseFloat(glowInput.value);
 
-      drawSeed({ cx, cy, circleR, offsetR, a });
+      // Glow pass (behind)
+      if (glowAmt > 0.001) {
+        drawSeedLayer({ cx, cy, circleR, offsetR, a, mode: 'glow', glowAmt });
+      }
+      // Base pass (sharp)
+      drawSeedLayer({ cx, cy, circleR, offsetR, a, mode: 'base' });
 
-      // UI readout
+      // UI readouts
       distanceVal.textContent = `${distanceFactor.toFixed(2)}×R`;
+      speedVal.textContent = `${Number(speedInput.value).toFixed(0)}°/s`;
+    }
+
+    function tick(now) {
+      const dt = Math.max(0, Math.min(1/10, (now - lastT) / 1000)); // clamp dt
+      lastT = now;
+
+      if (autoChk.checked) {
+        const degPerSec = parseFloat(speedInput.value);
+        const radPerSec = degPerSec * Math.PI / 180;
+        rotation += radPerSec * dt;
+      }
+      draw();
+      requestAnimationFrame(tick);
     }
 
     // UI
     alphaInput.addEventListener('input', draw);
     distanceInput.addEventListener('input', draw);
+    glowInput.addEventListener('input', draw);
+
+    speedInput.addEventListener('input', () => {
+      speedVal.textContent = `${Number(speedInput.value).toFixed(0)}°/s`;
+      // draw() not necessary; animation loop updates continuously
+    });
+
+    document.addEventListener('keydown', (e) => {
+      // Space toggles auto-rotate
+      if (e.code === 'Space') {
+        autoChk.checked = !autoChk.checked;
+        e.preventDefault();
+      }
+    });
+
     rotateBtn.addEventListener('click', () => { rotation += Math.PI/12; draw(); });
-    resetBtn.addEventListener('click', () => { rotation = 0; alphaInput.value = 0.6; distanceInput.value = 1; draw(); });
+    resetBtn.addEventListener('click', () => {
+      rotation = 0;
+      alphaInput.value = 0.6;
+      distanceInput.value = 1;
+      glowInput.value = 0.5;
+      autoChk.checked = false;
+      speedInput.value = 30;
+      draw();
+    });
 
     // Init
     window.addEventListener('resize', resize);
     resize();
+    requestAnimationFrame((t) => { lastT = t; tick(t); });
   </script>
 </body>
 </html>
