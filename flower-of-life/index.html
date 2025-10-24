@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>24-Fold Seed of Life — Canvas</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: radial-gradient(1200px 800px at 70% 20%, #0b1221 0%, #070d19 55%, #060910 100%);
+      color: #e5e7eb; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overflow: hidden;
+    }
+    #c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+
+    .hud {
+      position: fixed; left: 12px; top: 12px; display: grid; gap: 10px;
+      background: rgba(15,23,42,.72); border: 1px solid rgba(255,255,255,.08);
+      padding: 12px 14px; border-radius: 10px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+    .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+    .row > label { white-space: nowrap; font-size: 12px; opacity: .9; }
+    .row > input[type="range"] { width: 220px; }
+    .toggle { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .bar { height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); margin:4px 0 2px; }
+    h1 { margin:0; font-size:14px; letter-spacing:.12em; text-transform:uppercase; opacity:.9; }
+    .badge { font-size:11px; opacity:.75; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <div class="row" style="grid-template-columns:auto auto;">
+      <h1>24-Fold Seed of Life</h1><span class="badge">Canvas</span>
+    </div>
+    <div class="bar"></div>
+    <div class="row">
+      <label>Glow</label>
+      <label class="toggle"><input id="glow" type="checkbox" checked> Enable</label>
+    </div>
+    <div class="row">
+      <label>Autorotate</label>
+      <label class="toggle"><input id="autorotate" type="checkbox" checked> On</label>
+    </div>
+    <div class="row">
+      <label>Speed</label>
+      <input id="speed" type="range" min="-180" max="180" value="30">
+      <span id="speedVal">30</span>
+    </div>
+    <div class="row">
+      <label>Opacity</label>
+      <input id="alpha" type="range" min="0.05" max="1" step="0.01" value="0.28" />
+      <span id="alphaVal">0.28</span>
+    </div>
+  </div>
+  <script>
+    const c=document.getElementById("c"),x=c.getContext("2d");
+    function resize(){const dpr=window.devicePixelRatio||1;c.width=innerWidth*dpr;c.height=innerHeight*dpr;x.setTransform(dpr,0,0,dpr,0,0);}resize();addEventListener("resize",resize);
+
+    const glow=document.getElementById("glow"),autorotate=document.getElementById("autorotate"),
+          speed=document.getElementById("speed"),speedVal=document.getElementById("speedVal"),
+          alpha=document.getElementById("alpha"),alphaVal=document.getElementById("alphaVal");
+    [speed,alpha].forEach(e=>e.oninput=()=>{speedVal.textContent=speed.value;alphaVal.textContent=alpha.value;});
+
+    let a=0,last=performance.now();
+    function color(i,n){return `hsla(${i*360/n},90%,60%,${alpha.value})`;}
+
+    function draw(){
+      const now=performance.now(),dt=(now-last)/1000;last=now;
+      if(autorotate.checked)a+=dt*(+speed.value)*Math.PI/180;
+      x.clearRect(0,0,innerWidth,innerHeight);
+      x.globalCompositeOperation='lighter';
+      x.shadowBlur=glow.checked?22:0;x.shadowColor='rgba(255,255,255,.35)';
+      const cx=innerWidth/2,cy=innerHeight/2,r=140,n=24;
+      for(let i=0;i<n;i++){
+        const ang=a+(i*2*Math.PI/n),xx=cx+Math.cos(ang)*r,yy=cy+Math.sin(ang)*r;
+        x.beginPath();x.arc(xx,yy,r,0,Math.PI*2);
+        x.fillStyle=color(i,n);x.fill();
+      }
+      // central
+      x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);
+      x.fillStyle=`hsla(210,90%,65%,${alpha.value})`;x.fill();
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>
