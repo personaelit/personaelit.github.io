@@ -1,104 +1,223 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('weightForm');
-  const weightInput = document.getElementById('weight');
-  const ctx = document.getElementById('weightChart').getContext('2d');
-  let chart;
+// script.js
+// Weight Tracker — mobile-first JS
+// - Strict client-side validation (digits + one decimal separator)
+// - One entry per calendar day (local time)
+// - Rounds to tenths
+// - Persists to localStorage
+// - Renders a time-series chart with Chart.js
+// =  allow updating today's entry
 
-  // Build a canonical local YYYY-MM-DD date key (no TZ surprises)
-  function getLocalDateKey(d = new Date()) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+(() => {
+  const STORAGE_KEY = "wt.entries.v1"; // [{ date: "YYYY-MM-DD", weight: 186.4 }]
+  const form = document.getElementById("weightForm");
+  const input = document.getElementById("weight");
+  const message = document.getElementById("message");
+  const saveBtn = document.getElementById("saveBtn");
+  const chartCanvas = document.getElementById("weightChart");
 
-  function checkDateChange() {
-    const lastDateKey = localStorage.getItem('lastDateKey');
-    const todayKey = getLocalDateKey();
-    const weightData = JSON.parse(localStorage.getItem('weightData')) || [];
+  /** Utils **/
+  const todayISO = () => {
+    const d = new Date();
+    const yr = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, "0");
+    const da = String(d.getDate()).padStart(2, "0");
+    return `${yr}-${mo}-${da}`;
+  };
 
-    // weightData now stores entry.dateKey === 'YYYY-MM-DD'
-    const weightEnteredToday = weightData.some(entry => entry.dateKey === todayKey);
-
-    if (lastDateKey !== todayKey || !weightEnteredToday) {
-      localStorage.setItem('lastDateKey', todayKey);
-      weightInput.value = '';
-      form.style.display = 'block';
-      document.getElementById('message').style.display = 'none';
-    } else {
-      form.style.display = 'none';
-      document.getElementById('message').style.display = 'block';
+  const loadEntries = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(
+          (e) =>
+            e &&
+            typeof e.date === "string" &&
+            typeof e.weight === "number" &&
+            isFinite(e.weight)
+        )
+        .sort((a, b) => a.date.localeCompare(b.date));
+    } catch {
+      return [];
     }
-  }
+  };
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const weight = parseFloat(weightInput.value);
-    const dateKey = getLocalDateKey();
+  const saveEntries = (entries) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  };
 
-    let weightData = JSON.parse(localStorage.getItem('weightData')) || [];
-    weightData.push({ dateKey, weight });
-    localStorage.setItem('weightData', JSON.stringify(weightData));
+  const roundToTenth = (n) => Math.round(n * 10) / 10;
 
-    // Refresh lastDateKey on submit too (keeps things consistent)
-    localStorage.setItem('lastDateKey', dateKey);
+  const showMsg = (text, type = "info") => {
+    message.textContent = text;
+    message.hidden = false;
+    message.className = `message ${type}`;
+  };
 
-    updateChart();
-    weightInput.value = '';
-    form.style.display = 'none';
-    document.getElementById('message').style.display = 'block';
+  const clearMsg = () => {
+    message.hidden = true;
+    message.textContent = "";
+    message.className = "message";
+  };
+
+  /** Input filtering (digits + one decimal, comma allowed) **/
+  input.addEventListener("input", () => {
+    const old = input.value;
+    let cleaned = old.replace(/[^0-9\.,]/g, "");
+    const firstSep = cleaned.search(/[.,]/);
+    if (firstSep !== -1) {
+      const head = cleaned.slice(0, firstSep + 1);
+      const tail = cleaned.slice(firstSep + 1).replace(/[.,]/g, "");
+      cleaned = head + tail;
+    }
+    if (cleaned !== old) {
+      const pos = input.selectionStart || cleaned.length;
+      input.value = cleaned;
+      requestAnimationFrame(() => input.setSelectionRange(pos, pos));
+    }
   });
 
-  function updateChart() {
-    const raw = JSON.parse(localStorage.getItem('weightData')) || [];
+  function parseWeight(value) {
+    if (typeof value !== "string") return null;
+    const normalized = value.replace(",", ".").trim();
+    if (!normalized) return null;
+    if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
+    const num = Number(normalized);
+    if (!isFinite(num)) return null;
+    if (num < 50 || num > 1000) return null; // adjust if needed
+    return roundToTenth(num);
+  }
 
-    // Map to {x: Date, y: Number} and sort by date ascending
-    const data = raw
-      .map(entry => ({
-        x: new Date(`${entry.dateKey}T00:00:00`), // safe parse
-        y: parseFloat(entry.weight)
-      }))
-      .sort((a, b) => a.x - b.x);
-
-    if (chart) chart.destroy();
-
-    // Guard against empty data
-    const xMin = data.length ? data[0].x : undefined;
-    const xMax = data.length ? data[data.length - 1].x : undefined;
-
-    chart = new Chart(ctx, {
-      type: 'line',
+  /** Chart.js **/
+  let chart;
+  const buildChart = (entries) => {
+    const dataPoints = entries.map((e) => ({ x: e.date, y: e.weight }));
+    if (chart) {
+      chart.data.datasets[0].data = dataPoints;
+      chart.update();
+      return;
+    }
+    chart = new Chart(chartCanvas.getContext("2d"), {
+      type: "line",
       data: {
-        datasets: [{
-          label: 'Weight Over Time',
-          data,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-          fill: false
-        }]
+        datasets: [
+          {
+            label: "Weight",
+            data: dataPoints,
+            tension: 0.25,
+            borderWidth: 2,
+            pointRadius: 3,
+            pointHitRadius: 12,
+          },
+        ],
       },
       options: {
-        parsing: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "nearest", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) =>
+                items[0]?.parsed?.x ? formatDate(items[0].parsed.x) : "",
+              label: (item) => `${item.parsed.y.toFixed(1)}`,
+            },
+          },
+        },
         scales: {
           x: {
-            type: 'time',
-            time: {
-              unit: 'day',
-              tooltipFormat: 'MM/dd/yyyy',
-              displayFormats: { day: 'MM/dd' }
-            },
-            title: { display: true, text: 'Date' },
-            ...(data.length ? { min: xMin, max: xMax } : {})
+            type: "time",
+            time: { unit: "day", tooltipFormat: "yyyy-MM-dd" },
+            grid: { display: false },
           },
           y: {
             beginAtZero: false,
-            title: { display: true, text: 'Weight' }
-          }
-        }
-      }
+            grid: { drawBorder: false },
+            ticks: { callback: (v) => Number(v).toFixed(1) },
+          },
+        },
+      },
     });
-  }
+  };
 
-  checkDateChange();
-  updateChart();
-});
+  const formatDate = (msOrStr) => {
+    const d = typeof msOrStr === "number" ? new Date(msOrStr) : new Date(msOrStr);
+    const yr = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, "0");
+    const da = String(d.getDate()).padStart(2, "0");
+    return `${yr}-${mo}-${da}`;
+  };
+
+  /** Helpers for today's entry UI **/
+  const getTodayEntry = (entries) => entries.find((e) => e.date === todayISO());
+
+  const setButtonMode = (mode /* 'save' | 'update' */) => {
+    saveBtn.textContent = mode === "update" ? "Update" : "Save";
+    saveBtn.dataset.mode = mode;
+  };
+
+  const prefillIfTodayExists = (entries) => {
+    const t = getTodayEntry(entries);
+    if (t) {
+      input.value = String(t.weight);
+      setButtonMode("update");
+      showMsg("Today’s entry is loaded. You can update it if needed.", "info");
+    } else {
+      setButtonMode("save");
+    }
+  };
+
+  /** Submit: create or overwrite today's entry **/
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    clearMsg();
+    saveBtn.disabled = true;
+
+    const weight = parseWeight(input.value);
+    if (weight == null) {
+      showMsg(
+        "Please enter a valid number like 186.4 (between 50 and 1000).",
+        "error"
+      );
+      saveBtn.disabled = false;
+      return;
+    }
+
+    const entries = loadEntries();
+    const today = todayISO();
+    const existing = getTodayEntry(entries);
+
+    if (existing) {
+      const prev = existing.weight;
+      existing.weight = weight; // overwrite
+      entries.sort((a, b) => a.date.localeCompare(b.date));
+      saveEntries(entries);
+      buildChart(entries);
+      showMsg(`Updated today’s entry: ${prev.toFixed(1)} → ${weight.toFixed(1)}.`, "success");
+      setButtonMode("update");
+    } else {
+      entries.push({ date: today, weight });
+      entries.sort((a, b) => a.date.localeCompare(b.date));
+      saveEntries(entries);
+      buildChart(entries);
+      showMsg("Saved!", "success");
+      setButtonMode("update"); // now it exists, so switch to update
+    }
+
+    // keep the value visible after save/update so user sees what’s recorded
+    input.value = String(weight);
+    saveBtn.disabled = false;
+  });
+
+  /** Init **/
+  const initial = loadEntries();
+  buildChart(initial);
+  prefillIfTodayExists(initial);
+
+  requestAnimationFrame(() => {
+    input.focus({ preventScroll: true });
+  });
+})();

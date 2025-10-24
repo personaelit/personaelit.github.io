@@ -2,34 +2,43 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <!-- Mobile-first viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1221" />
     <title>Weight Tracker</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-    <div class="container">
-        <h1>Daily Weight</h1>
-        <p class="lead">Track progress with one entry per day.</p>
+    <main class="container">
+        <header class="stack gap-2">
+            <h1>Daily Weight</h1>
+            <p class="lead">Track progress with one entry per day.</p>
+        </header>
 
-        <div class="row">
-            <form id="weightForm">
-                <label for="weight">Enter today’s weight</label>
-                <div class="input">
-                    <input id="weight" type="number" step="0.1" placeholder="e.g., 186.4" />
-                    <button class="button" type="submit">Save</button>
-                </div>
-                <div class="helper">Tip: use tenths for better trends.</div>
-                <div id="message">Already logged for today — nice work!</div>
-            </form>
+        <!-- Form first in DOM for mobile flow -->
+        <form id="weightForm" class="card stack gap-3" novalidate>
+            <label for="weight" class="label">Enter today’s weight</label>
 
-            <div class="chart-card">
-                <canvas id="weightChart" height="180"></canvas>
+            <div class="input-row">
+                <input id="weight" name="weight" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done"
+                    placeholder="e.g., 186.4" required />
+
+                <button class="button" type="submit" id="saveBtn">Save</button>
             </div>
-        </div>
-    </div>
 
+            <div class="helper">Tip: use tenths for better trends.</div>
+            <div id="message" class="message" aria-live="polite" role="status" hidden></div>
+        </form>
+
+        <!-- Chart below on mobile; sits beside on larger screens -->
+        <section class="card chart-card">
+            <canvas id="weightChart"></canvas>
+        </section>
+    </main>
+
+    <!-- libs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="script.js"></script>
