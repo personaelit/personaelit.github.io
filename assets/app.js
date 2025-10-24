@@ -19,6 +19,10 @@ const ROUTE_META = {
     "/method": {
         title: "Methodology — Jim Smits",
         desc: "My approach to leadership, team development, and continuous improvement."
+    },
+    "/digital-playground": {
+        title: "Digital Playground — Jim Smits",
+        desc: "Fun projects that I do in my spare time.."
     }
 };
 
