@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            touch-action: manipulation;
+        }
+    </style>
+    <title>Earth Calendar</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="date-chooser">
+        <input type="date" id="datePicker">
+    </div>
+    <div id="days-alive-container">
+        <div id="daysAlive"></div>
+    </div>
+    <div id="clock-container">
+        <div id="clock"></div>
+    </div>
+    <canvas id="solarSystem"></canvas>
+    <div id="controls">
+        <input type="range" min="1" max="365" value="1" step="1" id="timeSlider">
+        <div id="dateLabel"></div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div id="modal-content" class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <div id="modalHeader"></div>
+        </div>
+    </div>
+    <div id="settingsPanel" class="settings-panel">
+        <h2>User Settings</h2>
+        <label for="userName">Name:</label>
+        <input type="text" id="userName"><br><br>
+        <label for="userDOB">Date of Birth:</label>
+        <input type="date" id="userDOB"><br><br>
+        <button id="saveSettingsBtn">Save</button>
+    </div>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
