@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>12-Fold Seed of Life — Canvas</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: radial-gradient(1200px 800px at 70% 20%, #0b1221 0%, #070d19 55%, #060910 100%);
+      color: #e5e7eb; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overflow: hidden;
+    }
+    #c { position:fixed; inset:0; width:100%; height:100%; display:block; }
+
+    .hud {
+      position: fixed; left: 12px; top: 12px; display: grid; gap: 10px;
+      background: rgba(15,23,42,.72); border: 1px solid rgba(255,255,255,.08);
+      padding: 12px 14px; border-radius: 10px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+    .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+    .row > label { white-space: nowrap; font-size: 12px; opacity: .9; }
+    .row > input[type="range"] { width: 220px; }
+    .row > input[type="number"] { width: 64px; background:#0b1326; color:#dbeafe; border:1px solid rgba(255,255,255,.15); border-radius:6px; padding:6px 8px;}
+    .toggle { display:flex; align-items:center; gap:8px; font-size:12px; }
+    .bar { height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); margin:4px 0 2px; }
+    h1 { margin:0; font-size:14px; letter-spacing:.12em; text-transform:uppercase; opacity:.9; }
+    .badge { font-size:11px; opacity:.75; }
+    .footer {
+      position: fixed; right: 14px; bottom: 12px; font-size: 12px; opacity: .65;
+      background: rgba(15,23,42,.6); padding: 6px 10px; border-radius: 8px; border:1px solid rgba(255,255,255,.08);
+    }
+    a { color:#93c5fd; text-decoration:none }
+    a:hover { text-decoration:underline }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <div class="hud" id="hud">
+    <div class="row" style="grid-template-columns:auto auto;">
+      <h1>12-Fold Seed of Life</h1><span class="badge">Canvas</span>
+    </div>
+    <div class="bar"></div>
+
+    <div class="row">
+      <label>Mode</label>
+      <div style="display:flex; gap:8px;">
+        <label class="toggle"><input id="modeFill" type="radio" name="mode" checked> Disks</label>
+        <label class="toggle"><input id="modeStroke" type="radio" name="mode"> Lines</label>
+      </div>
+      <span></span>
+    </div>
+
+    <div class="row">
+      <label>Outer Count</label>
+      <input id="count" type="number" min="3" max="48" step="1" value="12" />
+      <span class="badge">default 12</span>
+    </div>
+
+    <div class="row">
+      <label>Circle Radius</label>
+      <input id="radius" type="range" min="30" max="320" value="140" />
+      <span id="radiusVal">140</span>
+    </div>
+
+    <div class="row">
+      <label>Opacity</label>
+      <input id="alpha" type="range" min="0.05" max="1" step="0.01" value="0.28" />
+      <span id="alphaVal">0.28</span>
+    </div>
+
+    <div class="row">
+      <label>Glow</label>
+      <label class="toggle"><input id="glow" type="checkbox" checked> Enable</label>
+      <span></span>
+    </div>
+
+    <div class="row">
+      <label>Autorotate</label>
+      <label class="toggle"><input id="autorotate" type="checkbox" checked> On</label>
+      <span></span>
+    </div>
+
+    <div class="row">
+      <label>Speed (°/s)</label>
+      <input id="speed" type="range" min="-180" max="180" step="1" value="24" />
+      <span id="speedVal">24</span>
+    </div>
+
+    <div class="row">
+      <label>Stroke Width</label>
+      <input id="lineWidth" type="range" min="0.5" max="10" step="0.5" value="2" />
+      <span id="lineWidthVal">2</span>
+    </div>
+
+    <div class="row">
+      <label>Central Circle</label>
+      <label class="toggle"><input id="showCenter" type="checkbox" checked> Show</label>
+      <span></span>
+    </div>
+  </div>
+
+  <div class="footer">
+    Drag to rotate manually • Double-click to reset view
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    // Controls
+    const el = id => document.getElementById(id);
+    const radius = el('radius');
+    const radiusVal = el('radiusVal');
+    const alpha = el('alpha');
+    const alphaVal = el('alphaVal');
+    const glow = el('glow');
+    const autorotate = el('autorotate');
+    const speed = el('speed');
+    const speedVal = el('speedVal');
+    const count = el('count');
+    const lineWidth = el('lineWidth');
+    const lineWidthVal = el('lineWidthVal');
+    const showCenter = el('showCenter');
+    const modeFill = el('modeFill');
+    const modeStroke = el('modeStroke');
+
+    // Save/restore simple prefs
+    const PREF_KEY = 'seed12_prefs_v1';
+    function loadPrefs() {
+      try {
+        const p = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
+        if (!p) return;
+        radius.value = p.radius ?? radius.value;
+        alpha.value = p.alpha ?? alpha.value;
+        glow.checked = p.glow ?? glow.checked;
+        autorotate.checked = p.autorotate ?? autorotate.checked;
+        speed.value = p.speed ?? speed.value;
+        count.value = p.count ?? count.value;
+        lineWidth.value = p.lineWidth ?? lineWidth.value;
+        showCenter.checked = p.showCenter ?? showCenter.checked;
+        (p.mode === 'stroke' ? modeStroke : modeFill).checked = true;
+      } catch {}
+    }
+    function savePrefs() {
+      const p = {
+        radius: +radius.value,
+        alpha: +alpha.value,
+        glow: glow.checked,
+        autorotate: autorotate.checked,
+        speed: +speed.value,
+        count: +count.value,
+        lineWidth: +lineWidth.value,
+        showCenter: showCenter.checked,
+        mode: modeStroke.checked ? 'stroke' : 'fill'
+      };
+      localStorage.setItem(PREF_KEY, JSON.stringify(p));
+    }
+
+    loadPrefs();
+
+    // Resize
+    function resize() {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    addEventListener('resize', resize);
+    resize();
+
+    // UI reflectors
+    function reflect() {
+      radiusVal.textContent = radius.value;
+      alphaVal.textContent = alpha.value;
+      speedVal.textContent = speed.value;
+      lineWidthVal.textContent = lineWidth.value;
+      savePrefs();
+    }
+    [radius, alpha, speed, count, lineWidth].forEach(inp => inp.addEventListener('input', reflect));
+    [glow, autorotate, showCenter, modeFill, modeStroke].forEach(inp => inp.addEventListener('change', reflect));
+    reflect();
+
+    // Interaction: drag to rotate
+    let dragging = false;
+    let dragStart = 0;
+    let baseAngle = 0;
+    let viewAngle = 0;
+
+    canvas.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      canvas.setPointerCapture(e.pointerId);
+      dragStart = e.clientX;
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - dragStart;
+      viewAngle = baseAngle + dx * 0.006; // radians per pixel
+    });
+    canvas.addEventListener('pointerup', () => {
+      dragging = false;
+      baseAngle = viewAngle;
+    });
+    canvas.addEventListener('pointercancel', () => { dragging = false; baseAngle = viewAngle; });
+    canvas.addEventListener('dblclick', () => { baseAngle = 0; viewAngle = 0; });
+
+    // Color wheel (12 hues spread) — we’ll map around the ring
+    function ringColor(i, n) {
+      const hue = (i * 360 / n) % 360;
+      // nice luminous fill that plays well with glow/lighten composite
+      return `hsla(${hue} 90% 60% / ${alpha.value})`;
+    }
+
+    function strokeColor(i, n) {
+      const hue = (i * 360 / n) % 360;
+      return `hsl(${hue} 85% 72%)`;
+    }
+
+    let last = performance.now();
+
+    function draw() {
+      const now = performance.now();
+      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); // cap dt
+      last = now;
+
+      const cx = innerWidth / 2;
+      const cy = innerHeight / 2;
+
+      // autorotation
+      if (!dragging && autorotate.checked) {
+        const degPerSec = +speed.value;
+        const radPerSec = degPerSec * Math.PI / 180;
+        viewAngle += radPerSec * dt;
+        baseAngle = viewAngle;
+      }
+
+      // clear
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+      // composite for pretty overlaps
+      ctx.globalCompositeOperation = 'lighter';
+
+      // Shadow glow
+      if (glow.checked) {
+        ctx.shadowBlur = 22;
+        ctx.shadowColor = 'rgba(255,255,255,0.35)';
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      const r = +radius.value;
+      const n = Math.max(3, Math.min(48, +count.value));
+      const mode = modeStroke.checked ? 'stroke' : 'fill';
+
+      ctx.lineWidth = +lineWidth.value;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // central circle first
+      if (showCenter.checked) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        if (mode === 'fill') {
+          ctx.fillStyle = `hsla(210 90% 65% / ${alpha.value})`;
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = 'hsl(210 70% 70%)';
+          ctx.stroke();
+        }
+      }
+
+      // outer ring centers lie on the circumference of the central circle
+      for (let i = 0; i < n; i++) {
+        const a = viewAngle + (i * Math.PI * 2) / n;
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r;
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+
+        if (mode === 'fill') {
+          ctx.fillStyle = ringColor(i, n);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = strokeColor(i, n);
+          ctx.stroke();
+        }
+      }
+
+      // reset composite for UI crispness
+      ctx.globalCompositeOperation = 'source-over';
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>
