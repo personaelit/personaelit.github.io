@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tesseract: 4D Projection + Dalí Cross Net</title>
+<title>Tesseract — 4D Projection with Glowing Panes</title>
 <style>
   html,body{height:100%;margin:0;overflow:hidden}
   body{
@@ -14,19 +14,20 @@
   .hud{
     position:fixed; left:12px; top:12px; background:rgba(15,23,42,.7);
     border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px;
-    backdrop-filter:blur(6px); font-size:12px; max-width:600px
+    backdrop-filter:blur(6px); font-size:12px; max-width:680px
   }
   .row{display:flex; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap}
   .row input[type="range"]{width:160px}
-  select,button{
+  input[type="color"], select, button{
     background:#172033; color:#e5e7eb; border:1px solid rgba(255,255,255,.12); border-radius:10px;
     padding:6px 10px; cursor:pointer
   }
   button:hover{background:#1c2942}
   .pill{display:inline-block; padding:4px 8px; border:1px solid rgba(255,255,255,.12); border-radius:999px; background:#101a2d}
+  label{opacity:.9}
 </style>
 
-<!-- Import map so examples/* can import "three" -->
+<!-- Import map for three.js -->
 <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
 </script>
@@ -35,34 +36,28 @@
 <canvas id="c"></canvas>
 
 <div class="hud">
-  <div class="row"><strong>Tesseract Modes</strong>
-    <span class="pill">Mode:</span>
-    <select id="mode">
-      <option value="proj">4D Projection (wireframe)</option>
-      <option value="net">Dalí Cross Net (8 cubes)</option>
-    </select>
+  <div class="row"><strong>Tesseract — 4D Projection</strong>
     <button id="resetCam">Reset Camera</button>
   </div>
 
   <div id="projUI">
     <div class="row">
-      Spin XW <input id="rxw" type="range" min="-2" max="2" step="0.01" value="0.6">
-      Spin YW <input id="ryw" type="range" min="-2" max="2" step="0.01" value="0.7">
-      Spin ZW <input id="rzw" type="range" min="-2" max="2" step="0.01" value="0.5">
-      Depth d <input id="depth" type="range" min="1.2" max="4" step="0.01" value="2.2">
+      <label>Spin XW</label><input id="rxw" type="range" min="-2" max="2" step="0.01" value="0.6">
+      <label>Spin YW</label><input id="ryw" type="range" min="-2" max="2" step="0.01" value="0.7">
+      <label>Spin ZW</label><input id="rzw" type="range" min="-2" max="2" step="0.01" value="0.5">
+      <label>Depth d</label><input id="depth" type="range" min="1.2" max="4" step="0.01" value="2.2">
     </div>
     <div class="row">
-      Edge Width <input id="ew" type="range" min="1" max="5" step="1" value="2">
-      Scale <input id="scale" type="range" min="0.5" max="2" step="0.01" value="1.2">
-      Fade Backfaces <input id="fade" type="checkbox" checked>
+      <label>Edge Width</label><input id="ew" type="range" min="1" max="5" step="1" value="2">
+      <label>Scale</label><input id="scale" type="range" min="0.5" max="2" step="0.01" value="1.2">
+      <label>Fade Backfaces</label><input id="fade" type="checkbox" checked>
     </div>
-  </div>
-
-  <div id="netUI" style="display:none">
     <div class="row">
-      Cube Opacity <input id="op" type="range" min="0.1" max="0.9" step="0.01" value="0.45">
-      Glow (Additive) <input id="glow" type="checkbox" checked>
-      Outline <input id="edges" type="checkbox" checked>
+      <span class="pill">Panes</span>
+      <label>Opacity</label><input id="paneOp" type="range" min="0.05" max="0.9" step="0.01" value="0.35">
+      <label>Glow (Additive)</label><input id="paneGlow" type="checkbox" checked>
+      <label>Tint</label><input id="paneColor" type="color" value="#66aaff">
+      <label>Outline</label><input id="edgesOn" type="checkbox" checked>
     </div>
   </div>
 </div>
@@ -90,16 +85,7 @@ const dir = new THREE.DirectionalLight(0xffffff, 0.9);
 dir.position.set(6,10,12);
 scene.add(dir);
 
-const modeSel = document.getElementById('mode');
-const projUI = document.getElementById('projUI');
-const netUI  = document.getElementById('netUI');
-document.getElementById('resetCam').addEventListener('click', ()=>{
-  camera.position.set(4,4,8); controls.target.set(0,0,0); controls.update();
-});
-
-/* -------------------- 4D → 3D PROJECTED TESSERACT -------------------- */
-const projGroup = new THREE.Group(); scene.add(projGroup);
-
+/* -------------------- UI -------------------- */
 const rxw = document.getElementById('rxw');
 const ryw = document.getElementById('ryw');
 const rzw = document.getElementById('rzw');
@@ -108,41 +94,122 @@ const edgeWidth = document.getElementById('ew');
 const scaleUI = document.getElementById('scale');
 const fadeBack = document.getElementById('fade');
 
-// Hypercube vertices (±1 in 4 dims)
+const paneOpacityUI = document.getElementById('paneOp');
+const paneGlowUI    = document.getElementById('paneGlow');
+const paneColorUI   = document.getElementById('paneColor');
+const edgesOnUI     = document.getElementById('edgesOn');
+
+document.getElementById('resetCam').addEventListener('click', ()=>{
+  camera.position.set(4,4,8); controls.target.set(0,0,0); controls.update();
+});
+
+/* -------------------- 4D → 3D PROJECTED TESSERACT -------------------- */
+const projGroup = new THREE.Group(); scene.add(projGroup);
+
+// Hypercube vertices (±1 in each of 4 dims)
 const V4 = [];
 for (let a of [-1,1])
 for (let b of [-1,1])
 for (let c of [-1,1])
 for (let d of [-1,1]) V4.push([a,b,c,d]); // (x,y,z,w)
 
+// Map 4D coord → index
+const key4 = (x,y,z,w)=>`${x},${y},${z},${w}`;
+const vMap = new Map();
+V4.forEach((v,i)=> vMap.set(key4(...v), i));
+
 // Edge list: pairs of indices that differ in exactly one bit
 const edges = [];
 for (let i=0;i<16;i++){
   for (let j=i+1;j<16;j++){
     const di = V4[i], dj = V4[j];
-    let diff=0;
-    for (let k=0;k<4;k++) if (di[k] !== dj[k]) diff++;
+    let diff=0; for (let k=0;k<4;k++) if (di[k] !== dj[k]) diff++;
     if (diff===1) edges.push([i,j]);
+  }
+}
+
+// Face list (24 squares): choose two fixed axes and their signs; vary the other two.
+const faces = [];
+const axes = [0,1,2,3]; // x,y,z,w
+for (let a=0;a<4;a++){
+  for (let b=a+1;b<4;b++){
+    const vary = axes.filter(i => i!==a && i!==b); // two varying axes
+    for (let sa of [-1,1]) for (let sb of [-1,1]){
+      // Square ordering in (vary[0], vary[1]) space: (-1,-1),(1,-1),(1,1),(-1,1)
+      const base = [0,0,0,0];
+      base[a]=sa; base[b]=sb;
+      const quad = [
+        [...base], [...base], [...base], [...base]
+      ];
+      quad[0][vary[0]]=-1; quad[0][vary[1]]=-1;
+      quad[1][vary[0]]= 1; quad[1][vary[1]]=-1;
+      quad[2][vary[0]]= 1; quad[2][vary[1]]= 1;
+      quad[3][vary[0]]=-1; quad[3][vary[1]]= 1;
+      faces.push(quad.map(v => vMap.get(key4(...v))));
+    }
   }
 }
 
 // Buffers for projected vertices
 let P3 = new Array(16).fill(0).map(()=> new THREE.Vector3());
 
-// Geometry + line object
-let lineGeo = new THREE.BufferGeometry();
-let lineMat = new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent:true, opacity:1, linewidth: 1 });
-let pos = new Float32Array(edges.length * 2 * 3); // 2 endpoints * 3 coords
+// ---------- Wireframe ----------
+const lineGeo = new THREE.BufferGeometry();
+const lineMat = new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent:true, opacity:1, linewidth: 1, vertexColors:true });
+const pos = new Float32Array(edges.length * 2 * 3);
+const colors = new Float32Array(edges.length * 2 * 3);
 lineGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-let wire = new THREE.LineSegments(lineGeo, lineMat);
+lineGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+const wire = new THREE.LineSegments(lineGeo, lineMat);
 projGroup.add(wire);
 
-// simple per-vertex color fade (front vs back based on camera)
-let colors = new Float32Array(edges.length * 2 * 3);
-lineGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-lineMat.vertexColors = true;
+// ---------- Pane meshes (one per face for dynamic per-face opacity) ----------
+const paneGroup = new THREE.Group();
+projGroup.add(paneGroup);
 
-// 4D rotation helper (rotates [x,y,z,w] in a plane AB by theta)
+function makePaneMaterial(){
+  const col = new THREE.Color(paneColorUI.value);
+  return new THREE.MeshBasicMaterial({
+    color: col,
+    transparent: true,
+    opacity: parseFloat(paneOpacityUI.value),
+    blending: paneGlowUI.checked ? THREE.AdditiveBlending : THREE.NormalBlending,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+}
+
+let paneMeshes = [];
+function buildPanes(){
+  // clear
+  while (paneGroup.children.length) paneGroup.remove(paneGroup.children[0]);
+  paneMeshes = faces.map((quadIdx)=>{
+    // two triangles: (0,1,2) and (2,3,0)
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(6 * 3); // 6 verts * xyz
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.computeVertexNormals(); // not critical for MeshBasic, but harmless
+
+    const mesh = new THREE.Mesh(geom, makePaneMaterial());
+    mesh.userData.indices = quadIdx; // store original vertex ids
+    paneGroup.add(mesh);
+
+    // optional outline per pane (toggle)
+    if (edgesOnUI.checked){
+      const egeom = new THREE.BufferGeometry();
+      egeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(8*3), 3)); // 4 edges * 2 points
+      const eline = new THREE.LineSegments(egeom, new THREE.LineBasicMaterial({
+        color: 0xffffff, opacity: 0.18, transparent:true
+      }));
+      eline.userData.indices = quadIdx;
+      mesh.add(eline);
+    }
+    return mesh;
+  });
+}
+buildPanes();
+
+// 4D rotation helper (rotates [x,y,z,w] in plane AB by theta)
 function rot4(v, iA, iB, theta){
   const c = Math.cos(theta), s = Math.sin(theta);
   const a = v[iA], b = v[iB];
@@ -151,8 +218,7 @@ function rot4(v, iA, iB, theta){
   return v;
 }
 
-// project 4D point to 3D with perspective on w:
-// x' = x / (d - w), etc. (d > 1)
+// project 4D point to 3D with perspective on w: x' = x/(d-w), etc. (d > 1)
 function project4to3([x,y,z,w], d){
   const denom = (d - w);
   return new THREE.Vector3(x/denom, y/denom, z/denom);
@@ -176,12 +242,10 @@ function updateProjected(t){
     P3[i].copy(p);
   }
 
-  // write edges
+  // update wireframe positions + colors (fade by facing)
   const pArr = lineGeo.attributes.position.array;
   const cArr = lineGeo.attributes.color.array;
   let idx = 0, cidx = 0;
-
-  // compute a “facing” factor per vertex vs camera (for optional fade)
   const fade = fadeBack.checked;
   const camDir = new THREE.Vector3().copy(camera.position).normalize();
 
@@ -192,10 +256,9 @@ function updateProjected(t){
     pArr[idx++] = A.x; pArr[idx++] = A.y; pArr[idx++] = A.z;
     pArr[idx++] = B.x; pArr[idx++] = B.y; pArr[idx++] = B.z;
 
-    const fA = fade ? Math.max(0.25, 0.5 + 0.5*A.clone().normalize().dot(camDir)) : 1.0;
-    const fB = fade ? Math.max(0.25, 0.5 + 0.5*B.clone().normalize().dot(camDir)) : 1.0;
+    const fA = fade ? Math.max(0.18, 0.5 + 0.5*A.clone().normalize().dot(camDir)) : 1.0;
+    const fB = fade ? Math.max(0.18, 0.5 + 0.5*B.clone().normalize().dot(camDir)) : 1.0;
 
-    // base color 0x9fd0ff, scaled by f
     const ca = new THREE.Color(0x9fd0ff).multiplyScalar(fA);
     const cb = new THREE.Color(0x9fd0ff).multiplyScalar(fB);
     cArr[cidx++] = ca.r; cArr[cidx++] = ca.g; cArr[cidx++] = ca.b;
@@ -204,85 +267,71 @@ function updateProjected(t){
   lineGeo.attributes.position.needsUpdate = true;
   lineGeo.attributes.color.needsUpdate = true;
 
+  // update pane meshes (positions + per-face opacity if fading)
+  const baseOpacity = parseFloat(paneOpacityUI.value);
+  for (const mesh of paneMeshes){
+    const quad = mesh.userData.indices; // [i0,i1,i2,i3]
+    const pa = P3[quad[0]], pb = P3[quad[1]], pc = P3[quad[2]], pd = P3[quad[3]];
+
+    // write two triangles (0,1,2) and (2,3,0)
+    const arr = mesh.geometry.attributes.position.array;
+    let k = 0;
+    // tri 1
+    arr[k++]=pa.x; arr[k++]=pa.y; arr[k++]=pa.z;
+    arr[k++]=pb.x; arr[k++]=pb.y; arr[k++]=pb.z;
+    arr[k++]=pc.x; arr[k++]=pc.y; arr[k++]=pc.z;
+    // tri 2
+    arr[k++]=pc.x; arr[k++]=pc.y; arr[k++]=pc.z;
+    arr[k++]=pd.x; arr[k++]=pd.y; arr[k++]=pd.z;
+    arr[k++]=pa.x; arr[k++]=pa.y; arr[k++]=pa.z;
+    mesh.geometry.attributes.position.needsUpdate = true;
+    mesh.geometry.computeVertexNormals(); // keeps winding/normal decent as it morphs
+
+    // per-face facing (average) for opacity scaling
+    if (fade){
+      const avg = pa.clone().add(pb).add(pc).add(pd).multiplyScalar(0.25).normalize();
+      const f = Math.max(0.12, 0.5 + 0.5*avg.dot(camDir)); // 0.12–1
+      mesh.material.opacity = baseOpacity * f;
+    } else {
+      mesh.material.opacity = baseOpacity;
+    }
+
+    // update pane outline positions if present
+    if (mesh.children.length){
+      const eline = mesh.children[0];
+      const earr = eline.geometry.attributes.position.array;
+      let m = 0;
+      // edges: a-b, b-c, c-d, d-a
+      const verts = [pa,pb,pc,pd,pa];
+      for (let i=0;i<4;i++){
+        const P = verts[i], Q = verts[i+1];
+        earr[m++]=P.x; earr[m++]=P.y; earr[m++]=P.z;
+        earr[m++]=Q.x; earr[m++]=Q.y; earr[m++]=Q.z;
+      }
+      eline.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
   // line width (note: many browsers don’t vary gl line width; still exposing UI)
   lineMat.linewidth = parseInt(edgeWidth.value, 10);
+
+  // live material props
+  const matOpts = {
+    blending: paneGlowUI.checked ? THREE.AdditiveBlending : THREE.NormalBlending,
+    color: new THREE.Color(paneColorUI.value)
+  };
+  for (const mesh of paneMeshes){
+    mesh.material.blending !== matOpts.blending && (mesh.material.blending = matOpts.blending);
+    mesh.material.color.copy(matOpts.color);
+  }
 }
-
-/* -------------------- DALÍ CROSS NET (8 CUBES) -------------------- */
-const netGroup = new THREE.Group(); scene.add(netGroup);
-
-// “Dalí cross–inspired” placement of 8 cubes (one center + a cross/stack)
-const NET_POS = [
-  [ 0, 0, 0], // center
-  [ 1, 0, 0], [-1, 0, 0],
-  [ 0, 1, 0], [ 0,-1, 0],
-  [ 0, 0, 1], [ 0, 0,-1],
-  [ 0, 2, 0]  // a “flap” extending upward
-];
-const UNIT = 1.02; // spacing
-
-function randomFaceColor(){
-  const c = new THREE.Color(); c.setHSL(Math.random(), 0.6+Math.random()*0.3, 0.5+Math.random()*0.3);
-  return c;
-}
-function buildNet(){
-  // clear
-  while (netGroup.children.length) netGroup.remove(netGroup.children[0]);
-
-  const opacity = parseFloat(document.getElementById('op').value);
-  const glow = document.getElementById('glow').checked;
-  const showEdges = document.getElementById('edges').checked;
-
-  NET_POS.forEach(([x,y,z])=>{
-    const geom = new THREE.BoxGeometry(1,1,1);
-    const mats = Array.from({length:6}, ()=> new THREE.MeshStandardMaterial({
-      color: randomFaceColor(), transparent:true, opacity,
-      roughness: glow ? 0.25 : 0.5,
-      metalness: glow ? 0.15 : 0.0,
-      blending: glow ? THREE.AdditiveBlending : THREE.NormalBlending,
-      side: THREE.DoubleSide,
-      depthWrite: !glow
-    }));
-    const cube = new THREE.Mesh(geom, mats);
-    cube.position.set(x*UNIT, y*UNIT, z*UNIT);
-    if (showEdges){
-      cube.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(geom),
-        new THREE.LineBasicMaterial({ color:0xffffff, opacity:0.15, transparent:true })
-      ));
-    }
-    netGroup.add(cube);
-  });
-}
-buildNet();
-
-/* -------------------- Mode Toggle -------------------- */
-function setMode(){
-  const m = modeSel.value;
-  const proj = (m === 'proj');
-  projGroup.visible = proj;
-  netGroup.visible = !proj;
-  projUI.style.display = proj ? '' : 'none';
-  netUI.style.display  = proj ? 'none' : '';
-}
-modeSel.addEventListener('change', setMode);
-setMode();
-
-document.getElementById('op').addEventListener('input', buildNet);
-document.getElementById('glow').addEventListener('change', buildNet);
-document.getElementById('edges').addEventListener('change', buildNet);
 
 /* -------------------- Loop -------------------- */
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(()=>{
   const t = clock.getElapsedTime();
   controls.update();
-  if (projGroup.visible){
-    updateProjected(t);
-  } else {
-    // gentle idle spin for the net
-    netGroup.rotation.y = t * 0.25;
-  }
+  updateProjected(t);
   renderer.render(scene, camera);
 });
 
@@ -290,6 +339,23 @@ addEventListener('resize', ()=>{
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+});
+
+/* -------------------- UI Listeners -------------------- */
+paneOpacityUI.addEventListener('input', ()=>{
+  // opacity is applied per-frame; nothing else needed
+});
+paneGlowUI.addEventListener('change', ()=>{
+  // switch blending on existing pane materials immediately
+  const blending = paneGlowUI.checked ? THREE.AdditiveBlending : THREE.NormalBlending;
+  paneMeshes.forEach(m => m.material.blending = blending);
+});
+paneColorUI.addEventListener('input', ()=>{
+  const c = new THREE.Color(paneColorUI.value);
+  paneMeshes.forEach(m => m.material.color.copy(c));
+});
+edgesOnUI.addEventListener('change', ()=>{
+  buildPanes(); // rebuild to add/remove outlines
 });
 </script>
 </body>
