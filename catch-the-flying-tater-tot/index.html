@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Flying Tater Tot</title>
+    <style>
+          body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+         
+        }
+        #tot {
+            position: absolute;
+            pointer-events: auto;
+            width: 50px;
+            height: 50px;
+            transition: transform 0.05s linear;
+        }
+        @media (min-width: 768px) {
+            #tot {
+                width: 100px;
+                height: 100px;
+            }
+        }
+        #splat, #resetButton, #timer {
+            position: absolute;
+        }
+        #splat {
+            display: none;
+            width: 100px;
+            height: 100px;
+        }
+        #resetButton {
+            display: none;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        #timer {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cloudCanvas"></canvas>
+    <img id="tot" src="flying-tot.png" alt="Flying Tater Tot">
+    <img id="splat" src="splat.png" alt="Splat">
+    <button id="resetButton">Reset</button>
+    <div id="timer">0.0s</div>
+    <script>
+        const canvas = document.getElementById('cloudCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let clouds = [];
+        for (let i = 0; i < 10; i++) {
+            clouds.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 100 + 100,
+                speed: Math.random() * 0.5 + 0.2
+            });
+        }
+
+        function drawClouds() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            clouds.forEach(cloud => {
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.fill();
+                cloud.x += cloud.speed;
+                if (cloud.x > canvas.width) cloud.x = -cloud.size;
+            });
+            requestAnimationFrame(drawClouds);
+        }
+
+        drawClouds();
+    </script>
+    <script>
+        const tot = document.getElementById('tot');
+        const splat = document.getElementById('splat');
+        const resetButton = document.getElementById('resetButton');
+        const timerDisplay = document.getElementById('timer');
+
+        let totPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let totVelocity = { x: 0, y: 0 };
+        let slowingDown = false;
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        let caught = false;
+        let timer = 0;
+        let timerInterval;
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer += 0.1;
+                timerDisplay.textContent = `${timer.toFixed(1)}s`;
+            }, 100);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function moveTot(event) {
+            if (caught) return;
+
+            const mouseX = event.clientX || event.touches[0].clientX;
+            const mouseY = event.clientY || event.touches[0].clientY;
+
+            const deltaX = totPosition.x - mouseX;
+            const deltaY = totPosition.y - mouseY;
+
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const maxSpeed = slowingDown ? 2 : 10;
+
+            if (distance < 100) {
+                const angle = Math.atan2(deltaY, deltaX);
+                totVelocity.x = maxSpeed * Math.cos(angle);
+                totVelocity.y = maxSpeed * Math.sin(angle);
+            } else {
+                totVelocity.x = 0;
+                totVelocity.y = 0;
+            }
+
+            totPosition.x += totVelocity.x;
+            totPosition.y += totVelocity.y;
+
+            // Correct boundary handling
+            if (totPosition.x < 0) {
+                totPosition.x = 0;
+                totVelocity.x *= -1;
+            } else if (totPosition.x > window.innerWidth - 40) {
+                totPosition.x = window.innerWidth - 40;
+                totVelocity.x *= -1;
+            }
+
+            if (totPosition.y < 0) {
+                totPosition.y = 0;
+                totVelocity.y *= -1;
+            } else if (totPosition.y > window.innerHeight - 40) {
+                totPosition.y = window.innerHeight - 40;
+                totVelocity.y *= -1;
+            }
+
+            tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+        }
+
+        function randomSlowDown() {
+            slowingDown = Math.random() < 0.3;
+        }
+
+        function randomMoveTot() {
+            //if (caught || !isMobile) return;
+            if (caught) return;
+
+            const jumpDistance = 240; // Increase this value for longer jumps
+            totVelocity.x = (Math.random() - 0.5) * jumpDistance;
+            totVelocity.y = (Math.random() - 0.5) * jumpDistance;
+
+            totPosition.x += totVelocity.x;
+            totPosition.y += totVelocity.y;
+
+            // Correct boundary handling
+            if (totPosition.x < 0) {
+                totPosition.x = 0;
+            } else if (totPosition.x > window.innerWidth - 40) {
+                totPosition.x = window.innerWidth - 40;
+            }
+
+            if (totPosition.y < 0) {
+                totPosition.y = 0;
+            } else if (totPosition.y > window.innerHeight - 40) {
+                totPosition.y = window.innerHeight - 40;
+            }
+
+            tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+        }
+
+        function catchTot() {
+            caught = true;
+            totVelocity.x = 0;
+            totVelocity.y = 0;
+            splat.style.display = 'block';
+            splat.style.transform = tot.style.transform;
+            tot.style.display = 'none';
+            resetButton.style.display = 'block';
+            stopTimer();
+        }
+
+        function resetGame() {
+            caught = false;
+            tot.style.display = 'block';
+            splat.style.display = 'none';
+            resetButton.style.display = 'none';
+            totPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+            tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+            timer = 0;
+            timerDisplay.textContent = '0.0s';
+            startTimer();
+        }
+
+        document.addEventListener('mousemove', moveTot);
+        document.addEventListener('touchmove', moveTot);
+        tot.addEventListener('click', catchTot);
+        tot.addEventListener('touchstart', catchTot);
+        resetButton.addEventListener('click', resetGame);
+
+        setInterval(randomSlowDown, 1000);
+        const movementInterval = isMobile ? 150 : 150; //We can adjust the second value for non-mobile screens if desired.
+        setInterval(randomMoveTot, movementInterval);
+
+        tot.style.transform = `translate(${totPosition.x}px, ${totPosition.y}px)`;
+        startTimer();
+    </script>
+</body>
+</html>
