@@ -8,17 +8,9 @@ const ROUTE_META = {
         title: "Jim Smits — Thinker • Doer • Leader",
         desc: "Director of E-commerce, software developer, and builder. Welcome to my online home."
     },
-    "/about": {
-        title: "About — Jim Smits",
-        desc: "Learn more about Jim Smits — Director of E-commerce and Software Development Manager"
-    },
     "/contact": {
         title: "Contact — Jim Smits",
         desc: "Get in touch with Jim — Director of E-commerce, software developer, and builder."
-    },
-    "/method": {
-        title: "Methodology — Jim Smits",
-        desc: "My approach to leadership, team development, and continuous improvement."
     },
     "/digital-playground": {
         title: "Digital Playground — Jim Smits",
@@ -242,45 +234,133 @@ function initThemeToggle() {
 }
 
 
-function startColorTransition() {
-    console.log("transition init.");
+function startColorTransition({
+  intervalMs = 2500,
+  minContrast = 4.5,          // WCAG AA
+  hueStep = 0.3,
+  start = null                // optional: {h,s,l} to seed
+} = {}) {
+  // Respect user preferences & opt-out switch
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+  if (document.body?.dataset?.anim === 'off') return;
 
-    let hue = Math.floor(Math.random() * 360); // Random hue 0-359
-    let saturation = Math.floor(Math.random() * 100); // Random saturation 0-99
-    let lightness = Math.floor(Math.random() * 100); // Random lightness 0-99
+  // Utilities ------------- //
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-    let saturationDirection = 1; // Control saturation changes
-    let lightnessDirection = 1;  // Control lightness changes
+  function hslToRgb(h, s, l) {
+    // h: 0-360, s/l: 0-100
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [f(0), f(8), f(4)].map(v => Math.round(v * 255));
+  }
 
-    function updateColors() {
-        hue = (hue + 1) % 360; // Cycle through 0-359 for the hue value
+  const srgbToLinear = v => {
+    v /= 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
 
-        // Reverse saturation direction at bounds
-        if (saturation >= 100 || saturation <= 0) {
-            saturationDirection *= -1;
-        }
-        saturation = Math.max(0, Math.min(100, saturation + saturationDirection));
+  function relativeLuminance(rgb) {
+    const [r, g, b] = rgb.map(srgbToLinear);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
 
-        // Reverse lightness direction at bounds
-        if (lightness >= 100 || lightness <= 0) {
-            lightnessDirection *= -1;
-        }
-        lightness = Math.max(0, Math.min(100, lightness + lightnessDirection));
+  function contrastRatio(rgb1, rgb2) {
+    const L1 = relativeLuminance(rgb1);
+    const L2 = relativeLuminance(rgb2);
+    const [light, dark] = L1 > L2 ? [L1, L2] : [L2, L1];
+    return (light + 0.05) / (dark + 0.05);
+  }
 
-        let bgColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  function pickTextColor(bgRgb) {
+    // Compare against near-black and near-white used in your theme
+    const darkText = [15, 23, 42];   // ~ #0f172a (slate-900)
+    const lightText = [230, 237, 243]; // ~ #e6edf3
+    const cDark = contrastRatio(bgRgb, darkText);
+    const cLight = contrastRatio(bgRgb, lightText);
+    return cDark >= cLight ? { rgb: darkText, hex: '#0f172a' } : { rgb: lightText, hex: '#e6edf3' };
+  }
 
-        document.body.style.setProperty('--bg-color', bgColor);
+  function ensureContrast({ h, s, l }, minRatio) {
+    // Try current bg; if under target, nudge lightness toward a better contrast
+    let L = l;
+    let tries = 0;
+    const maxTries = 60;
 
+    // Decide target text first for direction
+    let bgRgb = hslToRgb(h, s, L);
+    let { rgb: textRgb } = pickTextColor(bgRgb);
+
+    // If contrast is low, walk lightness up/down depending on which text we picked
+    while (contrastRatio(bgRgb, textRgb) < minRatio && tries++ < maxTries) {
+      // If text is light, make bg darker; if text is dark, make bg lighter
+      L += (textRgb === '#e6edf3' || textRgb[0] > 128) ? -1 : 1;
+      L = clamp(L, 5, 95);
+      bgRgb = hslToRgb(h, s, L);
     }
 
-    // Clear any existing interval before starting a new one
-    if (window.colorTransitionInterval) {
-        clearInterval(window.colorTransitionInterval);
-    }
-    window.colorTransitionInterval = setInterval(updateColors, 1000);
+    // After adjustment, re-pick the better text color (in case direction flipped)
+    const choice = pickTextColor(bgRgb);
+    return { h, s, l: L, bgRgb, textHex: choice.hex };
+  }
 
-    // Initial update
-    updateColors();
+  // Init random-ish state ------- //
+  let hue = start?.h ?? Math.floor(Math.random() * 360);
+  let saturation = start?.s ?? 65;          // keep fairly vivid to avoid muddy grays
+  let lightness = start?.l ?? 22;           // start comfortably dark
+
+  let satDir = 1;
+  let lightDir = 1;
+
+  function step() {
+    hue = (hue + hueStep) % 360;
+
+    // Gentle ping-pong for saturation and lightness (kept in safe bands)
+    if (saturation >= 80 || saturation <= 55) satDir *= -1;
+    saturation = clamp(saturation + satDir, 55, 80);
+
+    if (lightness >= 85 || lightness <= 15) lightDir *= -1;
+    lightness = clamp(lightness + lightDir, 15, 85);
+
+    // Propose a bg
+    const proposed = { h: hue, s: saturation, l: lightness };
+    // Adjust to meet contrast and pick matching text color
+    const { l, bgRgb, textHex } = ensureContrast(proposed, minContrast);
+    lightness = l; // keep the adjusted L as the new baseline
+
+    const bgCss = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+    // Apply both in same frame to avoid illegible flash
+    const root = document.documentElement;
+    document.body.style.setProperty('--bg', bgCss);
+    root.style.setProperty('--text', textHex);
+
+    // If your CSS uses body background-color directly, set it too:
+    document.body.style.backgroundColor = bgCss;
+    document.body.style.color = textHex;
+  }
+
+  // Pause when tab hidden (saves battery/CPU)
+  function onVis() {
+    if (document.hidden && window.colorTransitionInterval) {
+      clearInterval(window.colorTransitionInterval);
+      window.colorTransitionInterval = null;
+    } else if (!document.hidden && !window.colorTransitionInterval) {
+      window.colorTransitionInterval = setInterval(step, intervalMs);
+    }
+  }
+  document.addEventListener('visibilitychange', onVis);
+
+  // Clear any existing interval before starting a new one
+  if (window.colorTransitionInterval) {
+    clearInterval(window.colorTransitionInterval);
+  }
+
+  // First paint is safe (no flash)
+  step();
+  window.colorTransitionInterval = setInterval(step, intervalMs);
 }
 
 function hslToRgb(h, s, l) {
@@ -309,6 +389,16 @@ function hslToRgb(h, s, l) {
 }
 
 function initHamburger() {
+
+    // measure header height → CSS var
+    const headerEl = document.querySelector('.site-header');
+    if (headerEl) {
+        const setHeaderH = () =>
+            document.documentElement.style.setProperty('--header-h', `${headerEl.getBoundingClientRect().height}px`);
+        setHeaderH();
+        window.addEventListener('resize', setHeaderH, { passive: true });
+    }
+
 
     const hambugerBtn = document.querySelector('.nav-toggle');
     const menu = document.getElementById('primary-nav');
