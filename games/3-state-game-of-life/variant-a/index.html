@@ -11,35 +11,40 @@
   <canvas id="c"></canvas>
   <div class="hud">
     <div class="card" id="panel">
-      <h1>3-State Life</h1>
-      <div class="row">
-        <button class="primary" id="toggle">Play</button>
-        <button id="step">Step</button>
-        <button class="danger" id="clear">Clear</button>
-        <button id="rand">Random</button>
+      <div class="card-header" id="header">
+        <h1>3-State Life</h1>
+        <button class="collapse-btn" id="collapse-btn">−</button>
       </div>
-      <div class="row">
-        <div class="pill"><span class="dot s0"></span>Dead</div>
-        <div class="pill"><span class="dot s1"></span>Dormant</div>
-        <div class="pill"><span class="dot s2"></span>Alive</div>
-      </div>
-      <div class="row">
-        <label><span>Brush</span>
-          <select id="brush">
-            <option value="2">Alive</option>
-            <option value="1">Dormant</option>
-            <option value="0">Dead (Eraser)</option>
-          </select>
-        </label>
-        <label><span>Size</span><input id="cell" type="range" min="4" max="24" step="1" value="10"/></label>
-      </div>
-      <div class="row">
-        <label><span>Speed</span><input id="speed" type="range" min="1" max="30" step="1" value="12"/></label>
-        <span class="pill" id="stats">0×0 • 0 gen</span>
-      </div>
-      <div class="row">
-        <button id="center">Center</button>
-        <button id="help">Help</button>
+      <div class="card-content" id="card-content">
+        <div class="row">
+          <button class="primary" id="toggle">Play</button>
+          <button id="step">Step</button>
+          <button class="danger" id="clear">Clear</button>
+          <button id="rand">Random</button>
+        </div>
+        <div class="row">
+          <div class="pill"><span class="dot s0"></span>Dead</div>
+          <div class="pill"><span class="dot s1"></span>Dormant</div>
+          <div class="pill"><span class="dot s2"></span>Alive</div>
+        </div>
+        <div class="row">
+          <label><span>Brush</span>
+            <select id="brush">
+              <option value="2">Alive</option>
+              <option value="1">Dormant</option>
+              <option value="0">Dead (Eraser)</option>
+            </select>
+          </label>
+          <label><span>Size</span><input id="cell" type="range" min="4" max="24" step="1" value="10"/></label>
+        </div>
+        <div class="row">
+          <label><span>Speed</span><input id="speed" type="range" min="1" max="30" step="1" value="12"/></label>
+          <span class="pill" id="stats">0×0 • 0 gen</span>
+        </div>
+        <div class="row">
+          <button id="center">Center</button>
+          <button id="help">Help</button>
+        </div>
       </div>
     </div>
     <div class="corner">
@@ -423,6 +428,32 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1400);
   }
+
+  // Collapse functionality
+  const collapseBtn = document.getElementById("collapse-btn");
+  const cardContent = document.getElementById("card-content");
+  const header = document.getElementById("header");
+  let isCollapsed = false;
+
+  function toggleCollapse() {
+    isCollapsed = !isCollapsed;
+    if (isCollapsed) {
+      cardContent.classList.add("collapsed");
+      collapseBtn.textContent = "+";
+    } else {
+      cardContent.classList.remove("collapsed");
+      collapseBtn.textContent = "−";
+    }
+  }
+
+  collapseBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleCollapse();
+  });
+
+  header.addEventListener("click", () => {
+    toggleCollapse();
+  });
 
   // Boot
   new ResizeObserver(resize).observe(canvas);

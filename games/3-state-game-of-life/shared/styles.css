@@ -63,6 +63,46 @@ canvas {
     min-width: min(360px, calc(100vw - 20px))
 }
 
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 10px 0;
+    cursor: pointer;
+    user-select: none
+}
+
+.card-header h1 {
+    margin: 0
+}
+
+.collapse-btn {
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid var(--stroke);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease
+}
+
+.collapse-btn:hover {
+    background: rgba(255, 255, 255, .12)
+}
+
+.card-content {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease
+}
+
+.card-content.collapsed {
+    max-height: 0;
+    opacity: 0
+}
+
 .row {
     display: flex;
     gap: 8px;
@@ -78,7 +118,6 @@ h1 {
     font-size: 14px;
     letter-spacing: .06em;
     text-transform: uppercase;
-    margin: 0 0 10px 0;
     color: var(--muted)
 }
 
