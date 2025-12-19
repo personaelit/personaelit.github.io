@@ -1,0 +1,195 @@
+:root {
+    --bg: #0b0f14;
+    --fg: #e7eef7;
+    --muted: #9ab0c7;
+    --panel: rgba(20, 26, 34, .72);
+    --stroke: rgba(231, 238, 247, .14);
+    --accent: #7cc0ff;
+    --danger: #ff6b6b;
+    --radius: 14px;
+    --pad: 12px;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif
+}
+
+#app {
+    position: fixed;
+    inset: 0;
+    overflow: hidden
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    touch-action: none
+}
+
+.hud {
+    position: fixed;
+    left: env(safe-area-inset-left);
+    right: env(safe-area-inset-right);
+    top: env(safe-area-inset-top);
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 10
+}
+
+.card {
+    pointer-events: auto;
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    padding: var(--pad);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    min-width: min(360px, calc(100vw - 20px))
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center
+}
+
+.row+.row {
+    margin-top: 10px
+}
+
+h1 {
+    font-size: 14px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin: 0 0 10px 0;
+    color: var(--muted)
+}
+
+button,
+select,
+input[type="range"] {
+    font: inherit;
+    color: var(--fg);
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+button {
+    cursor: pointer;
+    user-select: none
+}
+
+button.primary {
+    background: rgba(124, 192, 255, .14);
+    border-color: rgba(124, 192, 255, .28)
+}
+
+button.danger {
+    background: rgba(255, 107, 107, .12);
+    border-color: rgba(255, 107, 107, .22)
+}
+
+button:active {
+    transform: translateY(1px)
+}
+
+label {
+    display: flex;
+    gap: 10px;
+    align-items: center
+}
+
+label span {
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 72px
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: rgba(255, 255, 255, .05);
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%
+}
+
+.dot.s0 {
+    background: #1a2230
+}
+
+.dot.s1 {
+    background: #3b88c7
+}
+
+.dot.s2 {
+    background: #e7eef7
+}
+
+.corner {
+    pointer-events: auto;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 10px
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    z-index: 11;
+    background: rgba(20, 26, 34, .78);
+    border: 1px solid var(--stroke);
+    backdrop-filter: blur(10px);
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--muted);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s ease
+}
+
+.toast.show {
+    opacity: 1
+}
+
+@media (max-width:520px) {
+    .card {
+        min-width: calc(100vw - 20px)
+    }
+
+    label span {
+        min-width: 62px
+    }
+}

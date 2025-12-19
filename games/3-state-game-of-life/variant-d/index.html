@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+    <title>3-State Life (Canvas + HUD)</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+
+<body>
+    <div id="app">
+        <canvas id="c"></canvas>
+        <div class="hud">
+            <div class="card" id="panel">
+                <h1>3-State Life</h1>
+                <div class="row">
+                    <label>
+                        <span>Dormant Decay</span>
+                        <input id="entropy" type="range" min="1.2" max="2.2" step="0.05" value="1.5">
+                    </label>
+                </div>
+
+                <div class="row">
+                    <button class="primary" id="toggle">Play</button>
+                    <button id="step">Step</button>
+                    <button class="danger" id="clear">Clear</button>
+                    <button id="rand">Random</button>
+                </div>
+                <div class="row">
+                    <div class="pill"><span class="dot s0"></span>Dead</div>
+                    <div class="pill"><span class="dot s1"></span>Dormant</div>
+                    <div class="pill"><span class="dot s2"></span>Alive</div>
+                </div>
+                <div class="row">
+                    <label><span>Brush</span>
+                        <select id="brush">
+                            <option value="2">Alive</option>
+                            <option value="1">Dormant</option>
+                            <option value="0">Dead (Eraser)</option>
+                        </select>
+                    </label>
+                    <label><span>Size</span><input id="cell" type="range" min="4" max="24" step="1"
+                            value="10" /></label>
+                </div>
+                <div class="row">
+                    <label><span>Speed</span><input id="speed" type="range" min="1" max="30" step="1"
+                            value="12" /></label>
+                    <span class="pill" id="stats">0×0 • 0 gen</span>
+                </div>
+                <div class="row">
+                    <button id="center">Center</button>
+                    <button id="help">Help</button>
+                </div>
+            </div>
+            <div class="corner">
+                <div class="card" style="min-width:auto">
+                    <div class="row" style="justify-content:space-between">
+                        <span class="pill">Pinch: zoom</span>
+                        <span class="pill">Drag: pan</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script>
+        (() => {
+            const canvas = document.getElementById("c");
+            const ctx = canvas.getContext("2d", { alpha: false });
+            const toggleBtn = document.getElementById("toggle");
+            const stepBtn = document.getElementById("step");
+            const clearBtn = document.getElementById("clear");
+            const randBtn = document.getElementById("rand");
+            const brushSel = document.getElementById("brush");
+            const cellRange = document.getElementById("cell");
+            const speedRange = document.getElementById("speed");
+            const statsEl = document.getElementById("stats");
+            const centerBtn = document.getElementById("center");
+            const helpBtn = document.getElementById("help");
+            const toastEl = document.getElementById("toast");
+            const entropyRange = document.getElementById("entropy");
+
+            let dormantDecay = +entropyRange.value;
+
+            entropyRange.addEventListener("input", () => {
+                dormantDecay = +entropyRange.value;
+                toast(`Dormant decay < ${dormantDecay}`);
+            });
+
+
+            const DPR = () => Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+            // World / view
+            let cellSize = +cellRange.value;           // in CSS pixels
+            let viewX = 0, viewY = 0;                  // world pixel offset (pan), in CSS pixels
+            let running = false;
+            let gen = 0;
+
+            // Grid data
+            let cols = 0, rows = 0;
+            let a = new Uint8Array(0);
+            let b = new Uint8Array(0);
+
+            // 3-state rules using weighted neighbor influence:
+            // Dead(0)->Dormant(1) if S in [1.5,2.5)
+            // Dead(0)->Alive(2)   if S in [2.5,3.5]
+            // Dormant(1)->Alive(2)if S in [2.0,3.0]
+            // Alive(2) stays Alive if S in [2.0,4.0]
+            // Alive(2)->Dormant(1) if S in [1.0,2.0) or S > 4.0
+            // Dormant(1)->Dead(0)  if S < 1.0
+            const w = [0, 0.25, 1.0];
+
+            function resize() {
+                const dpr = DPR();
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = Math.floor(rect.width * dpr);
+                canvas.height = Math.floor(rect.height * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                const newCols = Math.max(10, Math.floor(rect.width / cellSize));
+                const newRows = Math.max(10, Math.floor(rect.height / cellSize));
+                if (newCols !== cols || newRows !== rows) {
+                    const old = a;
+                    const oldCols = cols, oldRows = rows;
+                    cols = newCols; rows = newRows;
+                    a = new Uint8Array(cols * rows);
+                    b = new Uint8Array(cols * rows);
+                    // Copy center-ish if possible
+                    if (old.length) {
+                        const dx = Math.floor((cols - oldCols) / 2);
+                        const dy = Math.floor((rows - oldRows) / 2);
+                        for (let y = 0; y < oldRows; y++) {
+                            for (let x = 0; x < oldCols; x++) {
+                                const nx = x + dx, ny = y + dy;
+                                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                                    a[nx + ny * cols] = old[x + y * oldCols];
+                                }
+                            }
+                        }
+                    }
+                    gen = 0;
+                }
+                stats();
+                draw();
+            }
+
+            function stats() {
+                statsEl.textContent = `${cols}×${rows} • ${gen} gen`;
+            }
+
+            function idx(x, y) { return x + y * cols; }
+            function wrap(n, m) { n %= m; return n < 0 ? n + m : n; }
+
+            function step() {
+                for (let y = 0; y < rows; y++) {
+                    const ym1 = (y - 1 + rows) % rows;
+                    const yp1 = (y + 1) % rows;
+
+                    for (let x = 0; x < cols; x++) {
+                        const xm1 = (x - 1 + cols) % cols;
+                        const xp1 = (x + 1) % cols;
+
+                        let S = 0;
+                        let aliveN = 0;
+                        let dormantN = 0;
+
+                        const n = [
+                            a[idx(xm1, ym1)], a[idx(x, ym1)], a[idx(xp1, ym1)],
+                            a[idx(xm1, y)], a[idx(xp1, y)],
+                            a[idx(xm1, yp1)], a[idx(x, yp1)], a[idx(xp1, yp1)]
+                        ];
+
+                        for (const v of n) {
+                            S += w[v];
+                            if (v === 2) aliveN++;
+                            if (v === 1) dormantN++;
+                        }
+
+                        const cur = a[idx(x, y)];
+                        let next = cur;
+
+                        // DEAD
+                        if (cur === 0) {
+                            // NEW: Dormant spreads into dead space
+                            if (dormantN >= 3 && ((x + y + gen) & 1) === 0) next = 1;
+
+                            // Existing birth rules
+                            else if (aliveN >= 2 && S >= 2.75 && S <= 3.25) {
+                                next = 2;
+                            }
+                            else if (aliveN >= 1 && S >= 1.75 && S < 2.25) {
+                                next = 1;
+                            }
+                            else {
+                                next = 0;
+                            }
+                        }
+
+
+                        // DORMANT
+                        else if (cur === 1) {
+                            if (S >= 2.25 && S <= 2.75) next = 2;
+                            else if (S < dormantDecay) next = 0;
+                            else next = 1;
+                        }
+
+                        // ALIVE
+                        else {
+                            if (S >= 2.0 && S <= 3.5) next = 2;
+                            else if (S > 4.5) next = 0;
+                            else if (S >= 1.5 && S < 2.0) next = 1;
+                            else next = 0;
+                        }
+
+                        b[idx(x, y)] = next;
+                    }
+                }
+
+                [a, b] = [b, a];
+                gen++;
+                stats();
+            }
+
+
+            function draw() {
+                const wpx = canvas.clientWidth;
+                const hpx = canvas.clientHeight;
+                ctx.clearRect(0, 0, wpx, hpx);
+
+                // Background
+                ctx.fillStyle = "#0b0f14";
+                ctx.fillRect(0, 0, wpx, hpx);
+
+                // Optional subtle grid lines at larger sizes
+                const showGrid = cellSize >= 10;
+                if (showGrid) {
+                    ctx.strokeStyle = "rgba(231,238,247,.06)";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (let x = 0; x <= cols; x++) {
+                        const px = x * cellSize + (viewX % cellSize);
+                        ctx.moveTo(px, 0);
+                        ctx.lineTo(px, hpx);
+                    }
+                    for (let y = 0; y <= rows; y++) {
+                        const py = y * cellSize + (viewY % cellSize);
+                        ctx.moveTo(0, py);
+                        ctx.lineTo(wpx, py);
+                    }
+                    ctx.stroke();
+                }
+
+                // Cells (0=dead, 1=dormant, 2=alive)
+                // Dead is background; draw only 1/2 for speed.
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const v = a[idx(x, y)];
+                        if (!v) continue;
+                        const px = x * cellSize + viewX;
+                        const py = y * cellSize + viewY;
+                        if (px + cellSize < 0 || py + cellSize < 0 || px > wpx || py > hpx) continue;
+
+                        if (v === 1) {
+                            ctx.fillStyle = "rgba(124,192,255,.35)";
+                            ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
+                        } else {
+                            ctx.fillStyle = "rgba(231,238,247,.92)";
+                            ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
+                        }
+                    }
+                }
+            }
+
+            // Simulation loop (ticks per second via accumulator)
+            let last = performance.now();
+            let acc = 0;
+            function loop(now) {
+                const dt = Math.min(0.05, (now - last) / 1000);
+                last = now;
+                if (running) {
+                    const tps = +speedRange.value;
+                    acc += dt;
+                    const stepDt = 1 / tps;
+                    let n = 0;
+                    while (acc >= stepDt && n < 4) { // cap catch-up steps
+                        step();
+                        acc -= stepDt;
+                        n++;
+                    }
+                    draw();
+                }
+                requestAnimationFrame(loop);
+            }
+
+            // HUD actions
+            toggleBtn.addEventListener("click", () => {
+                running = !running;
+                toggleBtn.textContent = running ? "Pause" : "Play";
+                toast(running ? "Running" : "Paused");
+            });
+
+            stepBtn.addEventListener("click", () => {
+                if (running) return;
+                step();
+                draw();
+            });
+
+            clearBtn.addEventListener("click", () => {
+                a.fill(0); b.fill(0); gen = 0; stats(); draw(); toast("Cleared");
+            });
+
+            randBtn.addEventListener("click", () => {
+                // Bias: mostly dead, some dormant, a few alive
+                for (let i = 0; i < a.length; i++) {
+                    const r = Math.random();
+                    a[i] = r < 0.78 ? 0 : (r < 0.93 ? 1 : 2);
+                }
+                gen = 0; stats(); draw(); toast("Randomized");
+            });
+
+            centerBtn.addEventListener("click", () => {
+                viewX = 0; viewY = 0; draw(); toast("Centered");
+            });
+
+            helpBtn.addEventListener("click", () => {
+                toast("Tap/drag to paint • Two-finger drag to pan • Pinch to zoom");
+            });
+
+            cellRange.addEventListener("input", () => {
+                const prev = cellSize;
+                cellSize = +cellRange.value;
+                // Preserve center when resizing cell size
+                const cx = canvas.clientWidth / 2, cy = canvas.clientHeight / 2;
+                const worldCx = (cx - viewX) / prev;
+                const worldCy = (cy - viewY) / prev;
+                viewX = cx - worldCx * cellSize;
+                viewY = cy - worldCy * cellSize;
+                resize();
+                toast(`Cell size: ${cellSize}px`);
+            });
+
+            speedRange.addEventListener("input", () => toast(`Speed: ${speedRange.value} tps`));
+
+            // Painting + gestures
+            let painting = false;
+            let lastPaintCell = -1;
+
+            // Pointer gesture state for pan/zoom
+            const pointers = new Map(); // id -> {x,y}
+            let gesture = null; // {type:'pan'|'pinch', startDist, startSize, startViewX, startViewY, startMidX, startMidY}
+
+            function canvasToCell(clientX, clientY) {
+                const rect = canvas.getBoundingClientRect();
+                const x = (clientX - rect.left - viewX) / cellSize;
+                const y = (clientY - rect.top - viewY) / cellSize;
+                return { x: Math.floor(x), y: Math.floor(y) };
+            }
+
+            function paintAt(clientX, clientY) {
+                const { x, y } = canvasToCell(clientX, clientY);
+                if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+                const i = idx(x, y);
+                if (i === lastPaintCell) return;
+                lastPaintCell = i;
+                a[i] = +brushSel.value;
+                draw();
+            }
+
+            function dist(a, b) {
+                const dx = a.x - b.x, dy = a.y - b.y;
+                return Math.hypot(dx, dy);
+            }
+            function mid(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+
+            canvas.addEventListener("pointerdown", (e) => {
+                canvas.setPointerCapture(e.pointerId);
+                pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+                if (pointers.size === 1) {
+                    // Single pointer = paint (unless user uses two fingers)
+                    painting = true;
+                    lastPaintCell = -1;
+                    paintAt(e.clientX, e.clientY);
+                } else if (pointers.size === 2) {
+                    // Two pointers = pinch/pan gesture
+                    painting = false;
+                    const pts = Array.from(pointers.values());
+                    const d = dist(pts[0], pts[1]);
+                    const m = mid(pts[0], pts[1]);
+                    gesture = {
+                        type: "pinch",
+                        startDist: d,
+                        startSize: cellSize,
+                        startViewX: viewX,
+                        startViewY: viewY,
+                        startMidX: m.x,
+                        startMidY: m.y
+                    };
+                } else {
+                    painting = false;
+                }
+            });
+
+            canvas.addEventListener("pointermove", (e) => {
+                if (!pointers.has(e.pointerId)) return;
+                pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+                if (pointers.size === 1 && painting) {
+                    paintAt(e.clientX, e.clientY);
+                    return;
+                }
+
+                if (pointers.size === 2 && gesture && gesture.type === "pinch") {
+                    const pts = Array.from(pointers.values());
+                    const d = dist(pts[0], pts[1]);
+                    const m = mid(pts[0], pts[1]);
+
+                    const scale = d / gesture.startDist;
+                    const newSize = Math.max(4, Math.min(30, Math.round(gesture.startSize * scale)));
+                    if (newSize !== cellSize) {
+                        // Zoom about midpoint
+                        const rect = canvas.getBoundingClientRect();
+                        const midX = m.x - rect.left;
+                        const midY = m.y - rect.top;
+
+                        const worldX = (midX - gesture.startViewX) / gesture.startSize;
+                        const worldY = (midY - gesture.startViewY) / gesture.startSize;
+
+                        cellSize = newSize;
+                        cellRange.value = String(cellSize);
+
+                        viewX = midX - worldX * cellSize;
+                        viewY = midY - worldY * cellSize;
+                        resize();
+                    }
+
+                    // Also pan with midpoint movement
+                    const dx = (m.x - gesture.startMidX);
+                    const dy = (m.y - gesture.startMidY);
+                    viewX = gesture.startViewX + dx;
+                    viewY = gesture.startViewY + dy;
+                    draw();
+                }
+            });
+
+            function endPointer(e) {
+                pointers.delete(e.pointerId);
+                if (pointers.size === 0) {
+                    painting = false;
+                    gesture = null;
+                    lastPaintCell = -1;
+                } else if (pointers.size === 1) {
+                    // If one finger remains after pinch, don't auto-paint until new down
+                    painting = false;
+                    gesture = null;
+                    lastPaintCell = -1;
+                }
+            }
+
+            canvas.addEventListener("pointerup", endPointer);
+            canvas.addEventListener("pointercancel", endPointer);
+            canvas.addEventListener("pointerout", endPointer);
+
+            // Keyboard (desktop)
+            window.addEventListener("keydown", (e) => {
+                if (e.key === " ") { e.preventDefault(); toggleBtn.click(); }
+                if (e.key.toLowerCase() === "s") stepBtn.click();
+                if (e.key.toLowerCase() === "c") clearBtn.click();
+                if (e.key.toLowerCase() === "r") randBtn.click();
+                if (e.key === "1") { brushSel.value = "1"; toast("Brush: Dormant"); }
+                if (e.key === "2") { brushSel.value = "2"; toast("Brush: Alive"); }
+                if (e.key === "0") { brushSel.value = "0"; toast("Brush: Eraser"); }
+            });
+
+            // Toast helper
+            let toastTimer = null;
+            function toast(msg) {
+                toastEl.textContent = msg;
+                toastEl.classList.add("show");
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1400);
+            }
+
+            // Boot
+            new ResizeObserver(resize).observe(canvas);
+            resize();
+            requestAnimationFrame(loop);
+        })();
+    </script>
+</body>
+
+</html>
