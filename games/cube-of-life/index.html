@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Cube Surface Game of Life</title>
+    <style>
+        :root {
+            --bg: #0b0d12;
+            --panel: rgba(10, 12, 18, .72);
+            --stroke: rgba(255, 255, 255, .12);
+            --text: #e9eef7;
+            --muted: rgba(233, 238, 247, .7);
+            --accent: #6ee7ff
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: var(--bg);
+            overflow: hidden;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text)
+        }
+
+        canvas {
+            display: block;
+            touch-action: none
+        }
+
+        #hud {
+            position: fixed;
+            inset: 0;
+            pointer-events: none
+        }
+
+        .panel {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            right: 12px;
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 10px 10px 12px;
+            border: 1px solid var(--stroke);
+            background: var(--panel);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            pointer-events: auto
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .row+.row {
+            margin-top: 8px
+        }
+
+        button,
+        input,
+        select {
+            font: inherit
+        }
+
+        button {
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid var(--stroke);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            user-select: none
+        }
+
+        button:active {
+            transform: translateY(1px)
+        }
+
+        button.primary {
+            background: rgba(110, 231, 255, .14);
+            border-color: rgba(110, 231, 255, .35)
+        }
+
+        .pill {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            padding: 6px 10px;
+            border: 1px solid var(--stroke);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .06)
+        }
+
+        .pill label {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .pill input,
+        .pill select {
+            background: transparent;
+            border: 0;
+            color: var(--text);
+            outline: none
+        }
+
+        .pill input[type="range"] {
+            width: 150px
+        }
+
+        #hint {
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            right: 12px;
+            max-width: 820px;
+            margin: 0 auto;
+            pointer-events: none
+        }
+
+        .hintbox {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--stroke);
+            background: rgba(10, 12, 18, .55);
+            backdrop-filter: blur(10px)
+        }
+
+        .hintbox .left {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.35
+        }
+
+        .hintbox .right {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .kbd {
+            display: inline-block;
+            padding: 1px 6px;
+            border: 1px solid var(--stroke);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .06);
+            color: var(--text)
+        }
+
+        @media (min-width:940px) {
+            .panel {
+                left: 16px;
+                right: auto;
+                width: 440px
+            }
+
+            #hint {
+                left: 16px;
+                right: auto;
+                width: 440px
+            }
+        }
+    </style>
+    <script
+        type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+
+<body>
+    <div id="hud">
+        <div class="panel">
+            <div class="row">
+                <button id="play" class="primary">Play</button>
+                <button id="step">Step</button>
+                <button id="random">Random</button>
+                <button id="clear">Clear</button>
+                <button id="seed">Seed: Bands</button>
+            </div>
+            <div class="row">
+                <span class="pill"><label>Face Grid</label><select id="size">
+                        <option value="24">24×24</option>
+                        <option value="32" selected>32×32</option>
+                        <option value="40">40×40</option>
+                        <option value="52">52×52</option>
+                    </select></span>
+                <span class="pill"><label>Fill</label><input id="fill" type="range" min="1" max="100" value="14" /><span
+                        id="fillv"
+                        style="font-size:12px;color:var(--muted);min-width:34px;text-align:right">14%</span></span>
+                <span class="pill"><label>Speed</label><input id="speed" type="range" min="1" max="60"
+                        value="18" /><span id="speedv"
+                        style="font-size:12px;color:var(--muted);min-width:34px;text-align:right">18</span></span>
+            </div>
+            <div class="row">
+                <span class="pill"><label>Rule</label><select id="rule">
+                        <option value="B3/S23" selected>Conway (B3/S23)</option>
+                        <option value="B36/S23">HighLife (B36/S23)</option>
+                        <option value="B2/S">Seeds (B2/S)</option>
+                        <option value="B34/S34">34 Life (B34/S34)</option>
+                        <option value="CUSTOM">Custom</option>
+                    </select></span>
+                <span class="pill"><label>B</label><input id="born" type="text" value="3" /></span>
+                <span class="pill"><label>S</label><input id="survive" type="text" value="23" /></span>
+            </div>
+            <div class="row">
+                <span class="pill">
+                    <label>Opacity</label>
+                    <input id="opacity" type="range" min="5" max="100" value="92" />
+                    <span id="opacityv"
+                        style="font-size:12px;color:var(--muted);min-width:34px;text-align:right">92%</span>
+                </span>
+
+            </div>
+        </div>
+        <div id="hint">
+            <div class="hintbox">
+                <div class="left">Drag to orbit. Two-finger pan. Pinch to zoom. Tap a cell to toggle (touch tap pauses
+                    to edit).<br />Desktop: <span class="kbd">Space</span> play/pause · <span class="kbd">R</span>
+                    random · <span class="kbd">C</span> clear · <span class="kbd">N</span> step</div>
+                <div class="right"><span id="stats">Gen 0 · Alive 0</span></div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import * as THREE from "three";
+        import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const parseDigits = (s) => new Set((s || "").replace(/[^0-9]/g, "").split("").filter(Boolean).map(n => parseInt(n, 10)));
+        const F = 6; // faces: 0 +Z(front),1 -Z(back),2 +X(right),3 -X(left),4 +Y(top),5 -Y(bottom)
+
+        const state = { N: 32, gen: 0, alive: 0, playing: false, speed: 18, fill: 0.14, opacity: 0.92, ruleB: new Set([3]), ruleS: new Set([2, 3]) };
+        let renderer, scene, camera, controls, raycaster, pointer, boxHelper;
+        let gridA, gridB, mesh, geom, mat, needsRebuild = true, lastT = 0, acc = 0;
+
+        init(); animate(0);
+
+        function init() {
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x0b0d12, 1);
+            document.body.appendChild(renderer.domElement);
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.01, 1000);
+            camera.position.set(2.7, 2.2, 2.7);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+            const d1 = new THREE.DirectionalLight(0xffffff, 0.9); d1.position.set(4, 5, 3); scene.add(d1);
+            const d2 = new THREE.DirectionalLight(0xffffff, 0.35); d2.position.set(-4, -2, -3); scene.add(d2);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; controls.dampingFactor = 0.06;
+            controls.minDistance = 1.3; controls.maxDistance = 8;
+            controls.target.set(0, 0, 0);
+
+            const e = new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 2));
+            boxHelper = new THREE.LineSegments(e, new THREE.LineBasicMaterial({ color: 0x2b3243, transparent: true, opacity: 0.75 }));
+            scene.add(boxHelper);
+
+            raycaster = new THREE.Raycaster();
+            pointer = new THREE.Vector2();
+
+            bindHUD();
+            window.addEventListener("resize", onResize, { passive: true });
+            renderer.domElement.addEventListener("pointerdown", onPointerDown, { passive: false });
+        }
+
+        function alloc() {
+            const N = state.N;
+            gridA = new Uint8Array(F * N * N);
+            gridB = new Uint8Array(F * N * N);
+        }
+        function id(face, x, y) { const N = state.N; return face * N * N + y * N + x; }
+
+        function faceUvToPos(face, u, v) {
+            // u,v in [-1,1], cube surface at +/-1
+            switch (face) {
+                case 0: return new THREE.Vector3(u, v, 1);       // +Z
+                case 1: return new THREE.Vector3(-u, v, -1);      // -Z (note -u to keep continuity)
+                case 2: return new THREE.Vector3(1, v, -u);      // +X
+                case 3: return new THREE.Vector3(-1, v, u);      // -X
+                case 4: return new THREE.Vector3(u, 1, -v);     // +Y
+                case 5: return new THREE.Vector3(u, -1, v);     // -Y
+            }
+        }
+        function faceBasis(face) {
+            // right, up, normal (world)
+            switch (face) {
+                case 0: return { r: new THREE.Vector3(1, 0, 0), u: new THREE.Vector3(0, 1, 0), n: new THREE.Vector3(0, 0, 1) };
+                case 1: return { r: new THREE.Vector3(-1, 0, 0), u: new THREE.Vector3(0, 1, 0), n: new THREE.Vector3(0, 0, -1) };
+                case 2: return { r: new THREE.Vector3(0, 0, -1), u: new THREE.Vector3(0, 1, 0), n: new THREE.Vector3(1, 0, 0) };
+                case 3: return { r: new THREE.Vector3(0, 0, 1), u: new THREE.Vector3(0, 1, 0), n: new THREE.Vector3(-1, 0, 0) };
+                case 4: return { r: new THREE.Vector3(1, 0, 0), u: new THREE.Vector3(0, 0, -1), n: new THREE.Vector3(0, 1, 0) };
+                case 5: return { r: new THREE.Vector3(1, 0, 0), u: new THREE.Vector3(0, 0, 1), n: new THREE.Vector3(0, -1, 0) };
+            }
+        }
+        function dirToFaceUv(d) {
+            // d is direction (normalized). Cubemap decode consistent with faceUvToPos above.
+            const ax = Math.abs(d.x), ay = Math.abs(d.y), az = Math.abs(d.z);
+            let face, u, v;
+            if (az >= ax && az >= ay) {
+                if (d.z >= 0) { face = 0; u = d.x / az; v = d.y / az; }
+                else { face = 1; u = -d.x / az; v = d.y / az; } // because -Z face uses x=-u
+            } else if (ax >= ay && ax >= az) {
+                if (d.x >= 0) { face = 2; u = -d.z / ax; v = d.y / ax; }
+                else { face = 3; u = d.z / ax; v = d.y / ax; }
+            } else {
+                if (d.y >= 0) { face = 4; u = d.x / ay; v = -d.z / ay; }
+                else { face = 5; u = d.x / ay; v = d.z / ay; }
+            }
+            u = clamp(u, -1, 1); v = clamp(v, -1, 1);
+            return { face, u, v };
+        }
+        function uvToXY(u, v) {
+            const N = state.N;
+            const x = clamp(Math.floor((u + 1) * 0.5 * N), 0, N - 1);
+            const y = clamp(Math.floor((v + 1) * 0.5 * N), 0, N - 1);
+            return { x, y };
+        }
+        function cellCenterUv(x, y) {
+            const N = state.N;
+            const u = ((x + 0.5) / N) * 2 - 1;
+            const v = ((y + 0.5) / N) * 2 - 1;
+            return { u, v };
+        }
+
+        function rebuild() {
+            needsRebuild = false;
+            if (mesh) { scene.remove(mesh); geom.dispose(); mat.dispose(); }
+            alloc();
+            state.gen = 0; state.alive = 0;
+
+            const N = state.N;
+            const cell = 2 / N;
+            geom = new THREE.BoxGeometry(cell * 0.92, cell * 0.92, cell * 0.16);
+            mat = new THREE.MeshStandardMaterial({ color: 0x6ee7ff, metalness: 0.0, roughness: 0.55, transparent: true, opacity: 0.92 });
+            mesh = new THREE.InstancedMesh(geom, mat, F * N * N);
+            mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+            scene.add(mesh);
+            hideAllInstances();
+            refresh();
+        }
+
+        function hideAllInstances() {
+            const m = new THREE.Matrix4();
+            const q = new THREE.Quaternion();
+            const z = new THREE.Vector3(0, 0, 0);
+            for (let i = 0; i < mesh.count; i++) { m.compose(z, q, z); mesh.setMatrixAt(i, m); }
+            mesh.instanceMatrix.needsUpdate = true;
+        }
+
+        function seedBands() {
+            clearGrid();
+            const N = state.N;
+            for (let f = 0; f < F; f++) {
+                for (let y = 0; y < N; y++) {
+                    for (let x = 0; x < N; x++) {
+                        const { u, v } = cellCenterUv(x, y);
+                        const band = (Math.sin((u + 1) * Math.PI * 2) + Math.cos((v + 1) * Math.PI * 2)) * 0.5;
+                        const p = 0.18 + 0.10 * (band > 0 ? 1 : 0);
+                        gridA[id(f, x, y)] = (Math.random() < p) ? 1 : 0;
+                    }
+                }
+            }
+            recountAlive();
+            refresh();
+        }
+        function randomize() {
+            const p = state.fill;
+            for (let i = 0; i < gridA.length; i++) gridA[i] = (Math.random() < p) ? 1 : 0;
+            state.gen = 0; recountAlive(); refresh();
+        }
+        function clearGrid() { gridA.fill(0); gridB.fill(0); state.gen = 0; state.alive = 0; refresh(); }
+        function recountAlive() { let a = 0; for (let i = 0; i < gridA.length; i++)a += gridA[i]; state.alive = a; }
+
+        function countNeighbors(face, x, y) {
+            const N = state.N;
+            const step = 2 / N;
+            const { u, v } = cellCenterUv(x, y);
+            const basis = faceBasis(face);
+            const base = faceUvToPos(face, u, v);
+            let c = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const p = base.clone()
+                        .addScaledVector(basis.r, dx * step)
+                        .addScaledVector(basis.u, dy * step);
+                    const d = p.clone().normalize();
+                    const m = dirToFaceUv(d);
+                    const xy = uvToXY(m.u, m.v);
+                    c += gridA[id(m.face, xy.x, xy.y)];
+                }
+            }
+            return c;
+        }
+
+        function step() {
+            const N = state.N;
+            let alive = 0;
+            for (let f = 0; f < F; f++) {
+                for (let y = 0; y < N; y++) {
+                    for (let x = 0; x < N; x++) {
+                        const i = id(f, x, y);
+                        const v = gridA[i];
+                        const nb = countNeighbors(f, x, y);
+                        let nv = 0;
+                        if (v) { nv = state.ruleS.has(nb) ? 1 : 0; }
+                        else { nv = state.ruleB.has(nb) ? 1 : 0; }
+                        gridB[i] = nv; alive += nv;
+                    }
+                }
+            }
+            const tmp = gridA; gridA = gridB; gridB = tmp;
+            state.gen++; state.alive = alive;
+            refresh();
+        }
+
+        function refresh() {
+            if (!mesh) return;
+            const N = state.N;
+            const thickness = 0.03;
+            const m = new THREE.Matrix4();
+            const q = new THREE.Quaternion();
+            const sOn = new THREE.Vector3(1, 1, 1);
+            const sOff = new THREE.Vector3(0, 0, 0);
+            const z0 = new THREE.Vector3(0, 0, 0);
+
+            for (let f = 0; f < F; f++) {
+                const basis = faceBasis(f);
+                const bn = basis.n.clone();
+                const up = basis.u.clone();
+                const right = basis.r.clone();
+                const rotM = new THREE.Matrix4().makeBasis(right, up, bn);
+                q.setFromRotationMatrix(rotM);
+                for (let y = 0; y < N; y++) {
+                    for (let x = 0; x < N; x++) {
+                        const inst = id(f, x, y);
+                        const alive = gridA[inst] === 1;
+                        if (alive) {
+                            const { u, v } = cellCenterUv(x, y);
+                            const pos = faceUvToPos(f, u, v).addScaledVector(bn, thickness);
+                            m.compose(pos, q, sOn);
+                        } else {
+                            m.compose(z0, q, sOff);
+                        }
+                        mesh.setMatrixAt(inst, m);
+                    }
+                }
+            }
+            mesh.instanceMatrix.needsUpdate = true;
+            document.getElementById("stats").textContent = `Gen ${state.gen} · Alive ${state.alive}`;
+        }
+
+        function toggleAtPointer(ev) {
+            const r = renderer.domElement.getBoundingClientRect();
+            pointer.set(((ev.clientX - r.left) / r.width) * 2 - 1, -(((ev.clientY - r.top) / r.height) * 2 - 1));
+            raycaster.setFromCamera(pointer, camera);
+            const box = new THREE.Box3(new THREE.Vector3(-1, -1, -1), new THREE.Vector3(1, 1, 1));
+            const hit = new THREE.Vector3();
+            if (!raycaster.ray.intersectBox(box, hit)) return;
+
+            // Determine face by dominant axis at intersection point
+            const ax = Math.abs(hit.x), ay = Math.abs(hit.y), az = Math.abs(hit.z);
+            let face, u, v;
+            if (az >= ax && az >= ay) {
+                if (hit.z >= 0) { face = 0; u = hit.x; v = hit.y; }
+                else { face = 1; u = -hit.x; v = hit.y; }
+            } else if (ax >= ay && ax >= az) {
+                if (hit.x >= 0) { face = 2; u = -hit.z; v = hit.y; }
+                else { face = 3; u = hit.z; v = hit.y; }
+            } else {
+                if (hit.y >= 0) { face = 4; u = hit.x; v = -hit.z; }
+                else { face = 5; u = hit.x; v = hit.z; }
+            }
+            u = clamp(u, -1, 1); v = clamp(v, -1, 1);
+            const { x, y } = uvToXY(u, v);
+            const i = id(face, x, y);
+            gridA[i] = gridA[i] ? 0 : 1;
+            recountAlive();
+            refresh();
+        }
+
+        function onPointerDown(ev) {
+            if (ev.pointerType === "touch" && state.playing) { state.playing = false; updatePlayButton(); }
+            const start = { x: ev.clientX, y: ev.clientY, t: performance.now() };
+            const onUp = (e) => {
+                window.removeEventListener("pointerup", onUp, true);
+                window.removeEventListener("pointermove", onMove, true);
+                const dt = performance.now() - start.t;
+                const dx = e.clientX - start.x, dy = e.clientY - start.y;
+                if (dt < 260 && (dx * dx + dy * dy) < 64) toggleAtPointer(e);
+            };
+            const onMove = () => { };
+            window.addEventListener("pointerup", onUp, true);
+            window.addEventListener("pointermove", onMove, true);
+        }
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function updatePlayButton() {
+            const b = document.getElementById("play");
+            b.textContent = state.playing ? "Pause" : "Play";
+        }
+
+        function bindHUD() {
+            const play = document.getElementById("play");
+            const stepBtn = document.getElementById("step");
+            const randomBtn = document.getElementById("random");
+            const clearBtn = document.getElementById("clear");
+            const seedBtn = document.getElementById("seed");
+            const sizeSel = document.getElementById("size");
+            const fill = document.getElementById("fill");
+            const fillv = document.getElementById("fillv");
+            const speed = document.getElementById("speed");
+            const speedv = document.getElementById("speedv");
+            const ruleSel = document.getElementById("rule");
+            const born = document.getElementById("born");
+            const survive = document.getElementById("survive");
+
+            const applyRule = () => {
+                const b = parseDigits(born.value);
+                const s = parseDigits(survive.value);
+                state.ruleB = b; state.ruleS = s;
+            };
+
+            play.addEventListener("click", () => { state.playing = !state.playing; updatePlayButton(); });
+            stepBtn.addEventListener("click", () => { state.playing = false; updatePlayButton(); step(); });
+            randomBtn.addEventListener("click", () => { state.playing = false; updatePlayButton(); randomize(); });
+            clearBtn.addEventListener("click", () => { state.playing = false; updatePlayButton(); clearGrid(); });
+            seedBtn.addEventListener("click", () => { state.playing = false; updatePlayButton(); seedBands(); });
+
+            sizeSel.addEventListener("change", () => { state.N = parseInt(sizeSel.value, 10); needsRebuild = true; });
+            fill.addEventListener("input", () => { state.fill = parseInt(fill.value, 10) / 100; fillv.textContent = `${parseInt(fill.value, 10)}%`; });
+            speed.addEventListener("input", () => { state.speed = parseInt(speed.value, 10); speedv.textContent = String(state.speed); });
+
+            ruleSel.addEventListener("change", () => {
+                if (ruleSel.value === "B3/S23") { born.value = "3"; survive.value = "23"; }
+                if (ruleSel.value === "B36/S23") { born.value = "36"; survive.value = "23"; }
+                if (ruleSel.value === "B2/S") { born.value = "2"; survive.value = ""; }
+                if (ruleSel.value === "B34/S34") { born.value = "34"; survive.value = "34"; }
+                applyRule();
+            });
+            born.addEventListener("input", () => { ruleSel.value = "CUSTOM"; applyRule(); });
+            survive.addEventListener("input", () => { ruleSel.value = "CUSTOM"; applyRule(); });
+
+            fillv.textContent = `${parseInt(fill.value, 10)}%`;
+            speedv.textContent = String(state.speed);
+            updatePlayButton();
+
+            window.addEventListener("keydown", (e) => {
+                if (e.code === "Space") { e.preventDefault(); state.playing = !state.playing; updatePlayButton(); }
+                if (e.key === "r" || e.key === "R") { state.playing = false; updatePlayButton(); randomize(); }
+                if (e.key === "c" || e.key === "C") { state.playing = false; updatePlayButton(); clearGrid(); }
+                if (e.key === "n" || e.key === "N") { state.playing = false; updatePlayButton(); step(); }
+            }, { passive: false });
+        }
+
+        function animate(t) {
+            requestAnimationFrame(animate);
+            if (needsRebuild) { rebuild(); seedBands(); }
+            controls.update();
+            const dt = (t - lastT) / 1000; lastT = t;
+            if (state.playing) {
+                acc += dt;
+                const stepEvery = 1 / Math.max(1, state.speed);
+                while (acc >= stepEvery) {
+                    acc -= stepEvery;
+                    step();
+                    if (state.alive === 0) { state.playing = false; updatePlayButton(); break; }
+                }
+            } else acc = 0;
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+
+</html>
