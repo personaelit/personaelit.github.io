@@ -300,7 +300,7 @@
                 <div class="brand">
                     <div class="sig"></div>
                     <div class="title">
-                        <strong>Interlacing Spirals 0.0.0</strong>
+                        <strong>Interlacing Spirals 0.0.1</strong>
                         <span id="subtitle">drag • pinch • vibe</span>
                     </div>
                 </div>
@@ -801,6 +801,18 @@
                         camx: state.cam.x,
                         camy: state.cam.y
                     };
+                } else if (state.touches.size === 4) {
+                    // Four-finger pan setup
+                    state.dragging = false;
+                    const arr = [...state.touches.values()];
+                    state.pinchStart = {
+                        dist: 1,
+                        zoom: state.zoom,
+                        midx: arr.reduce((sum, t) => sum + t.x, 0) / 4,
+                        midy: arr.reduce((sum, t) => sum + t.y, 0) / 4,
+                        camx: state.cam.x,
+                        camy: state.cam.y
+                    };
                 }
             }, { passive: false });
 
@@ -834,10 +846,12 @@
                     const dist = Math.hypot(dx, dy);
                     const scale = dist / state.pinchStart.dist;
                     state.zoom = clamp(state.pinchStart.zoom * scale, 0.25, 4);
-
-                    // two-finger pan (subtle)
-                    const midx = (arr[0].x + arr[1].x) / 2;
-                    const midy = (arr[0].y + arr[1].y) / 2;
+                    syncUI();
+                } else if (state.touches.size === 4 && state.pinchStart) {
+                    // four-finger pan
+                    const arr = [...state.touches.values()];
+                    const midx = arr.reduce((sum, t) => sum + t.x, 0) / 4;
+                    const midy = arr.reduce((sum, t) => sum + t.y, 0) / 4;
                     const pdx = (midx - state.pinchStart.midx);
                     const pdy = (midy - state.pinchStart.midy);
                     state.cam.x = state.pinchStart.camx + pdx * 0.35;
