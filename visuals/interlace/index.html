@@ -607,7 +607,7 @@
                 }
             }
 
-
+            
             const PRESETS = [
                 {
                     name: "Clean Weave",
@@ -644,7 +644,7 @@
                     view: { rot: -0.4, tilt: 0.28, zoom: 0.9 },
                     paletteSeed: 0.61
                 },
-
+                
                 {
                     name: "Orbital Threads",
                     params: {
@@ -662,7 +662,7 @@
                     view: { rot: 0.9, tilt: -0.1, zoom: 1.05 },
                     paletteSeed: 0.83
                 },
-
+                
                 {
                     name: "Slow Vortex",
                     params: {
@@ -699,16 +699,6 @@
                     paletteSeed: 0.52
                 }
             ];
-
-            function dampedZoom(baseZoom, rawScale) {
-                // compress scale response
-                // rawScale ~ 0.7–1.4 in practice
-                const k = 0.65; // lower = more resistance
-                const eased = Math.pow(rawScale, k);
-                return baseZoom * eased;
-            }
-
-
 
             // Helpers: lightweight pseudo-noise
             function hash2(x, y) {
@@ -792,15 +782,19 @@
 
             // Touch: pinch to zoom + two-finger pan
             canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 for (const t of e.changedTouches) {
                     state.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
                 }
                 if (state.touches.size === 2) {
+                    // Stop any drag motion when pinch starts
+                    state.dragging = false;
                     const arr = [...state.touches.values()];
                     const dx = arr[1].x - arr[0].x;
                     const dy = arr[1].y - arr[0].y;
+                    const dist = Math.hypot(dx, dy);
                     state.pinchStart = {
-                        dist: Math.hypot(dx, dy),
+                        dist: Math.max(dist, 1), // prevent division by zero
                         zoom: state.zoom,
                         midx: (arr[0].x + arr[1].x) / 2,
                         midy: (arr[0].y + arr[1].y) / 2,
@@ -808,9 +802,10 @@
                         camy: state.cam.y
                     };
                 }
-            }, { passive: true });
+            }, { passive: false });
 
             canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
                 for (const t of e.changedTouches) {
                     if (state.touches.has(t.identifier)) {
                         state.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
@@ -837,13 +832,8 @@
                     const dx = arr[1].x - arr[0].x;
                     const dy = arr[1].y - arr[0].y;
                     const dist = Math.hypot(dx, dy);
-                    const rawScale = dist / (state.pinchStart.dist || dist);
-                    state.zoom = clamp(
-                        dampedZoom(state.pinchStart.zoom, rawScale),
-                        0.35,
-                        3.0
-                    );
-
+                    const scale = dist / state.pinchStart.dist;
+                    state.zoom = clamp(state.pinchStart.zoom * scale, 0.25, 4);
 
                     // two-finger pan (subtle)
                     const midx = (arr[0].x + arr[1].x) / 2;
@@ -854,7 +844,7 @@
                     state.cam.y = state.pinchStart.camy + pdy * 0.35;
                     syncUI();
                 }
-            }, { passive: true });
+            }, { passive: false });
 
             canvas.addEventListener('touchend', (e) => {
                 for (const t of e.changedTouches) {
