@@ -1,0 +1,71 @@
+/* ======================================================
+   Personaelit — Design Tokens
+   Core design system variables
+   ====================================================== */
+
+/* ------------------------------
+   Light theme (default)
+-------------------------------- */
+:root {
+  /* Typeface */
+  --font-sans: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+               Arial, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Color — semantic, not descriptive */
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #e2e8f0;
+
+  --link: #0d66d0;
+  --link-hover: #0a4ea3;
+  --accent: #000000;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgb(2 6 23 / 6%);
+  --shadow-2: 0 8px 24px rgb(2 6 23 / 8%);
+
+  /* Radius */
+  --r-sm: .5rem;
+  --r-md: .875rem;
+  --r-lg: 1.25rem;
+
+  /* Spacing (4px scale) */
+  --s-1: .25rem;
+  --s-2: .5rem;
+  --s-3: .75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+
+  /* Layout */
+  --container: 1080px;
+  --header-h: 56px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(.2,.8,.2,1);
+  --t-fast: 120ms;
+  --t-med: 240ms;
+}
+
+/* ------------------------------
+   Dark theme (system-driven)
+-------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0f14;
+    --surface: #121823;
+    --text: #e6edf3;
+    --muted: #9aa4b2;
+    --border: #1f2937;
+
+    --link: #7cc0ff;
+    --link-hover: #b3dbff;
+    --accent: #ffffff;
+
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 50%);
+    --shadow-2: 0 12px 28px rgb(0 0 0 / 40%);
+  }
+}

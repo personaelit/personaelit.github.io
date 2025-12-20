@@ -1,3 +1,4 @@
+// app.js
 // --- config -------------------------------------------------
 const BASE = ""; // if you publish under a subdir, set e.g. "/mysite"
 const TEMPLATES = { header: "/templates/header.html", footer: "/templates/footer.html" };

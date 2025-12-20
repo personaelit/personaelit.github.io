@@ -1,0 +1,111 @@
+/* ======================================================
+   Personaelit — Component Styles
+   Reusable UI components
+   ====================================================== */
+
+/* ------------------------------
+   Header / navigation
+-------------------------------- */
+.site-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1000;
+  backdrop-filter: saturate(120%) blur(6px);
+  background: color-mix(in oklab, var(--surface) 85%, transparent);
+  border-block-end: 1px solid var(--border);
+}
+
+.nav {
+  min-block-size: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.toggle-square {
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 4px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--accent),
+      color-mix(in oklab, var(--accent) 60%, black)
+    );
+  box-shadow: inset 0 -2px 4px rgb(0 0 0 / 12%), var(--shadow-1);
+}
+
+/* ------------------------------
+   Navigation links
+-------------------------------- */
+.nav-links {
+  display: flex;
+  gap: var(--s-4);
+}
+
+.nav-links a {
+  padding: .375rem .5rem;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  background: color-mix(in oklab, var(--text) 6%, transparent);
+}
+
+/* ------------------------------
+   Pills
+-------------------------------- */
+.pills {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.pills li {
+  padding: .4rem .65rem;
+  font-size: .9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 90%, transparent);
+  box-shadow: var(--shadow-1);
+}
+
+/* ------------------------------
+   Footer
+-------------------------------- */
+.site-footer {
+  border-block-start: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  padding-block: var(--s-8);
+}
+
+.foot-grid {
+  display: grid;
+  gap: var(--s-6);
+}
+
+@media (min-width: 820px) {
+  .foot-grid {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+.meta {
+  font-size: .95rem;
+  color: var(--muted);
+}
