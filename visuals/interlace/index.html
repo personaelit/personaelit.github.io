@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Interlacing Spirals</title>
+  <style>
+    :root{
+      --bg0:#07090f;
+      --bg1:#0b1020;
+      --ink:#e9ecff;
+      --mut:#9aa3c7;
+      --glass: rgba(18, 26, 56, 0.55);
+      --glass2: rgba(10, 14, 28, 0.75);
+      --stroke: rgba(180, 200, 255, 0.22);
+      --stroke2: rgba(255,255,255,0.10);
+      --accent:#6aa8ff;
+      --accent2:#b46bff;
+      --good:#65ffb6;
+      --warn:#ffd36a;
+      --bad:#ff5f7e;
+      --r: 18px;
+      --shadow: 0 14px 40px rgba(0,0,0,0.45);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      overflow:hidden;
+      background: radial-gradient(1200px 900px at 20% 10%, rgba(90,140,255,0.14), transparent 60%),
+                  radial-gradient(900px 700px at 80% 30%, rgba(180,90,255,0.10), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      touch-action: none;
+    }
+
+    canvas{
+      display:block;
+      width:100vw;
+      height:100vh;
+    }
+
+    /* HUD */
+    .hud{
+      position: fixed;
+      inset: 12px 12px auto 12px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      z-index: 10;
+      pointer-events: none; /* enable only on children */
+    }
+
+    .panel{
+      pointer-events: auto;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, var(--glass), var(--glass2));
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      border-bottom: 1px solid var(--stroke2);
+      gap:10px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 220px;
+    }
+
+    .sig{
+      width:12px; height:12px;
+      border-radius: 4px;
+      background: conic-gradient(from 200deg, var(--accent), var(--accent2), var(--accent), var(--good));
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.06), 0 10px 30px rgba(120,160,255,0.18);
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+
+    .title strong{
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .title span{
+      font-size: 12px;
+      color: var(--mut);
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    .btnrow{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    button{
+      appearance:none;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.06);
+      color: var(--ink);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px) scale(0.99); }
+    button:hover{ background: rgba(255,255,255,0.09); border-color: rgba(180,200,255,0.32); }
+    button.primary{
+      border-color: rgba(120,170,255,0.45);
+      background: linear-gradient(180deg, rgba(120,170,255,0.16), rgba(120,170,255,0.08));
+    }
+    button.bad{
+      border-color: rgba(255,95,126,0.45);
+      background: linear-gradient(180deg, rgba(255,95,126,0.16), rgba(255,95,126,0.08));
+    }
+
+    .controls{
+      padding:10px 12px 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      min-width: min(560px, calc(100vw - 24px));
+      max-width: min(760px, calc(100vw - 24px));
+    }
+
+    .ctrl{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding:10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.10);
+    }
+
+    .ctrl label{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size: 12px;
+      color: var(--mut);
+      letter-spacing: 0.02em;
+    }
+
+    .ctrl label b{
+      color: var(--ink);
+      font-weight: 650;
+      letter-spacing: 0.03em;
+    }
+
+    input[type="range"]{
+      width:100%;
+      margin: 2px 0 0;
+      accent-color: var(--accent);
+    }
+
+    .mini{
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 10;
+      pointer-events:none;
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      flex-direction:column;
+    }
+
+    .readout{
+      pointer-events:auto;
+      padding:10px 12px;
+      min-width: 220px;
+      max-width: min(420px, calc(100vw - 24px));
+    }
+
+    .readout .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size: 12px;
+      color: var(--mut);
+      margin: 3px 0;
+    }
+    .readout .row span{
+      color: var(--ink);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .hint{
+      pointer-events:auto;
+      padding:10px 12px;
+      color: var(--mut);
+      font-size: 12px;
+      line-height: 1.3;
+      max-width: min(420px, calc(100vw - 24px));
+    }
+    .hint kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      color: var(--ink);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 8px;
+      padding: 2px 6px;
+      margin: 0 2px;
+      white-space: nowrap;
+    }
+
+    /* Mobile HUD collapse */
+    .collapsed .controls{ display:none; }
+    .collapsed .panel-header{ border-bottom: none; }
+
+    @media (max-width: 640px){
+      .hud{ inset: 10px 10px auto 10px; }
+      .controls{ grid-template-columns: 1fr; }
+      .brand{ min-width: 180px; }
+      button{ padding: 10px 11px; font-size: 12px; }
+      .mini{ right: 10px; bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <div class="hud">
+    <div class="panel" id="panel">
+      <div class="panel-header">
+        <div class="brand">
+          <div class="sig"></div>
+          <div class="title">
+            <strong>Interlacing Spirals</strong>
+            <span id="subtitle">drag • pinch • vibe</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="primary" id="toggle">HUD</button>
+          <button id="pause">Pause</button>
+          <button class="bad" id="reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="controls" id="controls">
+        <div class="ctrl">
+          <label><span>Spirals</span><b id="vCount">2</b></label>
+          <input id="count" type="range" min="2" max="6" step="1" value="2" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Interlace</span><b id="vInterlace">0.62</b></label>
+          <input id="interlace" type="range" min="0" max="1" step="0.01" value="0.62" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Frequency</span><b id="vFreq">3.40</b></label>
+          <input id="freq" type="range" min="0.5" max="10" step="0.01" value="3.40" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Twist</span><b id="vTwist">1.80</b></label>
+          <input id="twist" type="range" min="-6" max="6" step="0.01" value="1.80" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Noise</span><b id="vNoise">0.18</b></label>
+          <input id="noise" type="range" min="0" max="1" step="0.01" value="0.18" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Line weight</span><b id="vWidth">1.20</b></label>
+          <input id="width" type="range" min="0.2" max="6" step="0.01" value="1.2" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Glow</span><b id="vGlow">0.55</b></label>
+          <input id="glow" type="range" min="0" max="1" step="0.01" value="0.55" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Motion</span><b id="vSpeed">0.42</b></label>
+          <input id="speed" type="range" min="0" max="2" step="0.01" value="0.42" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Zoom</span><b id="vZoom">1.00</b></label>
+          <input id="zoom" type="range" min="0.4" max="2.2" step="0.01" value="1.0" />
+        </div>
+
+        <div class="ctrl">
+          <label><span>Background</span><b id="vFade">0.08</b></label>
+          <input id="fade" type="range" min="0" max="0.25" step="0.001" value="0.08" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mini">
+    <div class="panel readout">
+      <div class="row"><div>FPS</div><span id="fps">—</span></div>
+      <div class="row"><div>Points</div><span id="pts">—</span></div>
+      <div class="row"><div>Scale</div><span id="scale">—</span></div>
+    </div>
+    <div class="panel hint">
+      Drag to orbit • Pinch to zoom • Double-tap to recenter<br/>
+      Keys: <kbd>Space</kbd> pause <kbd>H</kbd> HUD <kbd>R</kbd> reset
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+
+  // DOM
+  const panel = document.getElementById('panel');
+  const controls = document.getElementById('controls');
+  const btnToggle = document.getElementById('toggle');
+  const btnPause = document.getElementById('pause');
+  const btnReset = document.getElementById('reset');
+
+  const el = {
+    count: document.getElementById('count'),
+    interlace: document.getElementById('interlace'),
+    freq: document.getElementById('freq'),
+    twist: document.getElementById('twist'),
+    noise: document.getElementById('noise'),
+    width: document.getElementById('width'),
+    glow: document.getElementById('glow'),
+    speed: document.getElementById('speed'),
+    zoom: document.getElementById('zoom'),
+    fade: document.getElementById('fade'),
+    vCount: document.getElementById('vCount'),
+    vInterlace: document.getElementById('vInterlace'),
+    vFreq: document.getElementById('vFreq'),
+    vTwist: document.getElementById('vTwist'),
+    vNoise: document.getElementById('vNoise'),
+    vWidth: document.getElementById('vWidth'),
+    vGlow: document.getElementById('vGlow'),
+    vSpeed: document.getElementById('vSpeed'),
+    vZoom: document.getElementById('vZoom'),
+    vFade: document.getElementById('vFade'),
+    fps: document.getElementById('fps'),
+    pts: document.getElementById('pts'),
+    scale: document.getElementById('scale'),
+    subtitle: document.getElementById('subtitle'),
+  };
+
+  // State
+  const state = {
+    w: 0, h: 0, dpr: 1,
+    t: 0,
+    paused: false,
+    collapsed: false,
+
+    // View transform (orbit & zoom)
+    rot: 0,
+    tilt: 0.2,
+    cam: { x: 0, y: 0 },
+    zoom: 1,
+
+    // Input
+    dragging: false,
+    last: { x: 0, y: 0 },
+    vel: { x: 0, y: 0 },
+
+    // Touch
+    touches: new Map(),
+    pinchStart: null,
+
+    // Params
+    params: {
+      count: 2,
+      interlace: 0.62,
+      freq: 3.4,
+      twist: 1.8,
+      noise: 0.18,
+      width: 1.2,
+      glow: 0.55,
+      speed: 0.42,
+      zoom: 1.0,
+      fade: 0.08,
+    },
+
+    paletteSeed: 0.12,
+  };
+
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function fmt(n, d=2){ return (+n).toFixed(d); }
+
+  // Crisp resize
+  function resize(){
+    const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+    state.dpr = dpr;
+    state.w = Math.floor(innerWidth);
+    state.h = Math.floor(innerHeight);
+    canvas.width = Math.floor(state.w * dpr);
+    canvas.height = Math.floor(state.h * dpr);
+    canvas.style.width = state.w + 'px';
+    canvas.style.height = state.h + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  addEventListener('resize', resize, { passive: true });
+  resize();
+
+  // UI binding
+  function syncUI(){
+    const p = state.params;
+    el.vCount.textContent = String(p.count|0);
+    el.vInterlace.textContent = fmt(p.interlace,2);
+    el.vFreq.textContent = fmt(p.freq,2);
+    el.vTwist.textContent = fmt(p.twist,2);
+    el.vNoise.textContent = fmt(p.noise,2);
+    el.vWidth.textContent = fmt(p.width,2);
+    el.vGlow.textContent = fmt(p.glow,2);
+    el.vSpeed.textContent = fmt(p.speed,2);
+    el.vZoom.textContent = fmt(p.zoom,2);
+    el.vFade.textContent = fmt(p.fade,3);
+
+    el.scale.textContent = fmt(state.zoom * p.zoom, 2);
+  }
+  function bindRange(key, min, max){
+    const input = el[key];
+    input.addEventListener('input', () => {
+      state.params[key] = clamp(parseFloat(input.value), min, max);
+      if (key === 'zoom') state.params.zoom = clamp(state.params.zoom, 0.4, 2.2);
+      syncUI();
+    }, { passive: true });
+  }
+  bindRange('count', 2, 6);
+  bindRange('interlace', 0, 1);
+  bindRange('freq', 0.5, 10);
+  bindRange('twist', -6, 6);
+  bindRange('noise', 0, 1);
+  bindRange('width', 0.2, 6);
+  bindRange('glow', 0, 1);
+  bindRange('speed', 0, 2);
+  bindRange('zoom', 0.4, 2.2);
+  bindRange('fade', 0, 0.25);
+  syncUI();
+
+  // HUD controls
+  btnToggle.addEventListener('click', () => {
+    state.collapsed = !state.collapsed;
+    document.body.classList.toggle('collapsed', state.collapsed);
+  });
+  btnPause.addEventListener('click', () => togglePause());
+  btnReset.addEventListener('click', () => reset(true));
+
+  function togglePause(){
+    state.paused = !state.paused;
+    btnPause.textContent = state.paused ? 'Play' : 'Pause';
+    el.subtitle.textContent = state.paused ? 'paused • adjust • resume' : 'drag • pinch • vibe';
+  }
+
+  function reset(hard=false){
+    state.rot = 0;
+    state.tilt = 0.2;
+    state.cam.x = 0; state.cam.y = 0;
+    state.zoom = 1;
+    state.vel.x = 0; state.vel.y = 0;
+    if (hard){
+      state.params.count = 2;
+      state.params.interlace = 0.62;
+      state.params.freq = 3.4;
+      state.params.twist = 1.8;
+      state.params.noise = 0.18;
+      state.params.width = 1.2;
+      state.params.glow = 0.55;
+      state.params.speed = 0.42;
+      state.params.zoom = 1.0;
+      state.params.fade = 0.08;
+
+      for (const k of Object.keys(state.params)){
+        if (el[k]) el[k].value = String(state.params[k]);
+      }
+      syncUI();
+    }
+  }
+
+  // Helpers: lightweight pseudo-noise
+  function hash2(x, y){
+    const s = Math.sin(x*127.1 + y*311.7) * 43758.5453123;
+    return s - Math.floor(s);
+  }
+  function noise2(x, y){
+    const ix = Math.floor(x), fx = x - ix;
+    const iy = Math.floor(y), fy = y - iy;
+    const a = hash2(ix, iy);
+    const b = hash2(ix+1, iy);
+    const c = hash2(ix, iy+1);
+    const d = hash2(ix+1, iy+1);
+    const u = fx*fx*(3-2*fx);
+    const v = fy*fy*(3-2*fy);
+    return lerp(lerp(a,b,u), lerp(c,d,u), v);
+  }
+
+  // Color: neon ink on dark glass
+  function hsl(h,s,l,a=1){
+    return `hsla(${h},${s}%,${l}%,${a})`;
+  }
+  function hueFrom(i, n, t){
+    // alternating bands around two anchors
+    const baseA = 210 + 70*Math.sin(state.paletteSeed*6.2831);
+    const baseB = 280 + 50*Math.cos(state.paletteSeed*6.2831);
+    const mix = (i/(n-1 || 1));
+    const base = lerp(baseA, baseB, mix);
+    const wob = 40*Math.sin(t*0.2 + i*1.8);
+    return (base + wob + 360) % 360;
+  }
+
+  // Input: pointer + touch
+  function getXY(e){
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    state.dragging = true;
+    const p = getXY(e);
+    state.last.x = p.x; state.last.y = p.y;
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!state.dragging) return;
+    const p = getXY(e);
+    const dx = p.x - state.last.x;
+    const dy = p.y - state.last.y;
+    state.last.x = p.x; state.last.y = p.y;
+    state.rot += dx * 0.006;
+    state.tilt += dy * 0.004;
+    state.tilt = clamp(state.tilt, -1.2, 1.2);
+    state.vel.x = dx; state.vel.y = dy;
+  });
+
+  function endDrag(){
+    state.dragging = false;
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', endDrag);
+
+  // Wheel zoom (desktop)
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = Math.sign(e.deltaY);
+    state.zoom *= (delta > 0) ? 0.92 : 1.08;
+    state.zoom = clamp(state.zoom, 0.25, 4);
+    syncUI();
+  }, { passive: false });
+
+  // Touch: pinch to zoom + two-finger pan
+  canvas.addEventListener('touchstart', (e) => {
+    for (const t of e.changedTouches){
+      state.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
+    }
+    if (state.touches.size === 2){
+      const arr = [...state.touches.values()];
+      const dx = arr[1].x - arr[0].x;
+      const dy = arr[1].y - arr[0].y;
+      state.pinchStart = {
+        dist: Math.hypot(dx,dy),
+        zoom: state.zoom,
+        midx: (arr[0].x + arr[1].x)/2,
+        midy: (arr[0].y + arr[1].y)/2,
+        camx: state.cam.x,
+        camy: state.cam.y
+      };
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', (e) => {
+    for (const t of e.changedTouches){
+      if (state.touches.has(t.identifier)){
+        state.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+    }
+    if (state.touches.size === 1 && state.pinchStart === null){
+      const only = [...state.touches.values()][0];
+      // emulate drag
+      if (!state.dragging){
+        state.dragging = true;
+        state.last.x = only.x;
+        state.last.y = only.y;
+      } else {
+        const dx = only.x - state.last.x;
+        const dy = only.y - state.last.y;
+        state.last.x = only.x; state.last.y = only.y;
+        state.rot += dx * 0.006;
+        state.tilt += dy * 0.004;
+        state.tilt = clamp(state.tilt, -1.2, 1.2);
+        state.vel.x = dx; state.vel.y = dy;
+      }
+    } else if (state.touches.size === 2 && state.pinchStart){
+      const arr = [...state.touches.values()];
+      const dx = arr[1].x - arr[0].x;
+      const dy = arr[1].y - arr[0].y;
+      const dist = Math.hypot(dx,dy);
+      const scale = dist / (state.pinchStart.dist || dist);
+      state.zoom = clamp(state.pinchStart.zoom * scale, 0.25, 4);
+
+      // two-finger pan (subtle)
+      const midx = (arr[0].x + arr[1].x)/2;
+      const midy = (arr[0].y + arr[1].y)/2;
+      const pdx = (midx - state.pinchStart.midx);
+      const pdy = (midy - state.pinchStart.midy);
+      state.cam.x = state.pinchStart.camx + pdx * 0.35;
+      state.cam.y = state.pinchStart.camy + pdy * 0.35;
+      syncUI();
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', (e) => {
+    for (const t of e.changedTouches){
+      state.touches.delete(t.identifier);
+    }
+    if (state.touches.size < 2) state.pinchStart = null;
+    if (state.touches.size === 0){
+      state.dragging = false;
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchcancel', () => {
+    state.touches.clear();
+    state.pinchStart = null;
+    state.dragging = false;
+  }, { passive: true });
+
+  // Double tap to recenter (mobile) + double click desktop
+  let lastTap = 0;
+  function handleTap(){
+    const now = performance.now();
+    if (now - lastTap < 280){
+      state.cam.x = 0; state.cam.y = 0;
+      state.zoom = 1;
+      syncUI();
+    }
+    lastTap = now;
+  }
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') handleTap();
+  });
+
+  canvas.addEventListener('dblclick', () => {
+    state.cam.x = 0; state.cam.y = 0;
+    state.zoom = 1;
+    syncUI();
+  });
+
+  // Keyboard
+  addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === ' ') { e.preventDefault(); togglePause(); }
+    if (k === 'h') {
+      state.collapsed = !state.collapsed;
+      document.body.classList.toggle('collapsed', state.collapsed);
+    }
+    if (k === 'r') reset(true);
+  });
+
+  // Rendering
+  let lastTime = performance.now();
+  let fpsAcc = 0, fpsN = 0, fpsLast = performance.now();
+
+  function drawBackground(fade){
+    // soft trail instead of full clear
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = `rgba(6, 8, 14, ${fade})`;
+    ctx.fillRect(0,0,state.w,state.h);
+
+    // subtle vignette
+    const g = ctx.createRadialGradient(state.w*0.5, state.h*0.52, 50, state.w*0.5, state.h*0.52, Math.max(state.w,state.h)*0.62);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.45)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,state.w,state.h);
+    ctx.restore();
+  }
+
+  function project(x, y){
+    // 2.5D-ish twist with tilt + rotation
+    const cr = Math.cos(state.rot), sr = Math.sin(state.rot);
+    const ct = Math.cos(state.tilt), st = Math.sin(state.tilt);
+    // rotate in plane
+    let X = x*cr - y*sr;
+    let Y = x*sr + y*cr;
+
+    // pseudo-tilt: squash Y and add depth shift
+    const Z = Y*st;
+    Y = Y*ct;
+
+    // camera offset
+    X += state.cam.x;
+    Y += state.cam.y;
+
+    // return with depth for alpha
+    return { X, Y, Z };
+  }
+
+  function draw(){
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - lastTime)/1000);
+    lastTime = now;
+
+    if (!state.paused){
+      state.t += dt * (0.6 + state.params.speed*1.2);
+    }
+
+    // inertia from drag
+    if (!state.dragging){
+      state.rot += state.vel.x * 0.0008;
+      state.tilt += state.vel.y * 0.0005;
+      state.vel.x *= 0.92;
+      state.vel.y *= 0.92;
+      state.tilt = clamp(state.tilt, -1.2, 1.2);
+    }
+
+    const p = state.params;
+    const cx = state.w * 0.5;
+    const cy = state.h * 0.5;
+    const baseScale = Math.min(state.w, state.h) * 0.42 * state.zoom * p.zoom;
+
+    drawBackground(p.fade);
+
+    // glow setup
+    const glow = p.glow;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const spiralCount = p.count | 0;
+    const layers = 2 + Math.floor(8 * p.interlace); // interlace depth
+    const pointsPerSpiral = Math.floor(1800 + 2400 * clamp(p.freq/10, 0, 1));
+
+    // interlacing: alternating radial offsets + phase shifting
+    const interlaceAmt = p.interlace;
+    const tw = p.twist;
+
+    // Estimate points for readout
+    const totalPts = spiralCount * layers * pointsPerSpiral;
+    el.pts.textContent = totalPts.toLocaleString();
+
+    // paint
+    for (let s = 0; s < spiralCount; s++){
+      const hue = hueFrom(s, spiralCount, state.t);
+      for (let L = 0; L < layers; L++){
+        const tPhase = (s / spiralCount) * Math.PI*2 + (L / layers) * Math.PI*2 * interlaceAmt;
+        const dir = (L % 2 === 0) ? 1 : -1;
+
+        // line weight slightly varies per layer
+        const lw = p.width * (0.7 + 0.8 * (1 - L/(layers-1 || 1)));
+
+        // color per layer
+        const sat = 74 + 10*Math.sin(state.t*0.6 + s*1.7 + L*0.8);
+        const lit = 56 + 10*Math.cos(state.t*0.5 + L*0.9);
+
+        // glow pass
+        if (glow > 0.001){
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = hsl(hue, sat, lit, 0.12 * glow);
+          ctx.lineWidth = lw * (6 + 18*glow);
+          ctx.beginPath();
+
+          for (let i = 0; i < pointsPerSpiral; i++){
+            const u = i / (pointsPerSpiral - 1);
+            // radius ramp: ease outward, with slight breathing
+            const rr = (0.08 + 0.92*u);
+            const breathe = 1 + 0.06*Math.sin(state.t*0.7 + u*8 + tPhase);
+            const r = rr * breathe;
+
+            // angle: frequency + twist + phase
+            const ang = (u * Math.PI * 2 * p.freq * dir) + (tw * u*u * 2.2) + tPhase;
+
+            // noise distortion
+            const nx = noise2(u*6 + s*10, state.t*0.35 + L*2.1) - 0.5;
+            const ny = noise2(u*6 + s*10 + 12.3, state.t*0.35 + L*2.1 + 7.7) - 0.5;
+
+            const radJit = 1 + p.noise * 0.22 * (nx + ny);
+            const x = Math.cos(ang) * r * radJit;
+            const y = Math.sin(ang) * r * radJit;
+
+            const pr = project(x, y);
+            const X = cx + pr.X * baseScale;
+            const Y = cy + pr.Y * baseScale;
+
+            if (i === 0) ctx.moveTo(X, Y);
+            else ctx.lineTo(X, Y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // ink pass
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = hsl(hue, sat, lit, 0.72);
+        ctx.lineWidth = lw;
+        ctx.beginPath();
+
+        for (let i = 0; i < pointsPerSpiral; i++){
+          const u = i / (pointsPerSpiral - 1);
+          const rr = (0.06 + 0.94*u);
+
+          // interlace banding: weave via radius modulation
+          const weave = 1 + (interlaceAmt * 0.14) * Math.sin((u*14 + L*1.7 + s*0.9) * Math.PI);
+          const breathe = 1 + 0.05*Math.sin(state.t*0.65 + u*9 + tPhase);
+          const r = rr * weave * breathe;
+
+          const ang = (u * Math.PI * 2 * p.freq * dir) + (tw * u*u * 2.2) + tPhase;
+
+          const nx = noise2(u*7 + s*11.2, state.t*0.4 + L*2.0) - 0.5;
+          const ny = noise2(u*7 + s*11.2 + 19.1, state.t*0.4 + L*2.0 + 3.8) - 0.5;
+
+          const x = Math.cos(ang) * r * (1 + p.noise*0.24*nx);
+          const y = Math.sin(ang) * r * (1 + p.noise*0.24*ny);
+
+          const pr = project(x, y);
+
+          // depth-based alpha (fake)
+          const depth = clamp(0.55 + pr.Z*0.9, 0.12, 1);
+          const X = cx + pr.X * baseScale;
+          const Y = cy + pr.Y * baseScale;
+
+          if (i === 0) ctx.moveTo(X, Y);
+          else ctx.lineTo(X, Y);
+
+          // micro highlights every so often
+          if (i % 260 === 0){
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = hsl(hue + 20, 92, 72, 0.35 * depth);
+            ctx.beginPath();
+            ctx.arc(X, Y, lw*2.2, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // vary stroke alpha by depth (can't per-vertex, so occasional tweak)
+          if (i % 120 === 0){
+            ctx.strokeStyle = hsl(hue, sat, lit, 0.70 * depth);
+          }
+        }
+
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // FPS meter
+    const instFps = 1 / Math.max(1e-6, dt);
+    fpsAcc += instFps; fpsN++;
+    if (now - fpsLast > 320){
+      el.fps.textContent = Math.round(fpsAcc / fpsN).toString();
+      fpsAcc = 0; fpsN = 0; fpsLast = now;
+    }
+
+    el.scale.textContent = fmt(state.zoom * state.params.zoom, 2);
+
+    requestAnimationFrame(draw);
+  }
+
+  // First clear
+  ctx.fillStyle = 'rgba(6,8,14,1)';
+  ctx.fillRect(0,0,innerWidth,innerHeight);
+
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
