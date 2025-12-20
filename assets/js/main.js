@@ -18,10 +18,8 @@ async function init() {
 
   // Initialize all modules
   initRouter();
-  initThemeToggle();
-  initHamburger();
   setYear();
-  startColorTransition();
+  //startColorTransition();
 
   // Render initial route
   await render(currentRoute());

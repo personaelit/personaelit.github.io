@@ -67,22 +67,59 @@
 /* ------------------------------
    Pills
 -------------------------------- */
+/* ------------------------------
+   Pills — ultra-faint glass
+-------------------------------- */
 .pills {
   list-style: none;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-3);
+  gap: .45rem;
 }
 
 .pills li {
-  padding: .4rem .65rem;
-  font-size: .9rem;
+  position: relative;
+  padding: .3rem .55rem;
+  font-size: .82rem;
+  font-weight: 450;
+  letter-spacing: .015em;
+
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--surface) 90%, transparent);
-  box-shadow: var(--shadow-1);
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--surface) 64%, transparent),
+      color-mix(in oklab, var(--surface) 50%, transparent)
+    );
+
+  backdrop-filter: blur(5px) saturate(115%);
+  -webkit-backdrop-filter: blur(5px) saturate(115%);
+
+  border: 1px solid color-mix(in oklab, var(--border) 28%, transparent);
+
+  color: color-mix(in oklab, var(--text) 88%, var(--muted));
 }
+
+/* almost-imperceptible sheen */
+.pills li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      120deg,
+      transparent 42%,
+      color-mix(in oklab, var(--accent) 6%, transparent) 50%,
+      transparent 58%
+    );
+  opacity: .35;
+  pointer-events: none;
+}
+
+
 
 /* ------------------------------
    Footer
@@ -108,4 +145,226 @@
 .meta {
   font-size: .95rem;
   color: var(--muted);
+}
+
+
+/* ======================================================
+   Personaelit — Missing Components
+   Adds styles referenced by the home page markup
+   ====================================================== */
+
+/* ------------------------------
+   Stack — shimmery glass rows
+-------------------------------- */
+.stack {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-7) 0;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.stack li {
+  position: relative;
+  padding: .75rem 1rem;
+  border-radius: var(--r-md);
+ background:
+    linear-gradient(
+      120deg,
+      transparent 42%,
+      color-mix(in oklab, var(--accent) 6%, transparent) 50%,
+      transparent 58%
+    );
+  opacity: .95;
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  border: 1px solid color-mix(in oklab, var(--border) 45%, transparent);
+}
+
+/* soft internal shimmer */
+.stack li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      120deg,
+      transparent 25%,
+      color-mix(in oklab, var(--accent) 8%, transparent) 45%,
+      transparent 65%
+    );
+  pointer-events: none;
+  opacity: .7;
+}
+
+/* typography carries the weight */
+.stack strong {
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+.stack li br + * {
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+
+/* ------------------------------
+   Note — glass margin annotation
+-------------------------------- */
+.note {
+  position: relative;
+  margin-block: var(--s-6) 0;
+  padding: .75rem 1rem;
+  border-radius: var(--r-md);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--surface) 78%, transparent),
+      color-mix(in oklab, var(--surface) 58%, transparent)
+    );
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--border) 40%, transparent);
+  color: color-mix(in oklab, var(--text) 88%, var(--muted));
+}
+
+/* thin light edge */
+.note::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 1px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--accent) 35%, transparent),
+      transparent
+    );
+}
+
+/* ------------------------------
+   CTA — quiet authority
+-------------------------------- */
+.cta {
+  margin-block: clamp(4rem, 8vw, 6rem);
+  padding-block: clamp(2rem, 4vw, 3rem);
+  padding-inline: clamp(1.25rem, 3vw, 2rem);
+
+  border-radius: var(--r-lg);
+
+  background:
+    radial-gradient(
+      900px 300px at 15% -10%,
+      color-mix(in oklab, var(--accent) 18%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--surface) 78%, transparent),
+      color-mix(in oklab, var(--surface) 55%, transparent)
+    );
+
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+
+  border: 1px solid color-mix(in oklab, var(--border) 45%, transparent);
+}
+
+.cta h2 {
+  margin-block-start: 0;
+  margin-block-end: .75rem;
+}
+
+.cta p {
+  max-width: 60ch;
+}
+
+.cta .button {
+  margin-block-start: var(--s-5);
+}
+
+
+/* ------------------------------
+   Art plate — editorial glass
+-------------------------------- */
+.art-plate {
+  margin-block: clamp(3rem, 6vw, 5rem);
+}
+
+/* keep image from feeling like a banner */
+.art-figure {
+  margin: 0;
+  display: grid;
+  gap: var(--s-3);
+}
+
+/* image itself */
+.art-image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-lg);
+
+  /* faint glass integration */
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--surface) 70%, transparent),
+      color-mix(in oklab, var(--surface) 50%, transparent)
+    );
+
+  box-shadow: none;
+}
+
+/* caption as margin annotation */
+.art-caption {
+  display: grid;
+  gap: .2rem;
+  padding: .6rem .75rem;
+
+  border-radius: var(--r-md);
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--surface) 78%, transparent),
+      color-mix(in oklab, var(--surface) 60%, transparent)
+    );
+
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+
+  border: 1px solid color-mix(in oklab, var(--border) 35%, transparent);
+
+  font-size: .85rem;
+  line-height: 1.45;
+}
+
+/* hierarchy inside caption */
+.art-title {
+  font-weight: 650;
+  letter-spacing: .01em;
+  color: var(--text);
+}
+
+.art-meta {
+  color: var(--muted);
+}
+
+.art-note {
+  margin-block-start: .35rem;
+  color: color-mix(in oklab, var(--text) 88%, var(--muted));
+  max-width: 60ch;
+}
+
+/* optional: tuck caption slightly into image */
+@media (min-width: 820px) {
+  .art-caption {
+    max-width: 36rem;
+    margin-inline-start: var(--s-6);
+    margin-block-start: -1.25rem;
+  }
 }

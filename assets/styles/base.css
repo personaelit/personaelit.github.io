@@ -35,9 +35,9 @@ body {
     radial-gradient(1200px 800px at 10% -10%,
       color-mix(in oklab, var(--accent) 15%, transparent),
       transparent 60%),
-    radial-gradient(1000px 700px at 85% -15%,
+    /* radial-gradient(1000px 700px at 85% -15%,
       color-mix(in oklab, var(--link) 15%, transparent),
-      transparent 60%),
+      transparent 60%), */
     var(--bg);
 }
 
@@ -135,7 +135,6 @@ a:hover {
 -------------------------------- */
 main > section {
   position: relative;
-  padding-block: clamp(2rem, 4vw, 3rem);
   scroll-margin-block-start: calc(var(--header-h) + 1rem);
 }
 
