@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Meaningful Life — Guided Slideshow</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.06);
+      --card-2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --border: rgba(255,255,255,.14);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius-lg: 24px;
+      --ease: cubic-bezier(.2,.8,.2,1);
+      --speed: 240ms;
+      --focus: 0 0 0 3px rgba(77,163,255,.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 700px at 12% 0%, rgba(77,163,255,.18), transparent 60%),
+        radial-gradient(900px 520px at 90% 8%, rgba(253,224,82,.12), transparent 55%),
+        radial-gradient(900px 520px at 20% 95%, rgba(46,196,126,.10), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .wrap{
+      min-height: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: clamp(1rem, 3vw, 2.2rem);
+    }
+
+    .deck{
+      width: min(980px, 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    .topbar{
+      display:flex;
+      gap: .75rem;
+      align-items:center;
+      justify-content:space-between;
+      padding: .9rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.20);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: .65rem;
+      min-width: 0;
+    }
+    .dot{
+      width: 12px; height: 12px;
+      border-radius: 999px;
+      background: rgba(77,163,255,.85);
+      box-shadow: 0 0 0 4px rgba(77,163,255,.18);
+      flex: 0 0 auto;
+    }
+    .brand h1{
+      font-size: .95rem;
+      margin:0;
+      letter-spacing:.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .progress{
+      width: min(340px, 45%);
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .progress__bar{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(77,163,255,.9), rgba(46,196,126,.75));
+      border-radius: 999px;
+      transition: width var(--speed) var(--ease);
+    }
+
+    .meta{
+      display:flex;
+      align-items:center;
+      gap: .6rem;
+      color: var(--muted);
+      font-size: .9rem;
+      white-space: nowrap;
+    }
+
+    .stage{
+      position: relative;
+      padding: clamp(1rem, 2.6vw, 1.6rem);
+      min-height: 520px;
+    }
+
+    .card{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      padding: clamp(1rem, 2.5vw, 1.35rem);
+    }
+
+    .slide{
+      display:none;
+      animation: slideIn var(--speed) var(--ease) both;
+    }
+    .slide.active{ display:block; }
+
+    @keyframes slideIn{
+      from{ opacity: 0; transform: translateY(10px); }
+      to{ opacity: 1; transform: translateY(0); }
+    }
+
+    .kicker{
+      margin:0 0 .35rem 0;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .8rem;
+    }
+    .title{
+      margin:0 0 .6rem 0;
+      font-size: clamp(1.55rem, 2.6vw, 2.2rem);
+      line-height: 1.1;
+    }
+    .lede{
+      margin: 0;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.45;
+    }
+
+    .grid{
+      margin-top: 1rem;
+      display:grid;
+      gap: 1rem;
+    }
+    @media (min-width: 820px){
+      .grid{ grid-template-columns: 1.15fr .85fr; }
+    }
+
+    .checks{
+      display:grid;
+      gap: .7rem;
+      margin-top: .9rem;
+    }
+    .check{
+      display:flex;
+      gap:.65rem;
+      align-items:flex-start;
+      padding:.7rem .75rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      transition: transform var(--speed) var(--ease), background var(--speed) var(--ease), border-color var(--speed) var(--ease);
+      cursor: pointer;
+      user-select: none;
+    }
+    .check:hover{ transform: translateY(-2px); background: rgba(0,0,0,.24); }
+    .check input{
+      margin-top: .15rem;
+      accent-color: #4da3ff;
+    }
+    .check .label{
+      display:flex;
+      flex-direction: column;
+      gap:.15rem;
+    }
+    .check .label strong{ font-size: .98rem; }
+    .check .label span{ color: var(--muted); font-size: .92rem; }
+
+    .side{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display:flex;
+      flex-direction: column;
+      gap: .85rem;
+    }
+
+    .signal{
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.20);
+      padding: .8rem;
+    }
+    .signal h4{ margin:0 0 .35rem 0; font-size: .95rem; }
+    .signal p{ margin:0; color: var(--muted); line-height: 1.45; }
+
+    .meter{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: .8rem;
+      background: rgba(0,0,0,.18);
+    }
+    .meter label{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: .75rem;
+      color: var(--muted);
+      font-size: .92rem;
+      margin-bottom: .4rem;
+    }
+    .meter input[type="range"]{
+      width: 100%;
+    }
+    .meter .hint{
+      margin:.5rem 0 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.4;
+    }
+
+    .nav{
+      display:flex;
+      gap: .75rem;
+      align-items:center;
+      justify-content: space-between;
+      padding: .9rem 1rem;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      flex-wrap: wrap;
+    }
+
+    .btnrow{ display:flex; gap:.6rem; align-items:center; flex-wrap: wrap; }
+    button{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: .65rem .9rem;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform var(--speed) var(--ease), background var(--speed) var(--ease), border-color var(--speed) var(--ease);
+      font-weight: 650;
+      letter-spacing: .01em;
+    }
+    button:hover{ transform: translateY(-2px); background: rgba(255,255,255,.10); }
+    button:active{ transform: translateY(0); }
+    button:focus-visible{ outline: none; box-shadow: var(--focus); }
+    button.primary{
+      background: rgba(77,163,255,.20);
+      border-color: rgba(77,163,255,.35);
+    }
+    button.ghost{
+      background: transparent;
+    }
+    button:disabled{
+      opacity: .55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .pillbar{
+      display:flex;
+      gap: .4rem;
+      align-items:center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .pill{
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      padding: .25rem .55rem;
+      border-radius: 999px;
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      max-width: min(720px, calc(100% - 24px));
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      color: var(--text);
+      border-radius: 16px;
+      padding: .75rem .9rem;
+      box-shadow: 0 16px 50px rgba(0,0,0,.55);
+      display:none;
+      animation: toastIn var(--speed) var(--ease) both;
+    }
+    .toast.show{ display:block; }
+    @keyframes toastIn{
+      from{ opacity:0; transform: translateX(-50%) translateY(10px); }
+      to{ opacity:1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .small{
+      font-size:.9rem;
+      color: var(--muted);
+    }
+
+    .kbd{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      padding: .1rem .4rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="deck" id="deck" aria-label="Guided slideshow: meaningful life framework">
+      <div class="topbar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <h1>Meaningful Life — Guided Framework</h1>
+        </div>
+
+        <div class="progress" aria-label="Progress">
+          <div class="progress__bar" id="progressBar"></div>
+        </div>
+
+        <div class="meta">
+          <span id="stepText">Step 1 / 5</span>
+        </div>
+      </div>
+
+      <section class="stage">
+        <!-- Slide 0: Intro -->
+        <article class="slide active" data-step="0">
+          <div class="card">
+            <p class="kicker">A simple north star</p>
+            <h2 class="title">Four responsibilities, in order</h2>
+            <p class="lede">
+              Move through the framework one layer at a time. Each step has a small “signal” you can set to
+              mark that you’re moving forward.
+            </p>
+
+            <div class="grid">
+              <div>
+                <div class="checks" role="group" aria-label="Framework overview checklist">
+                  <label class="check">
+                    <input type="checkbox" data-signal="self" />
+                    <span class="label">
+                      <strong>Take care of yourself</strong>
+                      <span>Energy, health, and craft.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-signal="loved" />
+                    <span class="label">
+                      <strong>Take care of your loved ones</strong>
+                      <span>Presence, reliability, kindness.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-signal="community" />
+                    <span class="label">
+                      <strong>Take care of your community</strong>
+                      <span>Leave things better than you found them.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-signal="world" />
+                    <span class="label">
+                      <strong>Take care of the world</strong>
+                      <span>Stewardship that scales.</span>
+                    </span>
+                  </label>
+                </div>
+                <p class="small" style="margin:.9rem 0 0 0;">
+                  Tip: use <span class="kbd">←</span> <span class="kbd">→</span> to navigate.
+                </p>
+              </div>
+
+              <aside class="side">
+                <div class="signal">
+                  <h4>Signals</h4>
+                  <p>
+                    On each slide, set an intention and a confidence level. When you hit <em>Next</em>,
+                    you’ll see a small nudge that summarizes your signal.
+                  </p>
+                </div>
+
+                <div class="meter">
+                  <label for="globalConfidence">
+                    <span>Confidence (overall)</span>
+                    <span><strong id="globalConfidenceValue">6</strong>/10</span>
+                  </label>
+                  <input id="globalConfidence" type="range" min="0" max="10" value="6" />
+                  <p class="hint">This doesn’t “score” you—just helps you notice momentum.</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+
+        <!-- Slide 1: Self -->
+        <article class="slide" data-step="1">
+          <div class="card">
+            <p class="kicker">Step 1</p>
+            <h2 class="title">Take care of yourself.</h2>
+            <p class="lede">Protect your energy, health, and craft—so you can show up fully.</p>
+
+            <div class="grid">
+              <div>
+                <div class="checks" role="group" aria-label="Self intentions">
+                  <label class="check">
+                    <input type="checkbox" data-intent="self" value="body" />
+                    <span class="label">
+                      <strong>Body</strong>
+                      <span>Sleep, movement, and real food.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="self" value="mind" />
+                    <span class="label">
+                      <strong>Mind</strong>
+                      <span>Time to think (and time to recover).</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="self" value="boundaries" />
+                    <span class="label">
+                      <strong>Boundaries</strong>
+                      <span>Protect what keeps you steady.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <aside class="side">
+                <div class="meter">
+                  <label for="confidenceSelf">
+                    <span>Confidence (self)</span>
+                    <span><strong id="confidenceSelfValue">6</strong>/10</span>
+                  </label>
+                  <input id="confidenceSelf" type="range" min="0" max="10" value="6" />
+                  <p class="hint">Pick 1–2 signals you can do in the next 24 hours.</p>
+                </div>
+
+                <div class="signal">
+                  <h4>Micro-prompt</h4>
+                  <p>What’s one small action that makes tomorrow easier than today?</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+
+        <!-- Slide 2: Loved ones -->
+        <article class="slide" data-step="2">
+          <div class="card">
+            <p class="kicker">Step 2</p>
+            <h2 class="title">Take care of your loved ones.</h2>
+            <p class="lede">Be present. Be reliable. Be kind in the boring moments.</p>
+
+            <div class="grid">
+              <div>
+                <div class="checks" role="group" aria-label="Loved ones intentions">
+                  <label class="check">
+                    <input type="checkbox" data-intent="loved" value="presence" />
+                    <span class="label">
+                      <strong>Presence</strong>
+                      <span>Put the phone down. Be here.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="loved" value="reliability" />
+                    <span class="label">
+                      <strong>Reliability</strong>
+                      <span>Do what you said you’d do.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="loved" value="kindness" />
+                    <span class="label">
+                      <strong>Kindness</strong>
+                      <span>Small acts of service that add up.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <aside class="side">
+                <div class="meter">
+                  <label for="confidenceLoved">
+                    <span>Confidence (loved ones)</span>
+                    <span><strong id="confidenceLovedValue">6</strong>/10</span>
+                  </label>
+                  <input id="confidenceLoved" type="range" min="0" max="10" value="6" />
+                  <p class="hint">Aim for “small + consistent,” not “perfect.”</p>
+                </div>
+
+                <div class="signal">
+                  <h4>Micro-prompt</h4>
+                  <p>Who needs you most this week—and what do they actually need?</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+
+        <!-- Slide 3: Community -->
+        <article class="slide" data-step="3">
+          <div class="card">
+            <p class="kicker">Step 3</p>
+            <h2 class="title">Take care of your community.</h2>
+            <p class="lede">Leave things better than you found them—at work and at home.</p>
+
+            <div class="grid">
+              <div>
+                <div class="checks" role="group" aria-label="Community intentions">
+                  <label class="check">
+                    <input type="checkbox" data-intent="community" value="mentor" />
+                    <span class="label">
+                      <strong>Mentor & share</strong>
+                      <span>Teach the thing you just learned.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="community" value="contribute" />
+                    <span class="label">
+                      <strong>Contribute</strong>
+                      <span>Help the local fabric hold.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="community" value="reduce-friction" />
+                    <span class="label">
+                      <strong>Reduce friction</strong>
+                      <span>Build systems that help others.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <aside class="side">
+                <div class="meter">
+                  <label for="confidenceCommunity">
+                    <span>Confidence (community)</span>
+                    <span><strong id="confidenceCommunityValue">6</strong>/10</span>
+                  </label>
+                  <input id="confidenceCommunity" type="range" min="0" max="10" value="6" />
+                  <p class="hint">If it saves time for others, it’s impact.</p>
+                </div>
+
+                <div class="signal">
+                  <h4>Micro-prompt</h4>
+                  <p>What would make your team’s day 10% smoother?</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+
+        <!-- Slide 4: World -->
+        <article class="slide" data-step="4">
+          <div class="card">
+            <p class="kicker">Step 4</p>
+            <h2 class="title">Take care of the world.</h2>
+            <p class="lede">Zoom out. Choose actions that scale goodness beyond your circle.</p>
+
+            <div class="grid">
+              <div>
+                <div class="checks" role="group" aria-label="World intentions">
+                  <label class="check">
+                    <input type="checkbox" data-intent="world" value="consume" />
+                    <span class="label">
+                      <strong>Consume with intention</strong>
+                      <span>Choose less, choose better.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="world" value="support" />
+                    <span class="label">
+                      <strong>Support what matters</strong>
+                      <span>Money, time, attention—aligned.</span>
+                    </span>
+                  </label>
+                  <label class="check">
+                    <input type="checkbox" data-intent="world" value="stewardship" />
+                    <span class="label">
+                      <strong>Stewardship</strong>
+                      <span>Care over extraction.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <aside class="side">
+                <div class="meter">
+                  <label for="confidenceWorld">
+                    <span>Confidence (world)</span>
+                    <span><strong id="confidenceWorldValue">6</strong>/10</span>
+                  </label>
+                  <input id="confidenceWorld" type="range" min="0" max="10" value="6" />
+                  <p class="hint">Pick one leverage point you can touch regularly.</p>
+                </div>
+
+                <div class="signal">
+                  <h4>Micro-prompt</h4>
+                  <p>What’s one choice you repeat that could be a little more intentional?</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+
+        <!-- Slide 5: Wrap -->
+        <article class="slide" data-step="5">
+          <div class="card">
+            <p class="kicker">Wrap</p>
+            <h2 class="title">Your quick check</h2>
+            <p class="lede">
+              If something pulls you away from all four, it’s probably a distraction.
+              If it strengthens one without harming the others, it’s probably worth doing.
+            </p>
+
+            <div class="grid" style="margin-top:1rem;">
+              <div class="card" style="background: rgba(0,0,0,.16);">
+                <h3 style="margin:0 0 .5rem 0; font-size:1.05rem;">Your signals (this run)</h3>
+                <div class="pillbar" id="summaryPills" aria-live="polite"></div>
+                <p class="small" style="margin:.75rem 0 0 0;">
+                  Want to reuse this? Hit <strong>Copy summary</strong> and paste into notes.
+                </p>
+              </div>
+
+              <aside class="side">
+                <div class="signal">
+                  <h4>One sentence</h4>
+                  <p id="oneSentence">Set a couple signals above, then come back here.</p>
+                </div>
+
+                <div class="btnrow">
+                  <button class="primary" id="copyBtn">Copy summary</button>
+                  <button class="ghost" id="restartBtn">Restart</button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer class="nav">
+        <div class="btnrow">
+          <button id="prevBtn" class="ghost">← Prev</button>
+          <button id="nextBtn" class="primary">Next →</button>
+        </div>
+        <div class="pillbar" aria-label="Navigation hints">
+          <span class="pill">Keys: <span class="kbd">←</span> <span class="kbd">→</span></span>
+          <span class="pill">Jump: <span class="kbd">1</span>-<span class="kbd">5</span></span>
+          <span class="pill">Save: <span class="kbd">C</span> copy</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function(){
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const progressBar = document.getElementById("progressBar");
+      const stepText = document.getElementById("stepText");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const toast = document.getElementById("toast");
+
+      const summaryPills = document.getElementById("summaryPills");
+      const oneSentence = document.getElementById("oneSentence");
+      const copyBtn = document.getElementById("copyBtn");
+      const restartBtn = document.getElementById("restartBtn");
+
+      // Sliders
+      const sliderMap = [
+        { id: "globalConfidence", labelId: "globalConfidenceValue", key: "global", label: "overall" },
+        { id: "confidenceSelf", labelId: "confidenceSelfValue", key: "self", label: "self" },
+        { id: "confidenceLoved", labelId: "confidenceLovedValue", key: "loved", label: "loved ones" },
+        { id: "confidenceCommunity", labelId: "confidenceCommunityValue", key: "community", label: "community" },
+        { id: "confidenceWorld", labelId: "confidenceWorldValue", key: "world", label: "world" },
+      ].filter(x => document.getElementById(x.id)); // only those present
+
+      const state = {
+        index: 0,
+        intents: {
+          self: new Set(),
+          loved: new Set(),
+          community: new Set(),
+          world: new Set()
+        },
+        signals: {
+          self: false,
+          loved: false,
+          community: false,
+          world: false
+        },
+        confidence: {
+          global: 6,
+          self: 6,
+          loved: 6,
+          community: 6,
+          world: 6
+        }
+      };
+
+      const stepCount = 6; // slides 0..5; show 1..5 in UI (intro counts)
+      const stepLabel = (i) => {
+        // Display as Step (i+1) / 6
+        return `Step ${i + 1} / ${stepCount}`;
+      };
+
+      function showToast(message){
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(showToast._t);
+        showToast._t = window.setTimeout(() => toast.classList.remove("show"), 1600);
+      }
+
+      function updateProgress(){
+        const pct = (state.index) / (slides.length - 1) * 100;
+        progressBar.style.width = `${pct}%`;
+        stepText.textContent = stepLabel(state.index);
+
+        prevBtn.disabled = state.index === 0;
+        nextBtn.textContent = state.index === slides.length - 1 ? "Done ✓" : "Next →";
+      }
+
+      function setActiveSlide(){
+        slides.forEach(s => s.classList.remove("active"));
+        const active = slides[state.index];
+        active.classList.add("active");
+        updateProgress();
+
+        // When entering wrap slide, build summary
+        if (state.index === slides.length - 1){
+          buildSummary();
+        }
+      }
+
+      function humanizeIntent(value){
+        const map = {
+          body: "Body",
+          mind: "Mind",
+          boundaries: "Boundaries",
+          presence: "Presence",
+          reliability: "Reliability",
+          kindness: "Kindness",
+          mentor: "Mentor & share",
+          contribute: "Contribute",
+          "reduce-friction": "Reduce friction",
+          consume: "Consume intentionally",
+          support: "Support what matters",
+          stewardship: "Stewardship"
+        };
+        return map[value] || value;
+      }
+
+      function buildSummary(){
+        if (!summaryPills || !oneSentence) return;
+
+        summaryPills.innerHTML = "";
+
+        const parts = [];
+        const confParts = [];
+
+        const order = [
+          ["self", "Take care of yourself"],
+          ["loved", "Take care of your loved ones"],
+          ["community", "Take care of your community"],
+          ["world", "Take care of the world"]
+        ];
+
+        order.forEach(([key, label]) => {
+          const intents = Array.from(state.intents[key]);
+          if (intents.length){
+            const pill = document.createElement("span");
+            pill.className = "pill";
+            pill.textContent = `${label}: ${intents.map(humanizeIntent).join(", ")}`;
+            summaryPills.appendChild(pill);
+            parts.push(`${label} → ${intents.map(humanizeIntent).join(", ")}`);
+          }
+        });
+
+        // Confidence
+        const c = state.confidence;
+        const cOrder = [
+          ["global","overall"],
+          ["self","self"],
+          ["loved","loved ones"],
+          ["community","community"],
+          ["world","world"]
+        ];
+        cOrder.forEach(([k, label]) => {
+          if (typeof c[k] === "number"){
+            confParts.push(`${label}: ${c[k]}/10`);
+          }
+        });
+
+        if (!parts.length){
+          summaryPills.innerHTML = `<span class="pill">No signals selected yet — go back and tap a few.</span>`;
+        }
+
+        const sentence = parts.length
+          ? `Today, I’ll focus on: ${parts.join(" • ")}.`
+          : `I’m doing a quick reset: I’ll pick one small signal for each step.`;
+
+        oneSentence.textContent = sentence;
+
+        // Also stash a copyable summary string
+        buildSummary._text =
+          `Meaningful Life — signals\n` +
+          (parts.length ? `- ${parts.join("\n- ")}\n` : `- (no signals selected)\n`) +
+          `Confidence\n- ${confParts.join("\n- ")}\n`;
+      }
+
+      function next(){
+        if (state.index < slides.length - 1){
+          // Nudge: summarize current step before moving on (except intro)
+          const nudge = nudgeForIndex(state.index);
+          if (nudge) showToast(nudge);
+          state.index++;
+          setActiveSlide();
+        } else {
+          showToast("Saved in your brain. Go do the next right thing.");
+        }
+      }
+
+      function prev(){
+        if (state.index > 0){
+          state.index--;
+          setActiveSlide();
+        }
+      }
+
+      function nudgeForIndex(idx){
+        // idx corresponds to slide we are leaving
+        const nudges = {
+          0: "Nice. Now pick a few signals for Step 1.",
+          1: summarize("self", "Self"),
+          2: summarize("loved", "Loved ones"),
+          3: summarize("community", "Community"),
+          4: summarize("world", "World"),
+        };
+        return nudges[idx] || "";
+      }
+
+      function summarize(key, label){
+        const intents = Array.from(state.intents[key]).map(humanizeIntent);
+        const c = state.confidence[key];
+        if (intents.length){
+          return `${label}: ${intents.join(", ")} • confidence ${c}/10`;
+        }
+        return `${label}: no signal selected • confidence ${c}/10`;
+      }
+
+      // Intent toggles
+      document.addEventListener("change", (e) => {
+        const el = e.target;
+        if (!(el instanceof HTMLInputElement)) return;
+
+        // Signals on intro
+        if (el.matches('input[type="checkbox"][data-signal]')){
+          const key = el.getAttribute("data-signal");
+          if (!key) return;
+          state.signals[key] = el.checked;
+          showToast(el.checked ? `Marked: ${key}` : `Unmarked: ${key}`);
+          return;
+        }
+
+        // Intents on step slides
+        if (el.matches('input[type="checkbox"][data-intent]')){
+          const key = el.getAttribute("data-intent");
+          const value = el.value;
+          if (!key || !value) return;
+          if (el.checked) state.intents[key].add(value);
+          else state.intents[key].delete(value);
+          showToast(el.checked ? `Signal set: ${humanizeIntent(value)}` : `Signal removed: ${humanizeIntent(value)}`);
+          return;
+        }
+      });
+
+      // Sliders
+      sliderMap.forEach(({id, labelId, key}) => {
+        const input = document.getElementById(id);
+        const out = document.getElementById(labelId);
+        if (!input || !out) return;
+
+        const sync = () => {
+          const v = Number(input.value);
+          state.confidence[key] = v;
+          out.textContent = String(v);
+        };
+        input.addEventListener("input", sync);
+        sync();
+      });
+
+      // Nav buttons
+      prevBtn.addEventListener("click", prev);
+      nextBtn.addEventListener("click", next);
+
+      // Copy + restart (wrap slide)
+      if (copyBtn){
+        copyBtn.addEventListener("click", async () => {
+          buildSummary();
+          const text = buildSummary._text || "";
+          try{
+            await navigator.clipboard.writeText(text);
+            showToast("Summary copied.");
+          }catch{
+            // fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            showToast("Summary copied (fallback).");
+          }
+        });
+      }
+
+      if (restartBtn){
+        restartBtn.addEventListener("click", () => {
+          // reset checkboxes
+          document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+          // reset sets
+          Object.keys(state.intents).forEach(k => state.intents[k].clear());
+          Object.keys(state.signals).forEach(k => state.signals[k] = false);
+          // reset sliders
+          sliderMap.forEach(({id}) => {
+            const input = document.getElementById(id);
+            if (input) input.value = 6;
+          });
+          sliderMap.forEach(({id, labelId, key}) => {
+            const input = document.getElementById(id);
+            const out = document.getElementById(labelId);
+            if (input && out){
+              const v = Number(input.value);
+              state.confidence[key] = v;
+              out.textContent = String(v);
+            }
+          });
+
+          state.index = 0;
+          setActiveSlide();
+          showToast("Restarted.");
+        });
+      }
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        const key = e.key;
+        if (key === "ArrowRight") { e.preventDefault(); next(); }
+        if (key === "ArrowLeft")  { e.preventDefault(); prev(); }
+
+        // Jump 1-5 to main steps (1=self ... 4=world, 5=wrap)
+        if (/^[1-5]$/.test(key)){
+          const n = Number(key);
+          // map: 1->1, 2->2, 3->3, 4->4, 5->5
+          state.index = n; // slide indices align with this mapping
+          setActiveSlide();
+          showToast(`Jumped to step ${n}.`);
+        }
+
+        // Copy summary
+        if (key.toLowerCase() === "c"){
+          if (state.index === slides.length - 1 && copyBtn){
+            copyBtn.click();
+          } else {
+            showToast("Go to the last slide to copy summary.");
+          }
+        }
+      });
+
+      // Initial render
+      setActiveSlide();
+    })();
+  </script>
+</body>
+</html>
