@@ -14,16 +14,12 @@ export const CONTENT_DIR = "/content";
 
 export const ROUTE_META = {
   "/": {
-    title: "Jim Smits — Thinker • Doer • Leader",
-    desc: "Director of E-commerce, software developer, and builder. Welcome to my online home."
+    title: "I'm so vain, I probably think this site is about me.",
+    desc: "This is a place for me to post real stuff that is important to me as a person, not as a cog in the machine."
   },
-  "/contact": {
-    title: "Contact — Jim Smits",
-    desc: "Get in touch with Jim — Director of E-commerce, software developer, and builder."
-  },
-  "/digital-playground": {
-    title: "Digital Playground — Jim Smits",
-    desc: "Fun projects that I do in my spare time.."
+  "/digital-craft": {
+    title: "Stuff I made.",
+    desc: "Stuff I made using LLMs and other digital tools."
   }
 };
 
