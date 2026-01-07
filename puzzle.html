@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Seven Levels</title>
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --fg:#e9eefc;
+      --muted:#9aa6c3;
+      --panel:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 50% 30%, rgba(77,163,255,.15), transparent 60%),
+                  radial-gradient(900px 700px at 20% 70%, rgba(191,39,45,.10), transparent 60%),
+                  var(--bg);
+      color:var(--fg);
+      overflow:hidden;
+    }
+
+    .screen{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .screen.active{display:flex}
+
+    .card{
+      width:min(720px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:22px;
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .badge{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(0,0,0,.18);
+      color:var(--muted);
+      font-size:13px;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+    .hint{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+      margin:10px 0 0;
+    }
+    .title{
+      margin:0 0 6px;
+      font-size:22px;
+      letter-spacing:.2px;
+    }
+
+    /* shared interactive */
+    .center-area{
+      margin-top:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:300px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.16);
+      background: rgba(0,0,0,.12);
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+      touch-action: manipulation;
+    }
+
+    /* level 1 */
+    .circle{
+      width:92px;height:92px;border-radius:50%;
+      background:white;
+      box-shadow: 0 18px 55px rgba(255,255,255,.15);
+      cursor:pointer;
+      transition: transform .12s ease;
+    }
+    .circle:hover{transform: scale(1.03)}
+    .circle:active{transform: scale(.98)}
+
+    /* level 2 */
+    .door{
+      width:140px;height:200px;
+      border-radius:16px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.18);
+      position:relative;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding-bottom:18px;
+    }
+    .knob{
+      position:absolute;
+      right:20px;
+      top:110px;
+      width:14px;height:14px;border-radius:50%;
+      background: rgba(255,255,255,.8);
+      box-shadow: 0 0 0 6px rgba(255,255,255,.09);
+      pointer-events:none;
+    }
+    .key{
+      width:54px;height:54px;border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.10));
+      border:1px solid rgba(255,255,255,.18);
+      display:flex;align-items:center;justify-content:center;
+      cursor:grab;
+      user-select:none;
+      position:absolute;
+      left:22px;
+      top:22px;
+      touch-action:none;
+    }
+    .key:active{cursor:grabbing}
+    .key svg{opacity:.9}
+
+    /* level 3 */
+    .grid{
+      width:min(520px, 100%);
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+      padding:18px;
+    }
+    .tile{
+      aspect-ratio: 1 / 1;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      color: rgba(255,255,255,.75);
+      cursor:pointer;
+      transition: transform .08s ease, background .18s ease, border-color .18s ease;
+    }
+    .tile:hover{transform: translateY(-1px)}
+    .tile.good{
+      background: rgba(47,196,126,.14);
+      border-color: rgba(47,196,126,.35);
+      color: rgba(233, 252, 242, .95);
+    }
+    .tile.bad{
+      background: rgba(191,39,45,.14);
+      border-color: rgba(191,39,45,.35);
+      color: rgba(255,235,236,.95);
+    }
+
+    /* level 4 */
+    .three{
+      display:flex; gap:12px; flex-wrap:wrap;
+      align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.8);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor:pointer;
+      transition: transform .08s ease, background .18s ease, border-color .18s ease;
+      font-weight:600;
+      letter-spacing:.2px;
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn:active{transform: translateY(0)}
+    .btn.selected{
+      background: rgba(77,163,255,.16);
+      border-color: rgba(77,163,255,.40);
+      color: rgba(240,248,255,.95);
+    }
+    .btn.big{padding:12px 18px}
+
+    /* level 5 */
+    .passwrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      flex-wrap:wrap;
+    }
+    input[type="text"]{
+      width:min(360px, 100%);
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.20);
+      color: var(--fg);
+      padding: 12px 14px;
+      font-size:16px;
+      outline:none;
+    }
+    input[type="text"]::placeholder{color: rgba(154,166,195,.7)}
+    .msg{
+      margin-top:10px;
+      color: var(--muted);
+      font-size:14px;
+      text-align:center;
+      min-height:20px;
+    }
+
+    /* level 6 */
+    .maze{
+      width: 320px;
+      height: 320px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      position:relative;
+      overflow:hidden;
+      touch-action:none;
+    }
+    .maze::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 2px, transparent 2px) 0 0 / 64px 64px,
+        linear-gradient(0deg, rgba(255,255,255,.08) 2px, transparent 2px) 0 0 / 64px 64px;
+      opacity:.35;
+      pointer-events:none;
+    }
+    .wall{
+      position:absolute;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 10px;
+    }
+    .dot{
+      width:18px;height:18px;border-radius:50%;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 10px 30px rgba(255,255,255,.18);
+      position:absolute;
+      left:20px; top:20px;
+      transform: translate(-50%, -50%);
+      cursor:grab;
+      touch-action:none;
+    }
+    .dot:active{cursor:grabbing}
+    .goal{
+      position:absolute;
+      right:22px; bottom:22px;
+      width:42px;height:42px;border-radius:14px;
+      border:1px solid rgba(47,196,126,.40);
+      background: rgba(47,196,126,.12);
+      display:flex;align-items:center;justify-content:center;
+      color: rgba(233,252,242,.92);
+      font-weight:800;
+      letter-spacing:.3px;
+      user-select:none;
+      pointer-events:none;
+    }
+
+    /* level 7 */
+    .final{
+      text-align:center;
+      padding:28px 18px 18px;
+    }
+    .final h3{
+      margin:0 0 8px;
+      font-size:24px;
+    }
+    .tiny{
+      font-size:13px;
+      color: rgba(154,166,195,.85);
+      margin: 10px 0 0;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    /* toast */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background: rgba(0,0,0,.40);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      padding:10px 14px;
+      color: rgba(255,255,255,.86);
+      font-size:13px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .sr-only{
+      position:absolute;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);
+      white-space:nowrap;border:0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEVEL 1 -->
+  <section class="screen active" data-level="1">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 1 / 7</div>
+        <div class="badge" id="status1">Solve to advance</div>
+      </div>
+      <h2 class="title">A white circle.</h2>
+      <p class="hint">Puzzle: click the circle to go to the next page.</p>
+      <div class="center-area" aria-label="Level 1 puzzle area">
+        <div class="circle" id="lvl1Circle" aria-label="White circle button" role="button" tabindex="0"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEVEL 2 -->
+  <section class="screen" data-level="2">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 2 / 7</div>
+        <div class="badge" id="status2">Locked</div>
+      </div>
+      <h2 class="title">The door is locked.</h2>
+      <p class="hint">Puzzle: drag the key onto the door. (Mouse or touch.)</p>
+      <div class="center-area" id="lvl2Area" aria-label="Level 2 puzzle area">
+        <div class="door" id="lvl2Door" aria-label="Door">
+          <div class="knob" aria-hidden="true"></div>
+          <div style="opacity:.75;font-weight:700;color:rgba(255,255,255,.75)">DOOR</div>
+        </div>
+
+        <div class="key" id="lvl2Key" aria-label="Key" role="button" tabindex="0">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14.5 10.5a4.5 4.5 0 1 0-2.73 4.14L14 17h2v2h2v2h3v-3.2l-6.06-6.06c.36-.64.56-1.38.56-2.24Z"
+              stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8.6h.01" stroke="rgba(255,255,255,.9)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEVEL 3 -->
+  <section class="screen" data-level="3">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 3 / 7</div>
+        <div class="badge" id="status3">Find the rule</div>
+      </div>
+      <h2 class="title">Choose the primes.</h2>
+      <p class="hint">Puzzle: click all the prime numbers. When you’ve got them all, you advance.</p>
+      <div class="center-area" aria-label="Level 3 puzzle area">
+        <div class="grid" id="lvl3Grid" aria-label="Number grid"></div>
+      </div>
+      <p class="hint" id="lvl3Hint" style="margin-top:12px;"></p>
+    </div>
+  </section>
+
+  <!-- LEVEL 4 -->
+  <section class="screen" data-level="4">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 4 / 7</div>
+        <div class="badge" id="status4">Listen closely</div>
+      </div>
+      <h2 class="title">The only safe button…</h2>
+      <p class="hint">Puzzle: three buttons, one rule. Pick the one that’s “safe.”</p>
+      <div class="center-area" aria-label="Level 4 puzzle area">
+        <div class="three">
+          <button class="btn big" id="btnA">Advance</button>
+          <button class="btn big" id="btnB">Advance</button>
+          <button class="btn big" id="btnC">Advance</button>
+        </div>
+      </div>
+      <p class="hint">Hint: the safe button is the only one that doesn’t say “Advance” out loud.</p>
+      <p class="hint" style="margin-top:6px;">(Your browser may ask to allow sound. If you don’t allow it, choose the silent button anyway.)</p>
+    </div>
+  </section>
+
+  <!-- LEVEL 5 -->
+  <section class="screen" data-level="5">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 5 / 7</div>
+        <div class="badge" id="status5">One word</div>
+      </div>
+      <h2 class="title">Type what you did.</h2>
+      <p class="hint">Puzzle: enter the exact word that describes the action you used to solve level one.</p>
+      <div class="center-area" aria-label="Level 5 puzzle area">
+        <div class="passwrap">
+          <input id="lvl5Input" type="text" placeholder="one word…" autocomplete="off" spellcheck="false" />
+          <button class="btn" id="lvl5Submit">Submit</button>
+        </div>
+      </div>
+      <div class="msg" id="lvl5Msg" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- LEVEL 6 -->
+  <section class="screen" data-level="6">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 6 / 7</div>
+        <div class="badge" id="status6">Precision</div>
+      </div>
+      <h2 class="title">Thread the needle.</h2>
+      <p class="hint">Puzzle: drag the dot to the green goal without touching any walls.</p>
+      <div class="center-area" aria-label="Level 6 puzzle area">
+        <div class="maze" id="maze" aria-label="Maze">
+          <div class="goal" id="goal" aria-hidden="true">✓</div>
+
+          <!-- walls -->
+          <div class="wall" style="left:54px; top:66px; width:220px; height:22px;"></div>
+          <div class="wall" style="left:54px; top:132px; width:22px; height:150px;"></div>
+          <div class="wall" style="left:118px; top:132px; width:170px; height:22px;"></div>
+          <div class="wall" style="left:266px; top:154px; width:22px; height:120px;"></div>
+          <div class="wall" style="left:118px; top:220px; width:148px; height:22px;"></div>
+
+          <div class="dot" id="dot" aria-label="Dot" role="button" tabindex="0"></div>
+        </div>
+      </div>
+      <p class="hint" id="lvl6Hint" style="margin-top:12px;"></p>
+    </div>
+  </section>
+
+  <!-- LEVEL 7 -->
+  <section class="screen" data-level="7">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge">Level 7 / 7</div>
+        <div class="badge" id="status7">Final</div>
+      </div>
+
+      <div class="final">
+        <h3>Last lock.</h3>
+        <p class="hint">Puzzle: don’t click anything. Wait.</p>
+        <p class="tiny">Sometimes the move is not making a move.</p>
+        <div class="row">
+          <button class="btn" id="restart">Restart</button>
+          <button class="btn" id="skipTo1" title="(dev) jump to level 1">Level 1</button>
+        </div>
+        <div class="msg" id="lvl7Msg" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ---------- helpers ----------
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    const toastEl = $("#toast");
+    let toastTimer = null;
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1200);
+    }
+
+    const screens = $$(".screen");
+    let level = 1;
+
+    function showLevel(n){
+      level = n;
+      screens.forEach(s => s.classList.toggle("active", Number(s.dataset.level) === n));
+      toast(`Level ${n}`);
+    }
+
+    function next(){ showLevel(Math.min(7, level + 1)); }
+
+    // ---------- Level 1 ----------
+    const lvl1Circle = $("#lvl1Circle");
+    function lvl1Advance(){ $("#status1").textContent = "Solved"; next(); }
+    lvl1Circle.addEventListener("click", lvl1Advance);
+    lvl1Circle.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" ") lvl1Advance(); });
+
+    // ---------- Level 2: drag key onto door ----------
+    const key = $("#lvl2Key");
+    const door = $("#lvl2Door");
+    const area2 = $("#lvl2Area");
+    let drag2 = null;
+
+    function rectsOverlap(a,b){
+      return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    }
+
+    function setKeyPos(x, y){
+      const r = area2.getBoundingClientRect();
+      const k = key.getBoundingClientRect();
+      const nx = Math.max(0, Math.min(r.width - k.width, x - r.left - drag2.offsetX));
+      const ny = Math.max(0, Math.min(r.height - k.height, y - r.top  - drag2.offsetY));
+      key.style.left = nx + "px";
+      key.style.top  = ny + "px";
+    }
+
+    function unlockIfNeeded(){
+      const kR = key.getBoundingClientRect();
+      const dR = door.getBoundingClientRect();
+      if(rectsOverlap(kR, dR)){
+        $("#status2").textContent = "Unlocked";
+        toast("Unlocked");
+        next();
+      }
+    }
+
+    function pointerDown2(e){
+      e.preventDefault();
+      const kR = key.getBoundingClientRect();
+      drag2 = {
+        offsetX: e.clientX - kR.left,
+        offsetY: e.clientY - kR.top
+      };
+      key.setPointerCapture(e.pointerId);
+    }
+    function pointerMove2(e){
+      if(!drag2) return;
+      setKeyPos(e.clientX, e.clientY);
+    }
+    function pointerUp2(e){
+      if(!drag2) return;
+      drag2 = null;
+      unlockIfNeeded();
+    }
+
+    // position key as absolute inside center-area
+    // (center-area is relative already)
+    key.style.position = "absolute";
+    key.addEventListener("pointerdown", pointerDown2);
+    key.addEventListener("pointermove", pointerMove2);
+    key.addEventListener("pointerup", pointerUp2);
+    key.addEventListener("pointercancel", pointerUp2);
+
+    // ---------- Level 3: select primes ----------
+    const primes = new Set([2,3,5,7,11,13]);
+    const nums = [2, 9, 3, 14, 5, 6, 7, 15, 4, 10, 11, 12, 1, 8, 13, 16];
+    const selected3 = new Set();
+    const grid = $("#lvl3Grid");
+    nums.forEach(n=>{
+      const b = document.createElement("button");
+      b.className = "tile";
+      b.type = "button";
+      b.textContent = n;
+      b.addEventListener("click", ()=>{
+        if(primes.has(n)){
+          b.classList.add("good");
+          selected3.add(n);
+          toast("Good");
+        }else{
+          b.classList.add("bad");
+          toast("Nope");
+          setTimeout(()=>b.classList.remove("bad"), 260);
+        }
+        const gotAll = [...primes].every(p=>selected3.has(p));
+        $("#lvl3Hint").textContent = gotAll ? "All primes found." : "";
+        if(gotAll){
+          $("#status3").textContent = "Solved";
+          next();
+        }
+      });
+      grid.appendChild(b);
+    });
+
+    // ---------- Level 4: audio trick ----------
+    const btnA = $("#btnA"), btnB = $("#btnB"), btnC = $("#btnC");
+
+    // Make two buttons "speak" and one remain silent.
+    function speak(text){
+      try{
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1;
+        u.pitch = 1;
+        speechSynthesis.speak(u);
+        return true;
+      }catch{
+        return false;
+      }
+    }
+
+    function wireSpeak(btn, willSpeak){
+      btn.addEventListener("click", ()=>{
+        btnA.classList.remove("selected");
+        btnB.classList.remove("selected");
+        btnC.classList.remove("selected");
+        btn.classList.add("selected");
+
+        if(willSpeak){
+          speak("Advance");
+          toast("That one talks.");
+          $("#status4").textContent = "Still locked";
+        }else{
+          toast("Silent.");
+          $("#status4").textContent = "Solved";
+          next();
+        }
+      });
+    }
+    wireSpeak(btnA, true);
+    wireSpeak(btnB, false); // the safe one
+    wireSpeak(btnC, true);
+
+    // ---------- Level 5: type what you did on level 1 ----------
+    const inp5 = $("#lvl5Input");
+    const msg5 = $("#lvl5Msg");
+    $("#lvl5Submit").addEventListener("click", check5);
+    inp5.addEventListener("keydown", (e)=>{ if(e.key==="Enter") check5(); });
+
+    function check5(){
+      const v = (inp5.value || "").trim().toLowerCase();
+      if(v === "click"){
+        msg5.textContent = "Correct.";
+        $("#status5").textContent = "Solved";
+        toast("Unlocked");
+        next();
+      }else if(!v){
+        msg5.textContent = "Type one word.";
+      }else{
+        msg5.textContent = "Not quite. Think back to level one.";
+        toast("Try again");
+      }
+    }
+
+    // ---------- Level 6: maze drag without touching walls ----------
+    const maze = $("#maze");
+    const dot = $("#dot");
+    const goal = $("#goal");
+    const walls = $$(".wall", maze);
+
+    let drag6 = null;
+    function setDotPos(x,y){
+      const r = maze.getBoundingClientRect();
+      const nx = Math.max(10, Math.min(r.width - 10, x - r.left));
+      const ny = Math.max(10, Math.min(r.height - 10, y - r.top));
+      dot.style.left = nx + "px";
+      dot.style.top  = ny + "px";
+    }
+    function resetDot(){
+      setDotPos(20 + maze.getBoundingClientRect().left, 20 + maze.getBoundingClientRect().top);
+      $("#lvl6Hint").textContent = "";
+      $("#status6").textContent = "Precision";
+      toast("Reset");
+    }
+
+    function overlapsAnyWall(dotRect){
+      return walls.some(w=>{
+        const wr = w.getBoundingClientRect();
+        return !(dotRect.right < wr.left || dotRect.left > wr.right || dotRect.bottom < wr.top || dotRect.top > wr.bottom);
+      });
+    }
+    function overlapsGoal(dotRect){
+      const gr = goal.getBoundingClientRect();
+      return !(dotRect.right < gr.left || dotRect.left > gr.right || dotRect.bottom < gr.top || dotRect.top > gr.bottom);
+    }
+
+    dot.addEventListener("pointerdown", (e)=>{
+      e.preventDefault();
+      drag6 = true;
+      dot.setPointerCapture(e.pointerId);
+    });
+    dot.addEventListener("pointermove", (e)=>{
+      if(!drag6) return;
+      setDotPos(e.clientX, e.clientY);
+      const dr = dot.getBoundingClientRect();
+
+      if(overlapsAnyWall(dr)){
+        $("#lvl6Hint").textContent = "You touched a wall.";
+        resetDot();
+        drag6 = false;
+        return;
+      }
+
+      if(overlapsGoal(dr)){
+        $("#status6").textContent = "Solved";
+        $("#lvl6Hint").textContent = "Nice.";
+        toast("Solved");
+        drag6 = false;
+        next();
+      }
+    });
+    dot.addEventListener("pointerup", ()=> drag6 = false);
+    dot.addEventListener("pointercancel", ()=> drag6 = false);
+
+    // ---------- Level 7: wait ----------
+    const msg7 = $("#lvl7Msg");
+    let waitTimer = null;
+    function startFinalWait(){
+      msg7.textContent = "Waiting…";
+      clearTimeout(waitTimer);
+      waitTimer = setTimeout(()=>{
+        msg7.textContent = "You win. (Reload or Restart to play again.)";
+        toast("Complete");
+      }, 5000);
+    }
+
+    // Start the wait when Level 7 becomes visible
+    const obs = new MutationObserver(()=>{
+      const active7 = $('.screen[data-level="7"]').classList.contains("active");
+      if(active7) startFinalWait();
+    });
+    obs.observe(document.body, {subtree:true, attributes:true, attributeFilter:["class"]});
+
+    // buttons
+    $("#restart").addEventListener("click", ()=>{
+      // reset simple state
+      showLevel(1);
+      // reset level 2 key position
+      key.style.left = "22px";
+      key.style.top  = "22px";
+      $("#status2").textContent = "Locked";
+      // reset level 3
+      selected3.clear();
+      $$(".tile", grid).forEach(t=>{ t.classList.remove("good"); t.classList.remove("bad"); });
+      $("#status3").textContent = "Find the rule";
+      $("#lvl3Hint").textContent = "";
+      // reset level 4
+      [btnA,btnB,btnC].forEach(b=>b.classList.remove("selected"));
+      $("#status4").textContent = "Listen closely";
+      // reset level 5
+      inp5.value = "";
+      msg5.textContent = "";
+      $("#status5").textContent = "One word";
+      // reset level 6
+      resetDot();
+      // reset level 7
+      msg7.textContent = "";
+      clearTimeout(waitTimer);
+    });
+    $("#skipTo1").addEventListener("click", ()=>showLevel(1));
+
+    // Ensure initial key position is correct
+    key.style.left = "22px";
+    key.style.top  = "22px";
+
+    // Ensure dot starts placed
+    // (after layout)
+    requestAnimationFrame(()=> resetDot());
+  </script>
+</body>
+</html>
