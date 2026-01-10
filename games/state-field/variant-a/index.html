@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>32-State Grid — Random Drift</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1620cc;
+      --panel2:#111a27;
+      --text:#e7eef7;
+      --muted:#a8b6c8;
+      --border:rgba(231,238,247,.12);
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius:16px;
+      --pad:12px;
+      --gap:10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);}
+    #app{position:fixed; inset:0; overflow:hidden;}
+    canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:var(--bg);}
+
+    .hud{
+      position:absolute; top:12px; left:12px; right:12px;
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+      pointer-events:none;
+    }
+    .card{
+      pointer-events:auto;
+      background:var(--panel);
+      border:1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:var(--pad);
+      max-width:min(520px, 100%);
+    }
+    .title{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+    }
+    .title h1{font-size:14px; margin:0; letter-spacing:.06em; text-transform:uppercase;}
+    .pill{font-family:var(--mono); font-size:12px; color:var(--muted); padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(17,26,39,.55)}
+    .row{display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; margin-top:10px;}
+    label{display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted); min-width:140px}
+    input[type="range"]{width:180px}
+    select, button{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+    }
+    button{cursor:pointer}
+    button.primary{background:rgba(231,238,247,.92); color:#0b0f14; border-color:transparent; font-weight:700}
+    button:active{transform:translateY(1px)}
+    .mini{min-width:auto}
+    .legend{
+      display:grid;
+      grid-template-columns: repeat(16, 10px);
+      gap:6px;
+      align-items:center;
+      margin-top:10px;
+    }
+    .sw{width:10px;height:10px;border-radius:3px;border:1px solid rgba(255,255,255,.08)}
+    .help{
+      max-width:360px;
+      pointer-events:none;
+      opacity:.9;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="c"></canvas>
+
+    <div class="hud">
+      <div class="card">
+        <div class="title">
+          <h1>32-State Grid</h1>
+          <span class="pill" id="stats">0×0 • gen 0</span>
+        </div>
+
+        <div class="row">
+          <button class="primary" id="toggle">Play</button>
+          <button id="step">Step</button>
+          <button id="randomize">Randomize</button>
+          <button id="clear">Clear</button>
+        </div>
+
+        <div class="row">
+          <label>
+            <span>Cell size</span>
+            <input id="cellSize" type="range" min="4" max="30" step="1" value="10">
+          </label>
+
+          <label>
+            <span>Speed (steps/sec)</span>
+            <input id="speed" type="range" min="1" max="60" step="1" value="20">
+          </label>
+
+          <label>
+            <span>Change chance / step</span>
+            <input id="chance" type="range" min="0" max="0.35" step="0.005" value="0.08">
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            <span>Brush state (0–31)</span>
+            <input id="brush" type="range" min="0" max="31" step="1" value="1">
+          </label>
+
+          <label>
+            <span>Palette shift</span>
+            <input id="shift" type="range" min="0" max="360" step="1" value="210">
+          </label>
+
+          <label>
+            <span>Palette spread</span>
+            <input id="spread" type="range" min="10" max="240" step="1" value="90">
+          </label>
+        </div>
+
+        <div class="legend" id="legend" title="States 0..31"></div>
+      </div>
+
+      <div class="card help">
+        <div class="title">
+          <h1>Controls</h1>
+          <span class="pill mini">Paint: click/drag</span>
+        </div>
+        <div style="color:var(--muted); font-size:12px; line-height:1.4">
+          Each step, every cell has a chance to jump to a random state (0–31).<br/>
+          State colors are a gradient you can tune with <b>shift</b> and <b>spread</b>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("c");
+      const ctx = canvas.getContext("2d", { alpha: false });
+
+      const STATES = 32;
+
+      const toggleBtn = document.getElementById("toggle");
+      const stepBtn = document.getElementById("step");
+      const randomizeBtn = document.getElementById("randomize");
+      const clearBtn = document.getElementById("clear");
+      const statsEl = document.getElementById("stats");
+
+      const cellSizeEl = document.getElementById("cellSize");
+      const speedEl = document.getElementById("speed");
+      const chanceEl = document.getElementById("chance");
+      const brushEl = document.getElementById("brush");
+      const shiftEl = document.getElementById("shift");
+      const spreadEl = document.getElementById("spread");
+      const legendEl = document.getElementById("legend");
+
+      let running = false;
+      let gen = 0;
+
+      let cellSize = +cellSizeEl.value;
+      let cols = 0, rows = 0;
+      let a = new Uint8Array(0);
+      let b = new Uint8Array(0);
+
+      // Colors (cached per redraw)
+      let palette = new Array(STATES).fill("#000");
+
+      const DPR = () => Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+      function rebuildPalette() {
+        const base = +shiftEl.value;     // 0..360
+        const spread = +spreadEl.value;  // degrees across gradient
+        for (let i = 0; i < STATES; i++) {
+          const t = i / (STATES - 1);           // 0..1
+          const hue = (base + spread * t) % 360;
+          const sat = 92;
+          const light = 20 + 65 * t;            // dark -> bright
+          palette[i] = `hsl(${hue} ${sat}% ${light}%)`;
+        }
+        renderLegend();
+      }
+
+      function renderLegend() {
+        legendEl.innerHTML = "";
+        for (let i = 0; i < STATES; i++) {
+          const d = document.createElement("div");
+          d.className = "sw";
+          d.style.background = palette[i];
+          d.title = `state ${i}`;
+          legendEl.appendChild(d);
+        }
+      }
+
+      function resize() {
+        const dpr = DPR();
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const newCols = Math.max(10, Math.floor(rect.width / cellSize));
+        const newRows = Math.max(10, Math.floor(rect.height / cellSize));
+
+        if (newCols !== cols || newRows !== rows) {
+          cols = newCols; rows = newRows;
+          a = new Uint8Array(cols * rows);
+          b = new Uint8Array(cols * rows);
+          gen = 0;
+          stats();
+        }
+        draw();
+      }
+
+      function stats() {
+        statsEl.textContent = `${cols}×${rows} • gen ${gen}`;
+      }
+
+      function idx(x, y) { return x + y * cols; }
+
+      // Random drift step:
+      // Each cell has probability p to jump to a new random state.
+      function step() {
+        const p = +chanceEl.value;
+        for (let i = 0; i < a.length; i++) {
+          const cur = a[i];
+          if (Math.random() < p) {
+            // pick a different state (biased toward nearby is also nice, but keep it simple)
+            let next = (Math.random() * STATES) | 0;
+            if (next === cur) next = (next + 1) % STATES;
+            b[i] = next;
+          } else {
+            b[i] = cur;
+          }
+        }
+        [a, b] = [b, a];
+        gen++;
+        stats();
+      }
+
+      function draw() {
+        const wpx = canvas.clientWidth;
+        const hpx = canvas.clientHeight;
+
+        ctx.fillStyle = "#0b0f14";
+        ctx.fillRect(0, 0, wpx, hpx);
+
+        // draw cells (state 0 is still a valid color, so draw all)
+        for (let y = 0; y < rows; y++) {
+          const py = y * cellSize;
+          if (py > hpx) break;
+
+          for (let x = 0; x < cols; x++) {
+            const px = x * cellSize;
+            if (px > wpx) break;
+
+            const v = a[idx(x, y)];
+            ctx.fillStyle = palette[v];
+            ctx.fillRect(px, py, cellSize, cellSize);
+          }
+        }
+
+        // subtle grid overlay (only when cells are big enough)
+        if (cellSize >= 10) {
+          ctx.strokeStyle = "rgba(231,238,247,.06)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let x = 0; x <= cols; x++) {
+            const px = x * cellSize;
+            ctx.moveTo(px, 0);
+            ctx.lineTo(px, hpx);
+          }
+          for (let y = 0; y <= rows; y++) {
+            const py = y * cellSize;
+            ctx.moveTo(0, py);
+            ctx.lineTo(wpx, py);
+          }
+          ctx.stroke();
+        }
+      }
+
+      // Loop
+      let last = performance.now();
+      let acc = 0;
+      function loop(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+
+        if (running) {
+          const tps = +speedEl.value;
+          acc += dt;
+          const stepDt = 1 / tps;
+          let n = 0;
+          while (acc >= stepDt && n < 6) {
+            step();
+            acc -= stepDt;
+            n++;
+          }
+          draw();
+        }
+        requestAnimationFrame(loop);
+      }
+
+      // UI
+      toggleBtn.addEventListener("click", () => {
+        running = !running;
+        toggleBtn.textContent = running ? "Pause" : "Play";
+      });
+
+      stepBtn.addEventListener("click", () => {
+        if (running) return;
+        step();
+        draw();
+      });
+
+      clearBtn.addEventListener("click", () => {
+        a.fill(0);
+        gen = 0;
+        stats();
+        draw();
+      });
+
+      randomizeBtn.addEventListener("click", () => {
+        for (let i = 0; i < a.length; i++) a[i] = (Math.random() * STATES) | 0;
+        gen = 0;
+        stats();
+        draw();
+      });
+
+      cellSizeEl.addEventListener("input", () => {
+        cellSize = +cellSizeEl.value;
+        resize();
+      });
+
+      shiftEl.addEventListener("input", () => { rebuildPalette(); draw(); });
+      spreadEl.addEventListener("input", () => { rebuildPalette(); draw(); });
+
+      // Painting
+      let painting = false;
+      let lastPaint = -1;
+
+      function canvasToCell(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((clientX - rect.left) / cellSize);
+        const y = Math.floor((clientY - rect.top) / cellSize);
+        return { x, y };
+      }
+
+      function paintAt(clientX, clientY) {
+        const { x, y } = canvasToCell(clientX, clientY);
+        if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+        const i = idx(x, y);
+        if (i === lastPaint) return;
+        lastPaint = i;
+        a[i] = +brushEl.value;
+      }
+
+      canvas.addEventListener("pointerdown", (e) => {
+        canvas.setPointerCapture(e.pointerId);
+        painting = true;
+        lastPaint = -1;
+        paintAt(e.clientX, e.clientY);
+        draw();
+      });
+
+      canvas.addEventListener("pointermove", (e) => {
+        if (!painting) return;
+        paintAt(e.clientX, e.clientY);
+        draw();
+      });
+
+      function endPaint() {
+        painting = false;
+        lastPaint = -1;
+      }
+      canvas.addEventListener("pointerup", endPaint);
+      canvas.addEventListener("pointercancel", endPaint);
+      canvas.addEventListener("pointerout", endPaint);
+
+      // Keyboard
+      window.addEventListener("keydown", (e) => {
+        if (e.key === " ") { e.preventDefault(); toggleBtn.click(); }
+        if (e.key.toLowerCase() === "s") stepBtn.click();
+        if (e.key.toLowerCase() === "r") randomizeBtn.click();
+        if (e.key.toLowerCase() === "c") clearBtn.click();
+      });
+
+      // Boot
+      rebuildPalette();
+      new ResizeObserver(resize).observe(canvas);
+      resize();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
