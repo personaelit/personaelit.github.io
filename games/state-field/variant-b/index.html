@@ -26,6 +26,9 @@
     .hud{
       position:absolute; top:12px; left:12px; right:12px;
       display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+      max-height:calc(100vh - 24px);
+      overflow:auto;
+      padding-bottom:6px;
       pointer-events:none;
     }
     .card{
@@ -44,6 +47,7 @@
       margin-bottom:10px;
     }
     .title h1{font-size:14px; margin:0; letter-spacing:.06em; text-transform:uppercase;}
+    .title-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
     .pill{font-family:var(--mono); font-size:12px; color:var(--muted); padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(17,26,39,.55)}
     .row{display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; margin-top:10px;}
     label{display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted); min-width:140px}
@@ -58,6 +62,7 @@
     }
     button{cursor:pointer}
     button.primary{background:rgba(231,238,247,.92); color:#0b0f14; border-color:transparent; font-weight:700}
+    button.ghost{background:rgba(17,26,39,.35); color:var(--text)}
     button:active{transform:translateY(1px)}
 
     .grid2{display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap:10px; margin-top:10px;}
@@ -87,6 +92,26 @@
     }
     .sw{width:10px;height:10px;border-radius:3px;border:1px solid rgba(255,255,255,.08)}
     .help{max-width:360px; pointer-events:none; opacity:.9}
+
+    .hud.collapsed .advanced{display:none}
+    .hud.collapsed .help{display:none}
+
+    @media (max-width: 720px){
+      .hud{
+        top:8px; left:8px; right:8px;
+        flex-direction:column;
+        align-items:stretch;
+        gap:8px;
+        max-height:calc(100vh - 16px);
+        overflow:auto;
+        padding-bottom:6px;
+      }
+      .card{max-width:100%}
+      label{min-width:120px}
+      input[type="range"]{width:150px}
+      .grid2{grid-template-columns: 1fr}
+      .legend{grid-template-columns: repeat(8, 10px)}
+    }
   </style>
 </head>
 <body>
@@ -94,10 +119,13 @@
     <canvas id="c"></canvas>
 
     <div class="hud">
-      <div class="card">
+      <div class="card main">
         <div class="title">
-          <h1>32-State Grid — Modular Rules</h1>
-          <span class="pill" id="stats">0×0 • gen 0</span>
+          <h1>256-State Grid — Modular Rules</h1>
+          <div class="title-actions">
+            <span class="pill" id="stats">0×0 • gen 0</span>
+            <button class="ghost" id="hudToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
         </div>
 
         <div class="row">
@@ -108,6 +136,7 @@
           <span class="pill">Paint: click/drag</span>
         </div>
 
+        <div class="advanced">
         <div class="row">
           <label>
             <span>Cell size</span>
@@ -252,6 +281,7 @@
         </div>
 
         <div class="legend" id="legend" title="States 0..31"></div>
+        </div>
       </div>
 
       <div class="card help">
@@ -272,7 +302,7 @@
       const canvas = document.getElementById("c");
       const ctx = canvas.getContext("2d", { alpha: false });
 
-      const STATES = 32;
+      const STATES = 256;
       const TWO_PI = Math.PI * 2;
 
       // Buttons / general controls
@@ -280,6 +310,8 @@
       const stepBtn = document.getElementById("step");
       const randomizeBtn = document.getElementById("randomize");
       const clearBtn = document.getElementById("clear");
+      const hudToggleBtn = document.getElementById("hudToggle");
+      const hudEl = document.querySelector(".hud");
       const statsEl = document.getElementById("stats");
       const cellSizeEl = document.getElementById("cellSize");
       const speedEl = document.getElementById("speed");
@@ -314,6 +346,8 @@
       // Sim state
       let running = false;
       let gen = 0;
+      let hudCollapsed = false;
+      let hudTouched = false;
 
       let cellSize = +cellSizeEl.value;
       let cols = 0, rows = 0;
@@ -571,9 +605,27 @@
       }
 
       // UI bindings
+      function setHudCollapsed(next) {
+        hudCollapsed = next;
+        hudEl.classList.toggle("collapsed", hudCollapsed);
+        hudToggleBtn.textContent = hudCollapsed ? "Expand" : "Collapse";
+        hudToggleBtn.setAttribute("aria-expanded", String(!hudCollapsed));
+      }
+
+      function syncHudForViewport() {
+        if (hudTouched) return;
+        const compact = window.matchMedia("(max-width: 720px)").matches;
+        setHudCollapsed(compact);
+      }
+
       toggleBtn.addEventListener("click", () => {
         running = !running;
         toggleBtn.textContent = running ? "Pause" : "Play";
+      });
+
+      hudToggleBtn.addEventListener("click", () => {
+        hudTouched = true;
+        setHudCollapsed(!hudCollapsed);
       });
 
       stepBtn.addEventListener("click", () => {
@@ -658,6 +710,8 @@
       rebuildPalette();
       new ResizeObserver(resize).observe(canvas);
       resize();
+      syncHudForViewport();
+      window.addEventListener("resize", syncHudForViewport);
       requestAnimationFrame(loop);
     })();
   </script>
