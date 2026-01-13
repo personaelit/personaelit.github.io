@@ -917,15 +917,14 @@
       }
 
       async function shareUniverse() {
-        const proceed = window.confirm("Share Universe? This capture may contain flashing lights.");
-        if (!proceed) return;
+        
         const url = buildShareUrl();
         const blob = await canvasToBlob(canvas);
         if (blob && navigator.share) {
           const file = new File([blob], "universe.png", { type: "image/png" });
           const data = {
             title: "State Field Universe",
-            text: "Shared universe + settings (may contain flashing lights)",
+            text: "Shared Universe (may contain flashing lights)",
             url,
             files: [file]
           };
