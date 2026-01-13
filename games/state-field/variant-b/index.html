@@ -22,6 +22,19 @@
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);}
     #app{position:fixed; inset:0; overflow:hidden;}
     canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:var(--bg);}
+    #mirror{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      opacity:var(--mirror-opacity, .28);
+      mix-blend-mode:var(--mirror-blend, screen);
+      transform:scaleX(-1);
+      display:none;
+      pointer-events:none;
+    }
+    #mirror.on{display:block;}
 
     .hud{
       position:absolute; top:12px; left:12px; right:12px;
@@ -117,6 +130,7 @@
 <body>
   <div id="app">
     <canvas id="c"></canvas>
+    <video id="mirror" playsinline muted></video>
 
     <div class="hud">
       <div class="card main">
@@ -133,6 +147,7 @@
           <button id="step">Step</button>
           <button id="randomize">Randomize</button>
           <button id="clear">Clear</button>
+          <button class="ghost" id="mirrorToggle" type="button">Mirror mode</button>
           <span class="pill">Paint: click/drag</span>
         </div>
 
@@ -149,7 +164,7 @@
           </label>
 
           <label>
-            <span>Brush state (0–31)</span>
+            <span>Brush state (0-31)</span>
             <input id="brush" type="range" min="0" max="31" step="1" value="1">
           </label>
         </div>
@@ -163,6 +178,11 @@
           <label>
             <span>Palette spread</span>
             <input id="spread" type="range" min="10" max="240" step="1" value="90">
+          </label>
+
+          <label>
+            <span>Mirror strength</span>
+            <input id="mirrorStrength" type="range" min="0" max="100" step="1" value="28">
           </label>
         </div>
 
@@ -319,6 +339,9 @@
       const shiftEl = document.getElementById("shift");
       const spreadEl = document.getElementById("spread");
       const legendEl = document.getElementById("legend");
+      const mirrorEl = document.getElementById("mirror");
+      const mirrorToggleBtn = document.getElementById("mirrorToggle");
+      const mirrorStrengthEl = document.getElementById("mirrorStrength");
 
       // Rule toggles + params
       const rJumpOn = document.getElementById("rJumpOn");
@@ -348,6 +371,7 @@
       let gen = 0;
       let hudCollapsed = false;
       let hudTouched = false;
+      let mirrorStream = null;
 
       let cellSize = +cellSizeEl.value;
       let cols = 0, rows = 0;
@@ -648,6 +672,57 @@
         draw();
       });
 
+      function setMirrorStrength(value) {
+        const strength = Math.max(0, Math.min(100, value));
+        const opacity = strength / 100;
+        const blend = opacity > 0.55 ? "screen" : (opacity > 0.25 ? "lighten" : "normal");
+        mirrorEl.style.setProperty("--mirror-opacity", opacity.toFixed(2));
+        mirrorEl.style.setProperty("--mirror-blend", blend);
+      }
+
+      mirrorStrengthEl.addEventListener("input", () => {
+        setMirrorStrength(+mirrorStrengthEl.value);
+      });
+
+      async function enableMirror() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          mirrorToggleBtn.textContent = "Mirror unsupported";
+          mirrorToggleBtn.disabled = true;
+          return;
+        }
+        try {
+          mirrorStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+            audio: false
+          });
+          mirrorEl.srcObject = mirrorStream;
+          await mirrorEl.play();
+          mirrorEl.classList.add("on");
+          mirrorToggleBtn.textContent = "Mirror on";
+        } catch (err) {
+          mirrorToggleBtn.textContent = "Mirror blocked";
+        }
+      }
+
+      function disableMirror() {
+        mirrorEl.classList.remove("on");
+        mirrorEl.pause();
+        if (mirrorStream) {
+          mirrorStream.getTracks().forEach((t) => t.stop());
+          mirrorStream = null;
+        }
+        mirrorEl.srcObject = null;
+        mirrorToggleBtn.textContent = "Mirror mode";
+      }
+
+      mirrorToggleBtn.addEventListener("click", () => {
+        if (mirrorStream) {
+          disableMirror();
+        } else {
+          enableMirror();
+        }
+      });
+
       cellSizeEl.addEventListener("input", () => {
         cellSize = +cellSizeEl.value;
         resize();
@@ -708,6 +783,7 @@
 
       // Boot
       rebuildPalette();
+      setMirrorStrength(+mirrorStrengthEl.value);
       new ResizeObserver(resize).observe(canvas);
       resize();
       syncHudForViewport();
