@@ -42,7 +42,10 @@
       max-height:calc(100vh - 24px);
       overflow:auto;
       padding-bottom:6px;
-      pointer-events:none;
+      pointer-events:auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
     }
     .card{
       pointer-events:auto;
@@ -108,6 +111,7 @@
 
     .hud.collapsed .advanced{display:none}
     .hud.collapsed .help{display:none}
+    .hud.simple .advanced{display:none}
     .spark{
       width:120px;
       height:24px;
@@ -150,6 +154,7 @@
           <h1>256-State Grid — Modular Rules</h1>
           <div class="title-actions">
             <span class="pill" id="stats">0×0 • gen 0</span>
+            <button class="ghost" id="modeToggle" type="button">Advanced</button>
             <button class="ghost" id="hudToggle" type="button" aria-expanded="true">Collapse</button>
           </div>
         </div>
@@ -381,6 +386,7 @@
       const randomizeBtn = document.getElementById("randomize");
       const clearBtn = document.getElementById("clear");
       const hudToggleBtn = document.getElementById("hudToggle");
+      const modeToggleBtn = document.getElementById("modeToggle");
       const hudEl = document.querySelector(".hud");
       const statsEl = document.getElementById("stats");
       const cellSizeEl = document.getElementById("cellSize");
@@ -432,6 +438,8 @@
       let gen = 0;
       let hudCollapsed = false;
       let hudTouched = false;
+      let simpleMode = false;
+      let modeTouched = false;
       let mirrorStream = null;
       let gravOn = true;
       const wells = [];
@@ -441,6 +449,7 @@
       const MAX_HISTORY = 120;
       let lastMetricTime = 0;
       let pendingWells = null;
+      let pendingGrid = null;
 
       let cellSize = +cellSizeEl.value;
       let cols = 0, rows = 0;
@@ -516,6 +525,11 @@
           }
           pendingWells = null;
           updateWellStats();
+        }
+        if (pendingGrid) {
+          applyGridFromSettings(pendingGrid);
+          pendingGrid = null;
+          computeMetrics();
         }
         draw();
       }
@@ -755,7 +769,12 @@
             radius: w.radius,
             strength: w.strength,
             mode: w.mode
-          }))
+          })),
+          grid: {
+            cols,
+            rows,
+            data: encodeGridData(a)
+          }
         };
       }
 
@@ -791,6 +810,7 @@
         if (gravStrengthEl && typeof settings.gravStrength === "number") gravStrengthEl.value = settings.gravStrength;
         if (gravFalloffEl && typeof settings.gravFalloff === "string") gravFalloffEl.value = settings.gravFalloff;
         if (Array.isArray(settings.wells)) pendingWells = settings.wells;
+        if (settings.grid && settings.grid.data) pendingGrid = settings.grid;
         cellSize = +cellSizeEl.value;
       }
 
@@ -799,17 +819,94 @@
         const raw = params.get("s");
         if (!raw) return;
         try {
-          const decoded = JSON.parse(decodeURIComponent(raw));
-          applySettings(decoded);
+          applySettings(decodeSettings(raw));
         } catch (err) {
-          // Ignore malformed settings
+          try {
+            applySettings(JSON.parse(raw));
+          } catch (err2) {
+            // Ignore malformed settings
+          }
         }
       }
 
       function buildShareUrl() {
-        const payload = encodeURIComponent(JSON.stringify(serializeSettings()));
-        const base = `${window.location.origin}${window.location.pathname}`;
-        return `${base}?s=${payload}`;
+        const payload = encodeSettings(serializeSettings());
+        const url = new URL(window.location.href);
+        url.searchParams.set("s", payload);
+        return url.toString();
+      }
+
+      function encodeSettings(settings) {
+        const json = JSON.stringify(settings);
+        const b64 = btoa(unescape(encodeURIComponent(json)));
+        return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      }
+
+      function decodeSettings(encoded) {
+        const b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = b64 + "===".slice((b64.length + 3) % 4);
+        const json = decodeURIComponent(escape(atob(padded)));
+        return JSON.parse(json);
+      }
+
+      function encodeGridData(grid) {
+        if (!grid || !grid.length) return "";
+        const bytes = [];
+        let runVal = grid[0];
+        let runLen = 1;
+        for (let i = 1; i < grid.length; i++) {
+          const v = grid[i];
+          if (v === runVal && runLen < 65535) {
+            runLen++;
+          } else {
+            bytes.push(runLen & 255, (runLen >> 8) & 255, runVal & 255);
+            runVal = v;
+            runLen = 1;
+          }
+        }
+        bytes.push(runLen & 255, (runLen >> 8) & 255, runVal & 255);
+        const arr = new Uint8Array(bytes);
+        let bin = "";
+        for (let i = 0; i < arr.length; i++) {
+          bin += String.fromCharCode(arr[i]);
+        }
+        const b64 = btoa(bin);
+        return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      }
+
+      function decodeGridData(encoded, total) {
+        if (!encoded) return new Uint8Array(0);
+        const b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = b64 + "===".slice((b64.length + 3) % 4);
+        const bin = atob(padded);
+        const out = new Uint8Array(total);
+        let oi = 0;
+        for (let i = 0; i + 2 < bin.length; i += 3) {
+          const runLen = bin.charCodeAt(i) | (bin.charCodeAt(i + 1) << 8);
+          const val = bin.charCodeAt(i + 2);
+          for (let j = 0; j < runLen && oi < out.length; j++) {
+            out[oi++] = val;
+          }
+        }
+        return out;
+      }
+
+      function applyGridFromSettings(gridSettings) {
+        const srcCols = gridSettings.cols | 0;
+        const srcRows = gridSettings.rows | 0;
+        if (srcCols <= 0 || srcRows <= 0) return;
+        const total = srcCols * srcRows;
+        const src = decodeGridData(gridSettings.data, total);
+        if (!src.length) return;
+        for (let y = 0; y < rows; y++) {
+          const sy = Math.min(srcRows - 1, Math.floor((y / rows) * srcRows));
+          for (let x = 0; x < cols; x++) {
+            const sx = Math.min(srcCols - 1, Math.floor((x / cols) * srcCols));
+            a[idx(x, y)] = src[sx + sy * srcCols];
+          }
+        }
+        gen = 0;
+        stats();
       }
 
       function canvasToBlob(canvasEl) {
@@ -819,13 +916,15 @@
       }
 
       async function shareUniverse() {
+        const proceed = window.confirm("Share Universe? This capture may contain flashing lights.");
+        if (!proceed) return;
         const url = buildShareUrl();
         const blob = await canvasToBlob(canvas);
         if (blob && navigator.share) {
           const file = new File([blob], "universe.png", { type: "image/png" });
           const data = {
             title: "State Field Universe",
-            text: "Shared universe + settings",
+            text: "Shared universe + settings (may contain flashing lights)",
             url,
             files: [file]
           };
@@ -1042,10 +1141,24 @@
         hudToggleBtn.setAttribute("aria-expanded", String(!hudCollapsed));
       }
 
+      function setSimpleMode(next) {
+        simpleMode = next;
+        hudEl.classList.toggle("simple", simpleMode);
+        if (modeToggleBtn) {
+          modeToggleBtn.textContent = simpleMode ? "Advanced" : "Simple";
+        }
+      }
+
       function syncHudForViewport() {
         if (hudTouched) return;
         const compact = window.matchMedia("(max-width: 720px)").matches;
         setHudCollapsed(compact);
+      }
+
+      function syncModeForViewport() {
+        if (modeTouched) return;
+        const compact = window.matchMedia("(max-width: 720px)").matches;
+        setSimpleMode(compact);
       }
 
       toggleBtn.addEventListener("click", () => {
@@ -1057,6 +1170,13 @@
         hudTouched = true;
         setHudCollapsed(!hudCollapsed);
       });
+
+      if (modeToggleBtn) {
+        modeToggleBtn.addEventListener("click", () => {
+          modeTouched = true;
+          setSimpleMode(!simpleMode);
+        });
+      }
 
       stepBtn.addEventListener("click", () => {
         if (running) return;
@@ -1074,6 +1194,53 @@
       });
 
       randomizeBtn.addEventListener("click", () => {
+        cellSizeEl.value = (4 + (Math.random() * 27) | 0);
+        speedEl.value = (1 + (Math.random() * 60) | 0);
+        brushEl.value = (Math.random() * 32) | 0;
+        shiftEl.value = (Math.random() * 360) | 0;
+        spreadEl.value = 10 + (Math.random() * 230) | 0;
+        mirrorStrengthEl.value = (Math.random() * 100) | 0;
+
+        rJumpOn.checked = Math.random() < 0.7;
+        rJumpP.value = (Math.random() * 0.35).toFixed(3);
+
+        rWalkOn.checked = Math.random() < 0.6;
+        rWalkP.value = (Math.random() * 0.8).toFixed(2);
+        rWalkStep.value = 1 + ((Math.random() * 6) | 0);
+
+        diffOn.checked = Math.random() < 0.8;
+        diffStrength.value = Math.random().toFixed(2);
+        diffP.value = (Math.random()).toFixed(2);
+
+        oscOn.checked = Math.random() < 0.5;
+        oscPeriod.value = 8 + ((Math.random() * 248) | 0);
+        oscAmp.value = (Math.random() * 12) | 0;
+
+        crysOn.checked = Math.random() < 0.6;
+        crysBands.value = 2 + ((Math.random() * 31) | 0);
+        crysStrength.value = Math.random().toFixed(2);
+
+        edgeOn.checked = Math.random() < 0.6;
+        edgeStrength.value = Math.random().toFixed(2);
+
+        gravOn = Math.random() < 0.7;
+        if (gravToggleBtn) {
+          gravToggleBtn.textContent = gravOn ? "Gravity wells: On" : "Gravity wells: Off";
+        }
+        if (gravRadiusEl) gravRadiusEl.value = 6 + ((Math.random() * 54) | 0);
+        if (gravStrengthEl) gravStrengthEl.value = Math.random().toFixed(2);
+        if (gravFalloffEl) {
+          const modes = ["gaussian", "linear", "inverse"];
+          gravFalloffEl.value = modes[(Math.random() * modes.length) | 0];
+        }
+
+        wells.length = 0;
+        updateWellStats();
+        cellSize = +cellSizeEl.value;
+        setMirrorStrength(+mirrorStrengthEl.value);
+        rebuildPalette();
+        resize();
+
         for (let i = 0; i < a.length; i++) a[i] = (Math.random() * STATES) | 0;
         gen = 0;
         stats();
@@ -1261,7 +1428,9 @@
       new ResizeObserver(resize).observe(canvas);
       resize();
       syncHudForViewport();
+      syncModeForViewport();
       window.addEventListener("resize", syncHudForViewport);
+      window.addEventListener("resize", syncModeForViewport);
       requestAnimationFrame(loop);
     })();
   </script>
