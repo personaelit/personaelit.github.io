@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>256 -State Grid — Modular Rules</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1620cc;
+      --panel2:#111a27;
+      --text:#e7eef7;
+      --muted:#a8b6c8;
+      --border:rgba(231,238,247,.12);
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius:16px;
+      --pad:12px;
+      --gap:10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);}
+    #app{position:fixed; inset:0; overflow:hidden;}
+    canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:var(--bg);}
+    #mirror{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      opacity:var(--mirror-opacity, .28);
+      mix-blend-mode:var(--mirror-blend, screen);
+      transform:scaleX(-1);
+      display:none;
+      pointer-events:none;
+    }
+    #mirror.on{display:block;}
+
+    .hud{
+      position:absolute; top:12px; left:12px; right:12px;
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+      max-height:calc(100vh - 24px);
+      overflow:auto;
+      padding-bottom:6px;
+      pointer-events:none;
+    }
+    .card{
+      pointer-events:auto;
+      background:var(--panel);
+      border:1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:var(--pad);
+      max-width:min(760px, 100%);
+    }
+    .title{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+    }
+    .title h1{font-size:14px; margin:0; letter-spacing:.06em; text-transform:uppercase;}
+    .title-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+    .pill{font-family:var(--mono); font-size:12px; color:var(--muted); padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(17,26,39,.55)}
+    .row{display:flex; gap:var(--gap); align-items:center; flex-wrap:wrap; margin-top:10px;}
+    label{display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted); min-width:140px}
+    input[type="range"]{width:190px}
+    button, select{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+    }
+    button{cursor:pointer}
+    button.primary{background:rgba(231,238,247,.92); color:#0b0f14; border-color:transparent; font-weight:700}
+    button.ghost{background:rgba(17,26,39,.35); color:var(--text)}
+    button:active{transform:translateY(1px)}
+
+    .grid2{display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap:10px; margin-top:10px;}
+    .rule{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      background:rgba(17,26,39,.35);
+    }
+    .rule-head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:8px;
+    }
+    .rule-head .name{
+      display:flex; align-items:center; gap:10px;
+      color:var(--text);
+      font-size:13px;
+    }
+    .rule-head input[type="checkbox"]{transform:translateY(1px)}
+    .rule small{color:var(--muted); display:block; margin-top:6px; line-height:1.35}
+    .legend{
+      display:grid;
+      grid-template-columns: repeat(16, 10px);
+      gap:6px;
+      align-items:center;
+      margin-top:10px;
+    }
+    .sw{width:10px;height:10px;border-radius:3px;border:1px solid rgba(255,255,255,.08)}
+    .help{max-width:360px; pointer-events:none; opacity:.9}
+
+    .hud.collapsed .advanced{display:none}
+    .hud.collapsed .help{display:none}
+    .spark{
+      width:120px;
+      height:24px;
+      display:block;
+    }
+    .share-btn{
+      position:absolute;
+      right:12px;
+      bottom:12px;
+      z-index:5;
+    }
+
+    @media (max-width: 720px){
+      .hud{
+        top:8px; left:8px; right:8px;
+        flex-direction:column;
+        align-items:stretch;
+        gap:8px;
+        max-height:calc(100vh - 16px);
+        overflow:auto;
+        padding-bottom:6px;
+      }
+      .card{max-width:100%}
+      label{min-width:120px}
+      input[type="range"]{width:150px}
+      .grid2{grid-template-columns: 1fr}
+      .legend{grid-template-columns: repeat(8, 10px)}
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="c"></canvas>
+    <video id="mirror" playsinline muted></video>
+    <button class="ghost share-btn" id="shareBtn" type="button">Share Universe</button>
+
+    <div class="hud">
+      <div class="card main">
+        <div class="title">
+          <h1>256-State Grid — Modular Rules</h1>
+          <div class="title-actions">
+            <span class="pill" id="stats">0×0 • gen 0</span>
+            <button class="ghost" id="hudToggle" type="button" aria-expanded="true">Collapse</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="primary" id="toggle">Play</button>
+          <button id="step">Step</button>
+          <button id="randomize">Randomize</button>
+          <button id="clear">Clear</button>
+          <button class="ghost" id="mirrorToggle" type="button">Mirror mode</button>
+          <span class="pill">Paint: click/drag</span>
+        </div>
+
+        <div class="advanced">
+        <div class="row">
+          <label>
+            <span>Cell size</span>
+            <input id="cellSize" type="range" min="4" max="30" step="1" value="10">
+          </label>
+
+          <label>
+            <span>Speed (steps/sec)</span>
+            <input id="speed" type="range" min="1" max="60" step="1" value="20">
+          </label>
+
+          <label>
+            <span>Brush state (0-31)</span>
+            <input id="brush" type="range" min="0" max="31" step="1" value="1">
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            <span>Palette shift</span>
+            <input id="shift" type="range" min="0" max="360" step="1" value="210">
+          </label>
+
+          <label>
+            <span>Palette spread</span>
+            <input id="spread" type="range" min="10" max="240" step="1" value="90">
+          </label>
+
+          <label>
+            <span>Mirror strength</span>
+            <input id="mirrorStrength" type="range" min="0" max="100" step="1" value="28">
+          </label>
+        </div>
+
+        <div class="row">
+          <button id="gravToggle" type="button">Gravity wells: On</button>
+          <label>
+            <span>Gravity radius</span>
+            <input id="gravRadius" type="range" min="6" max="60" step="1" value="22">
+          </label>
+          <label>
+            <span>Gravity strength</span>
+            <input id="gravStrength" type="range" min="0" max="1" step="0.02" value="0.28">
+          </label>
+          <label>
+            <span>Gravity falloff</span>
+            <select id="gravFalloff">
+              <option value="gaussian" selected>gaussian</option>
+              <option value="linear">linear</option>
+              <option value="inverse">inverse</option>
+            </select>
+          </label>
+          <span class="pill" id="gravStats">wells 0</span>
+          <span class="pill">Click add • Drag move • Shift+click remove</span>
+        </div>
+        <div class="row">
+          <span class="pill" style="display:flex; align-items:center; gap:8px;">
+            <span>Entropy</span>
+            <span id="entropyVal">0.0</span>
+            <canvas id="entropySpark" class="spark" width="120" height="24"></canvas>
+          </span>
+          <span class="pill" style="display:flex; align-items:center; gap:8px;">
+            <span>Mean</span>
+            <span id="meanVal">0.0</span>
+            <canvas id="meanSpark" class="spark" width="120" height="24"></canvas>
+          </span>
+          <span class="pill" style="display:flex; align-items:center; gap:8px;">
+            <span>Local variance</span>
+            <canvas id="varSpark" class="spark" width="120" height="24"></canvas>
+          </span>
+        </div>
+
+        <div class="grid2">
+          <!-- Rule: Random Jump -->
+          <div class="rule">
+            <div class="rule-head">
+              <div class="name">
+                <input id="rJumpOn" type="checkbox" checked>
+                <span>Random jump</span>
+              </div>
+              <span class="pill">noise</span>
+            </div>
+            <label>
+              <span>Chance / step</span>
+              <input id="rJumpP" type="range" min="0" max="0.35" step="0.005" value="0.06">
+            </label>
+            <small>With probability p, a cell jumps to a new random state.</small>
+          </div>
+
+          <!-- Rule: Random Walk -->
+          <div class="rule">
+            <div class="rule-head">
+              <div class="name">
+                <input id="rWalkOn" type="checkbox">
+                <span>Random walk</span>
+              </div>
+              <span class="pill">drift</span>
+            </div>
+            <label>
+              <span>Chance / step</span>
+              <input id="rWalkP" type="range" min="0" max="0.8" step="0.01" value="0.25">
+            </label>
+            <label>
+              <span>Step size (±)</span>
+              <input id="rWalkStep" type="range" min="1" max="6" step="1" value="1">
+            </label>
+            <small>With probability p, a cell drifts ±k states (wraps around).</small>
+          </div>
+
+          <!-- Rule: Diffusion -->
+          <div class="rule">
+            <div class="rule-head">
+              <div class="name">
+                <input id="diffOn" type="checkbox">
+                <span>Neighbor diffusion</span>
+              </div>
+              <span class="pill">smooth</span>
+            </div>
+            <label>
+              <span>Strength</span>
+              <input id="diffStrength" type="range" min="0" max="1" step="0.02" value="0.25">
+            </label>
+            <label>
+              <span>Chance / step</span>
+              <input id="diffP" type="range" min="0" max="1" step="0.02" value="1">
+            </label>
+            <small>Pulls each cell toward the circular mean of its 8 neighbors.</small>
+          </div>
+
+          <!-- Rule: Oscillation -->
+          <div class="rule">
+            <div class="rule-head">
+              <div class="name">
+                <input id="oscOn" type="checkbox">
+                <span>Global oscillator</span>
+              </div>
+              <span class="pill">breath</span>
+            </div>
+            <label>
+              <span>Period (steps)</span>
+              <input id="oscPeriod" type="range" min="8" max="256" step="1" value="64">
+            </label>
+            <label>
+              <span>Amplitude (states)</span>
+              <input id="oscAmp" type="range" min="0" max="12" step="1" value="4">
+            </label>
+            <small>Adds a global sinusoidal push to all cells (wraps).</small>
+          </div>
+
+          <!-- Rule: Crystallize -->
+          <div class="rule">
+            <div class="rule-head">
+              <div class="name">
+                <input id="crysOn" type="checkbox">
+                <span>Crystallize</span>
+              </div>
+              <span class="pill">band</span>
+            </div>
+            <label>
+              <span>Bands</span>
+              <input id="crysBands" type="range" min="2" max="32" step="1" value="8">
+            </label>
+            <label>
+              <span>Strength</span>
+              <input id="crysStrength" type="range" min="0" max="1" step="0.02" value="0.4">
+            </label>
+            <small>Quantizes states into a smaller set of bands (softly).</small>
+          </div>
+
+          <!-- Rule: Edge bias (optional) -->
+          <div class="rule">
+            <div class="rule-head">
+              <div class="name">
+                <input id="edgeOn" type="checkbox">
+                <span>Edge enhance</span>
+              </div>
+              <span class="pill">sharp</span>
+            </div>
+            <label>
+              <span>Strength</span>
+              <input id="edgeStrength" type="range" min="0" max="1" step="0.02" value="0.25">
+            </label>
+            <small>Pushes away from neighbor mean (adds crisp boundaries).</small>
+          </div>
+        </div>
+
+        <div class="legend" id="legend" title="States 0..31"></div>
+        </div>
+      </div>
+
+      <div class="card help">
+        <div class="title">
+          <h1>Tips</h1>
+          <span class="pill">Space = Play/Pause</span>
+        </div>
+        <div style="color:var(--muted); font-size:12px; line-height:1.4">
+          For silky motion: <b>Random walk</b> + <b>Diffusion</b> (low jump).<br/>
+          For “breathing crystal”: <b>Oscillator</b> + <b>Crystallize</b> + a touch of <b>Edge enhance</b>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("c");
+      const ctx = canvas.getContext("2d", { alpha: false });
+
+      const STATES = 256;
+      const TWO_PI = Math.PI * 2;
+
+      // Buttons / general controls
+      const toggleBtn = document.getElementById("toggle");
+      const stepBtn = document.getElementById("step");
+      const randomizeBtn = document.getElementById("randomize");
+      const clearBtn = document.getElementById("clear");
+      const hudToggleBtn = document.getElementById("hudToggle");
+      const hudEl = document.querySelector(".hud");
+      const statsEl = document.getElementById("stats");
+      const cellSizeEl = document.getElementById("cellSize");
+      const speedEl = document.getElementById("speed");
+      const brushEl = document.getElementById("brush");
+      const shiftEl = document.getElementById("shift");
+      const spreadEl = document.getElementById("spread");
+      const legendEl = document.getElementById("legend");
+      const mirrorEl = document.getElementById("mirror");
+      const mirrorToggleBtn = document.getElementById("mirrorToggle");
+      const mirrorStrengthEl = document.getElementById("mirrorStrength");
+      const gravToggleBtn = document.getElementById("gravToggle");
+      const gravRadiusEl = document.getElementById("gravRadius");
+      const gravStrengthEl = document.getElementById("gravStrength");
+      const gravFalloffEl = document.getElementById("gravFalloff");
+      const gravStatsEl = document.getElementById("gravStats");
+      const entropyValEl = document.getElementById("entropyVal");
+      const meanValEl = document.getElementById("meanVal");
+      const entropySparkEl = document.getElementById("entropySpark");
+      const meanSparkEl = document.getElementById("meanSpark");
+      const varSparkEl = document.getElementById("varSpark");
+      const shareBtn = document.getElementById("shareBtn");
+
+      // Rule toggles + params
+      const rJumpOn = document.getElementById("rJumpOn");
+      const rJumpP = document.getElementById("rJumpP");
+
+      const rWalkOn = document.getElementById("rWalkOn");
+      const rWalkP = document.getElementById("rWalkP");
+      const rWalkStep = document.getElementById("rWalkStep");
+
+      const diffOn = document.getElementById("diffOn");
+      const diffStrength = document.getElementById("diffStrength");
+      const diffP = document.getElementById("diffP");
+
+      const oscOn = document.getElementById("oscOn");
+      const oscPeriod = document.getElementById("oscPeriod");
+      const oscAmp = document.getElementById("oscAmp");
+
+      const crysOn = document.getElementById("crysOn");
+      const crysBands = document.getElementById("crysBands");
+      const crysStrength = document.getElementById("crysStrength");
+
+      const edgeOn = document.getElementById("edgeOn");
+      const edgeStrength = document.getElementById("edgeStrength");
+
+      // Sim state
+      let running = false;
+      let gen = 0;
+      let hudCollapsed = false;
+      let hudTouched = false;
+      let mirrorStream = null;
+      let gravOn = true;
+      const wells = [];
+      let draggingWell = -1;
+      const entropyHistory = [];
+      const meanHistory = [];
+      const MAX_HISTORY = 120;
+      let lastMetricTime = 0;
+      let pendingWells = null;
+
+      let cellSize = +cellSizeEl.value;
+      let cols = 0, rows = 0;
+      let a = new Uint8Array(0);
+      let b = new Uint8Array(0);
+
+      // Palette cache
+      let palette = new Array(STATES).fill("#000");
+
+      const DPR = () => Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+      function rebuildPalette() {
+        const base = +shiftEl.value;     // 0..360
+        const spread = +spreadEl.value;  // degrees across gradient
+        for (let i = 0; i < STATES; i++) {
+          const t = i / (STATES - 1);           // 0..1
+          const hue = (base + spread * t) % 360;
+          const sat = 92;
+          const light = 18 + 70 * t;            // dark -> bright
+          palette[i] = `hsl(${hue} ${sat}% ${light}%)`;
+        }
+        renderLegend();
+      }
+
+      function renderLegend() {
+        legendEl.innerHTML = "";
+        for (let i = 0; i < STATES; i++) {
+          const d = document.createElement("div");
+          d.className = "sw";
+          d.style.background = palette[i];
+          d.title = `state ${i}`;
+          legendEl.appendChild(d);
+        }
+      }
+
+      function resize() {
+        const dpr = DPR();
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const newCols = Math.max(10, Math.floor(rect.width / cellSize));
+        const newRows = Math.max(10, Math.floor(rect.height / cellSize));
+
+        if (newCols !== cols || newRows !== rows) {
+          cols = newCols; rows = newRows;
+          a = new Uint8Array(cols * rows);
+          b = new Uint8Array(cols * rows);
+          gen = 0;
+          stats();
+        }
+        if (wells.length) {
+          for (let i = 0; i < wells.length; i++) {
+            const w = wells[i];
+            w.x = Math.min(Math.max(w.x, 0), cols - 1);
+            w.y = Math.min(Math.max(w.y, 0), rows - 1);
+          }
+        }
+        if (pendingWells) {
+          wells.length = 0;
+          for (let i = 0; i < pendingWells.length; i++) {
+            const w = pendingWells[i];
+            if (!w) continue;
+            wells.push({
+              x: Math.min(Math.max(w.x | 0, 0), cols - 1),
+              y: Math.min(Math.max(w.y | 0, 0), rows - 1),
+              target: wrapState(w.target | 0),
+              radius: Math.max(1, +w.radius || 1),
+              strength: Math.max(0, +w.strength || 0),
+              mode: w.mode === "repel" ? "repel" : (w.mode === "rotate" ? "rotate" : "attract")
+            });
+          }
+          pendingWells = null;
+          updateWellStats();
+        }
+        draw();
+      }
+
+      function stats() {
+        statsEl.textContent = `${cols}×${rows} • gen ${gen}`;
+      }
+
+      function idx(x, y) { return x + y * cols; }
+
+      // Helpers for circular mean on a ring of STATES (treat state as angle).
+      function stateToAngle(s) { return (s / STATES) * TWO_PI; }
+      function angleToState(theta) {
+        // normalize to [0, 2pi)
+        theta = theta % TWO_PI;
+        if (theta < 0) theta += TWO_PI;
+        return Math.round((theta / TWO_PI) * (STATES - 1));
+      }
+      function wrapState(s) {
+        s %= STATES;
+        return s < 0 ? s + STATES : s;
+      }
+      function lerp(a, b, t) { return a + (b - a) * t; }
+
+      function neighborMeanState(x, y) {
+        // 8 neighbors with wrap-around edges
+        const xm1 = (x - 1 + cols) % cols, xp1 = (x + 1) % cols;
+        const ym1 = (y - 1 + rows) % rows, yp1 = (y + 1) % rows;
+
+        let sx = 0, sy = 0;
+
+        const n0 = a[idx(xm1, ym1)], n1 = a[idx(x, ym1)], n2 = a[idx(xp1, ym1)];
+        const n3 = a[idx(xm1, y  )],                   n4 = a[idx(xp1, y  )];
+        const n5 = a[idx(xm1, yp1)], n6 = a[idx(x, yp1)], n7 = a[idx(xp1, yp1)];
+
+        const ns = [n0,n1,n2,n3,n4,n5,n6,n7];
+        for (let i = 0; i < 8; i++) {
+          const ang = stateToAngle(ns[i]);
+          sx += Math.cos(ang);
+          sy += Math.sin(ang);
+        }
+        const meanAng = Math.atan2(sy, sx);
+        // Convert mean angle to a "state index" on 0..STATES-1 (use full STATES here)
+        let state = Math.round(( (meanAng < 0 ? meanAng + TWO_PI : meanAng) / TWO_PI) * (STATES - 1));
+        return state;
+      }
+
+      function updateWellStats() {
+        if (!gravStatsEl) return;
+        gravStatsEl.textContent = `wells ${wells.length}`;
+      }
+
+      function ringShortestDelta(from, to) {
+        const dv = to - from;
+        const alt = dv > 0 ? dv - STATES : dv + STATES;
+        return Math.abs(alt) < Math.abs(dv) ? alt : dv;
+      }
+
+      function falloffFactor(d, radius, mode) {
+        if (d > radius) return 0;
+        if (mode === "linear") return 1 - d / radius;
+        if (mode === "inverse") return 1 / (1 + d);
+        const sigma = Math.max(0.0001, radius * 0.45);
+        return Math.exp(-(d * d) / (2 * sigma * sigma));
+      }
+
+      function nearestWellIndex(cx, cy, maxDistCells) {
+        let best = -1;
+        let bestDist = Infinity;
+        for (let i = 0; i < wells.length; i++) {
+          const w = wells[i];
+          const dx = cx - w.x;
+          const dy = cy - w.y;
+          const d = Math.hypot(dx, dy);
+          if (d <= maxDistCells && d < bestDist) {
+            bestDist = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function applyCrystallize(v) {
+        const bands = Math.max(2, Math.min(STATES, +crysBands.value | 0));
+        const strength = +crysStrength.value;
+        const step = (STATES - 1) / (bands - 1);
+        const snapped = Math.round(Math.round(v / step) * step);
+        return wrapState(Math.round(lerp(v, snapped, strength)));
+      }
+
+      function applyDiffusion(v, mean) {
+        const k = +diffStrength.value;
+        // Move v toward mean along shortest direction on the ring.
+        const dv = mean - v;
+        const alt = dv > 0 ? dv - STATES : dv + STATES;
+        const shortest = Math.abs(alt) < Math.abs(dv) ? alt : dv;
+        const out = v + shortest * k;
+        return wrapState(Math.round(out));
+      }
+
+      function applyEdge(v, mean) {
+        const k = +edgeStrength.value;
+        // Push away from mean (sharpen edges), along shortest direction.
+        const dv = v - mean;
+        const alt = dv > 0 ? dv - STATES : dv + STATES;
+        const shortest = Math.abs(alt) < Math.abs(dv) ? alt : dv;
+        const out = v + shortest * k;
+        return wrapState(Math.round(out));
+      }
+
+      function applyOsc(v) {
+        const period = Math.max(2, +oscPeriod.value | 0);
+        const amp = +oscAmp.value | 0;
+        if (amp <= 0) return v;
+        const s = Math.sin((gen / period) * TWO_PI);
+        const delta = Math.round(s * amp);
+        return wrapState(v + delta);
+      }
+
+      function pushHistory(arr, value) {
+        arr.push(value);
+        if (arr.length > MAX_HISTORY) arr.shift();
+      }
+
+      function drawSparkline(canvasEl, values, min, max, color) {
+        if (!canvasEl) return;
+        const ctx2 = canvasEl.getContext("2d");
+        const w = canvasEl.width;
+        const h = canvasEl.height;
+        ctx2.clearRect(0, 0, w, h);
+        if (!values.length || max <= min) return;
+        ctx2.strokeStyle = color;
+        ctx2.lineWidth = 1;
+        ctx2.beginPath();
+        for (let i = 0; i < values.length; i++) {
+          const t = i / (MAX_HISTORY - 1 || 1);
+          const v = values[i];
+          const y = h - ((v - min) / (max - min)) * h;
+          const x = t * w;
+          if (i === 0) ctx2.moveTo(x, y);
+          else ctx2.lineTo(x, y);
+        }
+        ctx2.stroke();
+      }
+
+      function drawHistogram(canvasEl, bins, color) {
+        if (!canvasEl) return;
+        const ctx2 = canvasEl.getContext("2d");
+        const w = canvasEl.width;
+        const h = canvasEl.height;
+        ctx2.clearRect(0, 0, w, h);
+        let maxCount = 1;
+        for (let i = 0; i < bins.length; i++) {
+          if (bins[i] > maxCount) maxCount = bins[i];
+        }
+        const barW = w / bins.length;
+        ctx2.fillStyle = color;
+        for (let i = 0; i < bins.length; i++) {
+          const bh = (bins[i] / maxCount) * h;
+          ctx2.fillRect(i * barW, h - bh, Math.max(1, barW - 1), bh);
+        }
+      }
+
+      function computeMetrics() {
+        const total = a.length || 1;
+        let sum = 0;
+        const counts = new Uint32Array(STATES);
+        for (let i = 0; i < a.length; i++) {
+          const v = a[i];
+          counts[v]++;
+          sum += v;
+        }
+        let entropy = 0;
+        for (let i = 0; i < STATES; i++) {
+          const c = counts[i];
+          if (!c) continue;
+          const p = c / total;
+          entropy -= p * Math.log2(p);
+        }
+        const mean = sum / total;
+        if (entropyValEl) entropyValEl.textContent = entropy.toFixed(2);
+        if (meanValEl) meanValEl.textContent = mean.toFixed(1);
+        pushHistory(entropyHistory, entropy);
+        pushHistory(meanHistory, mean);
+        drawSparkline(entropySparkEl, entropyHistory, 0, Math.log2(STATES), "rgba(231,238,247,.9)");
+        drawSparkline(meanSparkEl, meanHistory, 0, STATES - 1, "rgba(231,238,247,.9)");
+
+        const bins = new Array(24).fill(0);
+        const maxVar = (STATES / 2) * (STATES / 2);
+        const step = 2;
+        for (let y = 0; y < rows; y += step) {
+          for (let x = 0; x < cols; x += step) {
+            const v = a[idx(x, y)];
+            const meanState = neighborMeanState(x, y);
+            const delta = ringShortestDelta(v, meanState);
+            const variance = delta * delta;
+            const t = Math.min(1, variance / maxVar);
+            const bin = Math.min(bins.length - 1, Math.floor(t * bins.length));
+            bins[bin]++;
+          }
+        }
+        drawHistogram(varSparkEl, bins, "rgba(231,238,247,.9)");
+      }
+
+      function serializeSettings() {
+        return {
+          cellSize: +cellSizeEl.value,
+          speed: +speedEl.value,
+          brush: +brushEl.value,
+          shift: +shiftEl.value,
+          spread: +spreadEl.value,
+          mirrorStrength: +mirrorStrengthEl.value,
+          rJumpOn: rJumpOn.checked,
+          rJumpP: +rJumpP.value,
+          rWalkOn: rWalkOn.checked,
+          rWalkP: +rWalkP.value,
+          rWalkStep: +rWalkStep.value,
+          diffOn: diffOn.checked,
+          diffStrength: +diffStrength.value,
+          diffP: +diffP.value,
+          oscOn: oscOn.checked,
+          oscPeriod: +oscPeriod.value,
+          oscAmp: +oscAmp.value,
+          crysOn: crysOn.checked,
+          crysBands: +crysBands.value,
+          crysStrength: +crysStrength.value,
+          edgeOn: edgeOn.checked,
+          edgeStrength: +edgeStrength.value,
+          gravOn,
+          gravRadius: gravRadiusEl ? +gravRadiusEl.value : 22,
+          gravStrength: gravStrengthEl ? +gravStrengthEl.value : 0.28,
+          gravFalloff: gravFalloffEl ? gravFalloffEl.value : "gaussian",
+          wells: wells.map((w) => ({
+            x: w.x,
+            y: w.y,
+            target: w.target,
+            radius: w.radius,
+            strength: w.strength,
+            mode: w.mode
+          }))
+        };
+      }
+
+      function applySettings(settings) {
+        if (!settings || typeof settings !== "object") return;
+        if (typeof settings.cellSize === "number") cellSizeEl.value = settings.cellSize;
+        if (typeof settings.speed === "number") speedEl.value = settings.speed;
+        if (typeof settings.brush === "number") brushEl.value = settings.brush;
+        if (typeof settings.shift === "number") shiftEl.value = settings.shift;
+        if (typeof settings.spread === "number") spreadEl.value = settings.spread;
+        if (typeof settings.mirrorStrength === "number") mirrorStrengthEl.value = settings.mirrorStrength;
+        if (typeof settings.rJumpOn === "boolean") rJumpOn.checked = settings.rJumpOn;
+        if (typeof settings.rJumpP === "number") rJumpP.value = settings.rJumpP;
+        if (typeof settings.rWalkOn === "boolean") rWalkOn.checked = settings.rWalkOn;
+        if (typeof settings.rWalkP === "number") rWalkP.value = settings.rWalkP;
+        if (typeof settings.rWalkStep === "number") rWalkStep.value = settings.rWalkStep;
+        if (typeof settings.diffOn === "boolean") diffOn.checked = settings.diffOn;
+        if (typeof settings.diffStrength === "number") diffStrength.value = settings.diffStrength;
+        if (typeof settings.diffP === "number") diffP.value = settings.diffP;
+        if (typeof settings.oscOn === "boolean") oscOn.checked = settings.oscOn;
+        if (typeof settings.oscPeriod === "number") oscPeriod.value = settings.oscPeriod;
+        if (typeof settings.oscAmp === "number") oscAmp.value = settings.oscAmp;
+        if (typeof settings.crysOn === "boolean") crysOn.checked = settings.crysOn;
+        if (typeof settings.crysBands === "number") crysBands.value = settings.crysBands;
+        if (typeof settings.crysStrength === "number") crysStrength.value = settings.crysStrength;
+        if (typeof settings.edgeOn === "boolean") edgeOn.checked = settings.edgeOn;
+        if (typeof settings.edgeStrength === "number") edgeStrength.value = settings.edgeStrength;
+        if (typeof settings.gravOn === "boolean") gravOn = settings.gravOn;
+        if (gravToggleBtn) {
+          gravToggleBtn.textContent = gravOn ? "Gravity wells: On" : "Gravity wells: Off";
+        }
+        if (gravRadiusEl && typeof settings.gravRadius === "number") gravRadiusEl.value = settings.gravRadius;
+        if (gravStrengthEl && typeof settings.gravStrength === "number") gravStrengthEl.value = settings.gravStrength;
+        if (gravFalloffEl && typeof settings.gravFalloff === "string") gravFalloffEl.value = settings.gravFalloff;
+        if (Array.isArray(settings.wells)) pendingWells = settings.wells;
+        cellSize = +cellSizeEl.value;
+      }
+
+      function loadSettingsFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get("s");
+        if (!raw) return;
+        try {
+          const decoded = JSON.parse(decodeURIComponent(raw));
+          applySettings(decoded);
+        } catch (err) {
+          // Ignore malformed settings
+        }
+      }
+
+      function buildShareUrl() {
+        const payload = encodeURIComponent(JSON.stringify(serializeSettings()));
+        const base = `${window.location.origin}${window.location.pathname}`;
+        return `${base}?s=${payload}`;
+      }
+
+      function canvasToBlob(canvasEl) {
+        return new Promise((resolve) => {
+          canvasEl.toBlob((blob) => resolve(blob), "image/png");
+        });
+      }
+
+      async function shareUniverse() {
+        const url = buildShareUrl();
+        const blob = await canvasToBlob(canvas);
+        if (blob && navigator.share) {
+          const file = new File([blob], "universe.png", { type: "image/png" });
+          const data = {
+            title: "State Field Universe",
+            text: "Shared universe + settings",
+            url,
+            files: [file]
+          };
+          if (!navigator.canShare || navigator.canShare(data)) {
+            try {
+              await navigator.share(data);
+              return;
+            } catch (err) {
+              // Fall through to download
+            }
+          }
+        }
+        if (blob) {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "universe.png";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(link.href), 500);
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          try { await navigator.clipboard.writeText(url); } catch (err) {}
+        }
+      }
+
+      function step() {
+        const useJump = rJumpOn.checked;
+        const pJump = +rJumpP.value;
+
+        const useWalk = rWalkOn.checked;
+        const pWalk = +rWalkP.value;
+        const walkK = +rWalkStep.value | 0;
+
+        const useDiff = diffOn.checked;
+        const pDiff = +diffP.value;
+
+        const useOsc = oscOn.checked;
+        const useCrys = crysOn.checked;
+        const useEdge = edgeOn.checked;
+
+        if (gravOn && wells.length) {
+          for (let i = 0; i < wells.length; i++) {
+            const w = wells[i];
+            if (w.mode === "rotate") {
+              w.target = wrapState(w.target + 1);
+            }
+          }
+        }
+
+        // We compute neighbor means only if diffusion or edge is on
+        const needMean = useDiff || useEdge;
+
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            const i = idx(x, y);
+            let v = a[i];
+
+            // 1) Oscillator (global breathing push)
+            if (useOsc) v = applyOsc(v);
+
+            // 2) Random walk (local drift in state space)
+            if (useWalk && Math.random() < pWalk) {
+              const dir = Math.random() < 0.5 ? -1 : 1;
+              const stepMag = 1 + ((Math.random() * walkK) | 0);
+              v = wrapState(v + dir * stepMag);
+            }
+
+            // 3) Random jump (noise injection)
+            if (useJump && Math.random() < pJump) {
+              let next = (Math.random() * STATES) | 0;
+              if (next === v) next = (next + 1) % STATES;
+              v = next;
+            }
+
+            // 4) Gravity wells
+            if (gravOn && wells.length) {
+              const mode = gravFalloffEl ? gravFalloffEl.value : "gaussian";
+              for (let wi = 0; wi < wells.length; wi++) {
+                const w = wells[wi];
+                const dx = x - w.x;
+                const dy = y - w.y;
+                const d = Math.hypot(dx, dy);
+                const f = falloffFactor(d, w.radius, mode);
+                if (f === 0) continue;
+                const delta = ringShortestDelta(v, w.target);
+                const dir = w.mode === "repel" ? -1 : 1;
+                const pull = delta * w.strength * f * dir;
+                v = wrapState(Math.round(v + pull));
+              }
+            }
+
+            // 5) Neighbor diffusion / edge enhance
+            if (needMean) {
+              const mean = neighborMeanState(x, y);
+              if (useDiff && Math.random() < pDiff) v = applyDiffusion(v, mean);
+              if (useEdge) v = applyEdge(v, mean);
+            }
+
+            // 6) Crystallize (quantize to bands)
+            if (useCrys) v = applyCrystallize(v);
+
+            b[i] = v;
+          }
+        }
+
+        [a, b] = [b, a];
+        gen++;
+        stats();
+      }
+
+      function draw() {
+        const wpx = canvas.clientWidth;
+        const hpx = canvas.clientHeight;
+
+        ctx.fillStyle = "#0b0f14";
+        ctx.fillRect(0, 0, wpx, hpx);
+
+        // Draw all cells (state 0 is still a valid color)
+        for (let y = 0; y < rows; y++) {
+          const py = y * cellSize;
+          if (py > hpx) break;
+          for (let x = 0; x < cols; x++) {
+            const px = x * cellSize;
+            if (px > wpx) break;
+            const v = a[idx(x, y)];
+            ctx.fillStyle = palette[v];
+            ctx.fillRect(px, py, cellSize, cellSize);
+          }
+        }
+
+        // subtle grid overlay
+        if (cellSize >= 10) {
+          ctx.strokeStyle = "rgba(231,238,247,.06)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let x = 0; x <= cols; x++) {
+            const px = x * cellSize;
+            ctx.moveTo(px, 0);
+            ctx.lineTo(px, hpx);
+          }
+          for (let y = 0; y <= rows; y++) {
+            const py = y * cellSize;
+            ctx.moveTo(0, py);
+            ctx.lineTo(wpx, py);
+          }
+          ctx.stroke();
+        }
+
+        if (gravOn && wells.length) {
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          for (let i = 0; i < wells.length; i++) {
+            const w = wells[i];
+            const cx = w.x * cellSize + cellSize / 2;
+            const cy = w.y * cellSize + cellSize / 2;
+
+            ctx.strokeStyle = "rgba(231,238,247,.22)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, w.radius * cellSize, 0, TWO_PI);
+            ctx.stroke();
+
+            ctx.fillStyle = palette[w.target];
+            const dotR = Math.max(3, cellSize * 0.25);
+            ctx.beginPath();
+            ctx.arc(cx, cy, dotR, 0, TWO_PI);
+            ctx.fill();
+
+            ctx.strokeStyle = "rgba(231,238,247,.35)";
+            ctx.beginPath();
+            ctx.moveTo(cx - 6, cy);
+            ctx.lineTo(cx + 6, cy);
+            ctx.moveTo(cx, cy - 6);
+            ctx.lineTo(cx, cy + 6);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      // Loop
+      let last = performance.now();
+      let acc = 0;
+      function loop(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+
+        if (running) {
+          const tps = +speedEl.value;
+          acc += dt;
+          const stepDt = 1 / tps;
+          let n = 0;
+          while (acc >= stepDt && n < 6) {
+            step();
+            acc -= stepDt;
+            n++;
+          }
+          draw();
+        }
+
+        requestAnimationFrame(loop);
+        if (now - lastMetricTime > 200) {
+          computeMetrics();
+          lastMetricTime = now;
+        }
+      }
+
+      // UI bindings
+      function setHudCollapsed(next) {
+        hudCollapsed = next;
+        hudEl.classList.toggle("collapsed", hudCollapsed);
+        hudToggleBtn.textContent = hudCollapsed ? "Expand" : "Collapse";
+        hudToggleBtn.setAttribute("aria-expanded", String(!hudCollapsed));
+      }
+
+      function syncHudForViewport() {
+        if (hudTouched) return;
+        const compact = window.matchMedia("(max-width: 720px)").matches;
+        setHudCollapsed(compact);
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        running = !running;
+        toggleBtn.textContent = running ? "Pause" : "Play";
+      });
+
+      hudToggleBtn.addEventListener("click", () => {
+        hudTouched = true;
+        setHudCollapsed(!hudCollapsed);
+      });
+
+      stepBtn.addEventListener("click", () => {
+        if (running) return;
+        step();
+        draw();
+      });
+
+      clearBtn.addEventListener("click", () => {
+        a.fill(0);
+        gen = 0;
+        wells.length = 0;
+        updateWellStats();
+        stats();
+        draw();
+      });
+
+      randomizeBtn.addEventListener("click", () => {
+        for (let i = 0; i < a.length; i++) a[i] = (Math.random() * STATES) | 0;
+        gen = 0;
+        stats();
+        draw();
+      });
+
+      function setMirrorStrength(value) {
+        const strength = Math.max(0, Math.min(100, value));
+        const opacity = strength / 100;
+        const blend = opacity > 0.55 ? "screen" : (opacity > 0.25 ? "lighten" : "normal");
+        mirrorEl.style.setProperty("--mirror-opacity", opacity.toFixed(2));
+        mirrorEl.style.setProperty("--mirror-blend", blend);
+      }
+
+      mirrorStrengthEl.addEventListener("input", () => {
+        setMirrorStrength(+mirrorStrengthEl.value);
+      });
+
+      async function enableMirror() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          mirrorToggleBtn.textContent = "Mirror unsupported";
+          mirrorToggleBtn.disabled = true;
+          return;
+        }
+        try {
+          mirrorStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+            audio: false
+          });
+          mirrorEl.srcObject = mirrorStream;
+          await mirrorEl.play();
+          mirrorEl.classList.add("on");
+          mirrorToggleBtn.textContent = "Mirror on";
+        } catch (err) {
+          mirrorToggleBtn.textContent = "Mirror blocked";
+        }
+      }
+
+      function disableMirror() {
+        mirrorEl.classList.remove("on");
+        mirrorEl.pause();
+        if (mirrorStream) {
+          mirrorStream.getTracks().forEach((t) => t.stop());
+          mirrorStream = null;
+        }
+        mirrorEl.srcObject = null;
+        mirrorToggleBtn.textContent = "Mirror mode";
+      }
+
+      mirrorToggleBtn.addEventListener("click", () => {
+        if (mirrorStream) {
+          disableMirror();
+        } else {
+          enableMirror();
+        }
+      });
+
+      if (gravToggleBtn) {
+        gravToggleBtn.addEventListener("click", () => {
+          gravOn = !gravOn;
+          gravToggleBtn.textContent = gravOn ? "Gravity wells: On" : "Gravity wells: Off";
+          draw();
+        });
+      }
+
+      if (shareBtn) {
+        shareBtn.addEventListener("click", () => {
+          shareUniverse();
+        });
+      }
+
+      cellSizeEl.addEventListener("input", () => {
+        cellSize = +cellSizeEl.value;
+        resize();
+      });
+
+      shiftEl.addEventListener("input", () => { rebuildPalette(); draw(); });
+      spreadEl.addEventListener("input", () => { rebuildPalette(); draw(); });
+
+      // Painting
+      let painting = false;
+      let lastPaint = -1;
+
+      function clientToCell(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((clientX - rect.left) / cellSize);
+        const y = Math.floor((clientY - rect.top) / cellSize);
+        return { x, y };
+      }
+
+      function paintAt(clientX, clientY) {
+        const { x, y } = clientToCell(clientX, clientY);
+        if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+        const i = idx(x, y);
+        if (i === lastPaint) return;
+        lastPaint = i;
+        a[i] = +brushEl.value;
+      }
+
+      canvas.addEventListener("pointerdown", (e) => {
+        canvas.setPointerCapture(e.pointerId);
+        const { x, y } = clientToCell(e.clientX, e.clientY);
+        if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+
+        if (e.shiftKey) {
+          const removeIndex = nearestWellIndex(x, y, 8);
+          if (removeIndex !== -1) {
+            wells.splice(removeIndex, 1);
+            updateWellStats();
+            draw();
+            return;
+          }
+        }
+
+        const hitIndex = nearestWellIndex(x, y, 6);
+        if (hitIndex !== -1) {
+          if (e.altKey) {
+            const w = wells[hitIndex];
+            if (w) {
+              w.mode = w.mode === "attract" ? "repel" : (w.mode === "repel" ? "rotate" : "attract");
+              draw();
+            }
+            return;
+          }
+          draggingWell = hitIndex;
+          return;
+        }
+
+        if (gravOn) {
+          const target = +brushEl.value;
+          const radius = gravRadiusEl ? +gravRadiusEl.value : 22;
+          const strength = gravStrengthEl ? +gravStrengthEl.value : 0.28;
+          if (wells.length >= 12) wells.shift();
+          wells.push({ x, y, target, radius, strength, mode: "attract" });
+          updateWellStats();
+          draw();
+          return;
+        }
+
+        painting = true;
+        lastPaint = -1;
+        paintAt(e.clientX, e.clientY);
+        draw();
+      });
+
+      canvas.addEventListener("pointermove", (e) => {
+        if (draggingWell !== -1) {
+          const { x, y } = clientToCell(e.clientX, e.clientY);
+          const w = wells[draggingWell];
+          if (w) {
+            w.x = Math.min(Math.max(x, 0), cols - 1);
+            w.y = Math.min(Math.max(y, 0), rows - 1);
+            draw();
+          }
+          return;
+        }
+        if (!painting) return;
+        paintAt(e.clientX, e.clientY);
+        draw();
+      });
+
+      function endPaint() {
+        painting = false;
+        lastPaint = -1;
+        draggingWell = -1;
+      }
+      canvas.addEventListener("pointerup", endPaint);
+      canvas.addEventListener("pointercancel", endPaint);
+      canvas.addEventListener("pointerout", endPaint);
+
+      // Keyboard
+      window.addEventListener("keydown", (e) => {
+        if (e.key === " ") { e.preventDefault(); toggleBtn.click(); }
+        if (e.key.toLowerCase() === "s") stepBtn.click();
+        if (e.key.toLowerCase() === "r") randomizeBtn.click();
+        if (e.key.toLowerCase() === "c") clearBtn.click();
+      });
+
+      // Boot
+      loadSettingsFromUrl();
+      rebuildPalette();
+      setMirrorStrength(+mirrorStrengthEl.value);
+      updateWellStats();
+      computeMetrics();
+      new ResizeObserver(resize).observe(canvas);
+      resize();
+      syncHudForViewport();
+      window.addEventListener("resize", syncHudForViewport);
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
