@@ -178,6 +178,7 @@
           <button id="randomize">Randomize</button>
           <button id="clear">Clear</button>
           <button class="ghost" id="mirrorToggle" type="button">Mirror mode</button>
+          <button class="ghost" id="arToggle" type="button">AR filter</button>
           <span class="pill">Paint: click/drag</span>
         </div>
 
@@ -419,6 +420,7 @@
       const legendEl = document.getElementById("legend");
       const mirrorEl = document.getElementById("mirror");
       const mirrorToggleBtn = document.getElementById("mirrorToggle");
+      const arToggleBtn = document.getElementById("arToggle");
       const mirrorStrengthEl = document.getElementById("mirrorStrength");
       const gravToggleBtn = document.getElementById("gravToggle");
       const addWellBtn = document.getElementById("addWellBtn");
@@ -465,6 +467,8 @@
       let hudTouched = false;
       let controlsHidden = false;
       let mirrorStream = null;
+      let mirrorEnabled = false;
+      let arEnabled = false;
       let mirrorOpacity = 0.28;
       let mirrorBlend = "screen";
       let gravOn = true;
@@ -492,6 +496,10 @@
       const mirrorCtx = mirrorCanvas.getContext("2d", { willReadFrequently: true });
       const warpCanvas = document.createElement("canvas");
       const warpCtx = warpCanvas.getContext("2d", { willReadFrequently: true });
+      const arCanvas = document.createElement("canvas");
+      const arCtx = arCanvas.getContext("2d", { willReadFrequently: true });
+      const arWarpCanvas = document.createElement("canvas");
+      const arWarpCtx = arWarpCanvas.getContext("2d", { willReadFrequently: true });
 
       // Palette cache
       let palette = new Array(STATES).fill("#000");
@@ -1155,6 +1163,143 @@
         ctx.restore();
       }
 
+      function ensureArBuffers(wpx, hpx) {
+        const scale = (wpx < 720 || hpx < 720) ? 4 : 3;
+        const targetW = Math.max(120, Math.floor(wpx / scale));
+        const targetH = Math.max(80, Math.floor(hpx / scale));
+        if (arCanvas.width !== targetW || arCanvas.height !== targetH) {
+          arCanvas.width = targetW;
+          arCanvas.height = targetH;
+          arWarpCanvas.width = targetW;
+          arWarpCanvas.height = targetH;
+        }
+      }
+
+      function applyArFilter(data, w, h) {
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            const alpha = Math.min(255, Math.max(0, (lum - 30) * 2.2));
+            data[i] = 32;
+            data[i + 1] = 220;
+            data[i + 2] = 255;
+            data[i + 3] = alpha;
+          }
+        }
+      }
+
+      function drawArFilter(wpx, hpx) {
+        if (!mirrorStream || !arEnabled || mirrorEl.readyState < 2) return;
+        const arOpacity = 0.35;
+        const arBlend = "screen";
+        ensureArBuffers(wpx, hpx);
+        const w = arCanvas.width;
+        const h = arCanvas.height;
+        arCtx.save();
+        arCtx.clearRect(0, 0, w, h);
+        drawMirrorCover(arCtx, mirrorEl, w, h, true);
+        arCtx.restore();
+        const src = arCtx.getImageData(0, 0, w, h);
+        applyArFilter(src.data, w, h);
+
+        if (!gravOn || !wells.length) {
+          arCtx.putImageData(src, 0, 0);
+          ctx.save();
+          ctx.globalAlpha = arOpacity;
+          ctx.globalCompositeOperation = arBlend;
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(arCanvas, 0, 0, wpx, hpx);
+          ctx.restore();
+          return;
+        }
+
+        const dst = arWarpCtx.createImageData(w, h);
+        const srcData = src.data;
+        const dstData = dst.data;
+        const scaleX = w / wpx;
+        const scaleY = h / hpx;
+        const falloffMode = gravFalloffEl ? gravFalloffEl.value : "gaussian";
+        const wellsPx = wells.map((well) => {
+          const wx = (well.x + 0.5) * cellSize * scaleX;
+          const wy = (well.y + 0.5) * cellSize * scaleY;
+          const radius = Math.max(1, well.radius * cellSize * ((scaleX + scaleY) * 0.5));
+          return {
+            x: wx,
+            y: wy,
+            radius,
+            strength: well.strength,
+            mode: well.mode
+          };
+        });
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            let offsetX = 0;
+            let offsetY = 0;
+            for (let i = 0; i < wellsPx.length; i++) {
+              const well = wellsPx[i];
+              const dx = x - well.x;
+              const dy = y - well.y;
+              const dist = Math.hypot(dx, dy);
+              if (dist > well.radius) continue;
+              const f = falloffFactor(dist, well.radius, falloffMode);
+              if (f === 0) continue;
+              const inv = dist > 0.0001 ? 1 / dist : 0;
+              const mag = well.radius * 0.85 * well.strength * f;
+              if (well.mode === "repel") {
+                offsetX += dx * inv * mag;
+                offsetY += dy * inv * mag;
+              } else if (well.mode === "rotate") {
+                offsetX += -dy * inv * mag;
+                offsetY += dx * inv * mag;
+              } else {
+                offsetX += -dx * inv * mag;
+                offsetY += -dy * inv * mag;
+              }
+            }
+
+            let sx = x + offsetX;
+            let sy = y + offsetY;
+            if (sx < 0) sx = 0;
+            if (sy < 0) sy = 0;
+            if (sx > w - 1) sx = w - 1;
+            if (sy > h - 1) sy = h - 1;
+
+            const x0 = Math.floor(sx);
+            const y0 = Math.floor(sy);
+            const x1 = Math.min(w - 1, x0 + 1);
+            const y1 = Math.min(h - 1, y0 + 1);
+            const tx = sx - x0;
+            const ty = sy - y0;
+            const w00 = (1 - tx) * (1 - ty);
+            const w10 = tx * (1 - ty);
+            const w01 = (1 - tx) * ty;
+            const w11 = tx * ty;
+            const i00 = (y0 * w + x0) * 4;
+            const i10 = (y0 * w + x1) * 4;
+            const i01 = (y1 * w + x0) * 4;
+            const i11 = (y1 * w + x1) * 4;
+            const di = (y * w + x) * 4;
+            dstData[di] = srcData[i00] * w00 + srcData[i10] * w10 + srcData[i01] * w01 + srcData[i11] * w11;
+            dstData[di + 1] = srcData[i00 + 1] * w00 + srcData[i10 + 1] * w10 + srcData[i01 + 1] * w01 + srcData[i11 + 1] * w11;
+            dstData[di + 2] = srcData[i00 + 2] * w00 + srcData[i10 + 2] * w10 + srcData[i01 + 2] * w01 + srcData[i11 + 2] * w11;
+            dstData[di + 3] = srcData[i00 + 3] * w00 + srcData[i10 + 3] * w10 + srcData[i01 + 3] * w01 + srcData[i11 + 3] * w11;
+          }
+        }
+
+        arWarpCtx.putImageData(dst, 0, 0);
+        ctx.save();
+        ctx.globalAlpha = arOpacity;
+        ctx.globalCompositeOperation = arBlend;
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(arWarpCanvas, 0, 0, wpx, hpx);
+        ctx.restore();
+      }
+
       function drawMirrorCover(targetCtx, videoEl, dstW, dstH, flipX) {
         const vw = videoEl.videoWidth || dstW;
         const vh = videoEl.videoHeight || dstH;
@@ -1212,8 +1357,11 @@
           ctx.stroke();
         }
 
-        if (mirrorStream) {
+        if (mirrorStream && mirrorEnabled) {
           drawWarpedMirror(wpx, hpx);
+        }
+        if (mirrorStream && arEnabled) {
+          drawArFilter(wpx, hpx);
         }
 
         if (gravOn && wells.length) {
@@ -1454,6 +1602,45 @@
         draw();
       });
 
+      function streamIsFront(stream) {
+        const track = stream && stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
+        const settings = track && track.getSettings ? track.getSettings() : null;
+        return settings && settings.facingMode === "user";
+      }
+
+      function setCameraStream(stream) {
+        if (mirrorStream) {
+          mirrorStream.getTracks().forEach((t) => t.stop());
+        }
+        mirrorStream = stream;
+        mirrorEl.srcObject = mirrorStream;
+        mirrorEl.play().catch(() => {});
+        mirrorEl.classList.add("on");
+      }
+
+      function stopCameraStream() {
+        mirrorEl.classList.remove("on");
+        mirrorEl.pause();
+        if (mirrorStream) {
+          mirrorStream.getTracks().forEach((t) => t.stop());
+          mirrorStream = null;
+        }
+        mirrorEl.srcObject = null;
+      }
+
+      function stopCameraIfIdle() {
+        if (mirrorEnabled || arEnabled) return;
+        stopCameraStream();
+      }
+
+      async function ensureCameraStream(requireFront) {
+        if (mirrorStream && (!requireFront || streamIsFront(mirrorStream))) return mirrorStream;
+        const constraints = requireFront ? { facingMode: { exact: "user" } } : { facingMode: "user" };
+        const stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
+        setCameraStream(stream);
+        return stream;
+      }
+
       function setMirrorStrength(value) {
         const strength = Math.max(0, Math.min(100, value));
         mirrorOpacity = strength / 100;
@@ -1466,6 +1653,10 @@
         setMirrorStrength(+mirrorStrengthEl.value);
       });
 
+      function isFrontCameraMissing(err) {
+        return err && (err.name === "OverconstrainedError" || err.name === "NotFoundError");
+      }
+
       async function enableMirror() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           mirrorToggleBtn.textContent = "Mirror unsupported";
@@ -1473,13 +1664,8 @@
           return;
         }
         try {
-          mirrorStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
-            audio: false
-          });
-          mirrorEl.srcObject = mirrorStream;
-          await mirrorEl.play();
-          mirrorEl.classList.add("on");
+          await ensureCameraStream(false);
+          mirrorEnabled = true;
           mirrorToggleBtn.textContent = "Mirror on";
         } catch (err) {
           mirrorToggleBtn.textContent = "Mirror blocked";
@@ -1487,23 +1673,54 @@
       }
 
       function disableMirror() {
-        mirrorEl.classList.remove("on");
-        mirrorEl.pause();
-        if (mirrorStream) {
-          mirrorStream.getTracks().forEach((t) => t.stop());
-          mirrorStream = null;
-        }
-        mirrorEl.srcObject = null;
+        mirrorEnabled = false;
         mirrorToggleBtn.textContent = "Mirror mode";
+        stopCameraIfIdle();
+      }
+
+      async function enableArFilter() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          arToggleBtn.textContent = "AR unsupported";
+          arToggleBtn.disabled = true;
+          return;
+        }
+        try {
+          await ensureCameraStream(true);
+          arEnabled = true;
+          arToggleBtn.textContent = "AR on";
+        } catch (err) {
+          if (isFrontCameraMissing(err)) {
+            arToggleBtn.textContent = "AR unavailable";
+            arToggleBtn.disabled = true;
+          } else {
+            arToggleBtn.textContent = "AR blocked";
+          }
+        }
+      }
+
+      function disableArFilter() {
+        arEnabled = false;
+        arToggleBtn.textContent = "AR filter";
+        stopCameraIfIdle();
       }
 
       mirrorToggleBtn.addEventListener("click", () => {
-        if (mirrorStream) {
+        if (mirrorEnabled) {
           disableMirror();
         } else {
           enableMirror();
         }
       });
+
+      if (arToggleBtn) {
+        arToggleBtn.addEventListener("click", () => {
+          if (arEnabled) {
+            disableArFilter();
+          } else {
+            enableArFilter();
+          }
+        });
+      }
 
       if (gravToggleBtn) {
         gravToggleBtn.addEventListener("click", () => {
