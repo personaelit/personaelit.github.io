@@ -205,6 +205,8 @@
 
         <div class="row">
           <button id="gravToggle" type="button">Gravity wells: On</button>
+          <button id="addWellBtn" type="button">Add Gravity Well</button>
+          <button id="cycleWellBtn" type="button">Cycle Well Type</button>
           <label>
             <span>Gravity radius</span>
             <input id="gravRadius" type="range" min="6" max="60" step="1" value="22">
@@ -222,7 +224,7 @@
             </select>
           </label>
           <span class="pill" id="gravStats">wells 0</span>
-          <span class="pill">Click add • Drag move • Shift+click remove</span>
+          
         </div>
         <div class="row">
           <span class="pill" style="display:flex; align-items:center; gap:8px;">
@@ -399,6 +401,8 @@
       const mirrorToggleBtn = document.getElementById("mirrorToggle");
       const mirrorStrengthEl = document.getElementById("mirrorStrength");
       const gravToggleBtn = document.getElementById("gravToggle");
+      const addWellBtn = document.getElementById("addWellBtn");
+      const cycleWellBtn = document.getElementById("cycleWellBtn");
       const gravRadiusEl = document.getElementById("gravRadius");
       const gravStrengthEl = document.getElementById("gravStrength");
       const gravFalloffEl = document.getElementById("gravFalloff");
@@ -443,6 +447,7 @@
       let gravOn = true;
       const wells = [];
       let draggingWell = -1;
+      let selectedWell = -1;
       const entropyHistory = [];
       const meanHistory = [];
       const MAX_HISTORY = 120;
@@ -578,6 +583,10 @@
 
       function updateWellStats() {
         if (!gravStatsEl) return;
+        if (selectedWell !== -1 && wells[selectedWell]) {
+          gravStatsEl.textContent = `wells ${wells.length} • ${wells[selectedWell].mode}`;
+          return;
+        }
         gravStatsEl.textContent = `wells ${wells.length}`;
       }
 
@@ -1268,6 +1277,34 @@
           draw();
         });
       }
+      if (addWellBtn) {
+        addWellBtn.addEventListener("click", () => {
+          if (cols <= 0 || rows <= 0) return;
+          const x = (Math.random() * cols) | 0;
+          const y = (Math.random() * rows) | 0;
+          const target = +brushEl.value;
+          const radius = gravRadiusEl ? +gravRadiusEl.value : 22;
+          const strength = gravStrengthEl ? +gravStrengthEl.value : 0.28;
+          if (wells.length >= 12) wells.shift();
+          wells.push({ x, y, target, radius, strength, mode: "attract" });
+          selectedWell = wells.length - 1;
+          updateWellStats();
+          draw();
+        });
+      }
+      if (cycleWellBtn) {
+        cycleWellBtn.addEventListener("click", () => {
+          if (!wells.length) return;
+          if (selectedWell === -1 || !wells[selectedWell]) {
+            selectedWell = wells.length - 1;
+          }
+          const w = wells[selectedWell];
+          if (!w) return;
+          w.mode = w.mode === "attract" ? "repel" : (w.mode === "repel" ? "rotate" : "attract");
+          updateWellStats();
+          draw();
+        });
+      }
 
 
       cellSizeEl.addEventListener("input", () => {
@@ -1307,6 +1344,7 @@
           const removeIndex = nearestWellIndex(x, y, 8);
           if (removeIndex !== -1) {
             wells.splice(removeIndex, 1);
+            if (selectedWell === removeIndex) selectedWell = -1;
             updateWellStats();
             draw();
             return;
@@ -1315,26 +1353,8 @@
 
         const hitIndex = nearestWellIndex(x, y, 6);
         if (hitIndex !== -1) {
-          if (e.altKey) {
-            const w = wells[hitIndex];
-            if (w) {
-              w.mode = w.mode === "attract" ? "repel" : (w.mode === "repel" ? "rotate" : "attract");
-              draw();
-            }
-            return;
-          }
+          selectedWell = hitIndex;
           draggingWell = hitIndex;
-          return;
-        }
-
-        if (gravOn) {
-          const target = +brushEl.value;
-          const radius = gravRadiusEl ? +gravRadiusEl.value : 22;
-          const strength = gravStrengthEl ? +gravStrengthEl.value : 0.28;
-          if (wells.length >= 12) wells.shift();
-          wells.push({ x, y, target, radius, strength, mode: "attract" });
-          updateWellStats();
-          draw();
           return;
         }
 
