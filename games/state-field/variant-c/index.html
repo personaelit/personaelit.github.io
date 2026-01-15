@@ -1034,8 +1034,7 @@
           ctx.globalAlpha = mirrorOpacity;
           ctx.globalCompositeOperation = mirrorBlend;
           ctx.imageSmoothingEnabled = true;
-          ctx.scale(-1, 1);
-          ctx.drawImage(mirrorEl, -wpx, 0, wpx, hpx);
+          drawMirrorCover(ctx, mirrorEl, wpx, hpx, true);
           ctx.restore();
           return;
         }
@@ -1043,8 +1042,8 @@
         const w = mirrorCanvas.width;
         const h = mirrorCanvas.height;
         mirrorCtx.save();
-        mirrorCtx.scale(-1, 1);
-        mirrorCtx.drawImage(mirrorEl, -w, 0, w, h);
+        mirrorCtx.clearRect(0, 0, w, h);
+        drawMirrorCover(mirrorCtx, mirrorEl, w, h, true);
         mirrorCtx.restore();
         const src = mirrorCtx.getImageData(0, 0, w, h);
         const dst = warpCtx.createImageData(w, h);
@@ -1128,6 +1127,25 @@
         ctx.imageSmoothingEnabled = true;
         ctx.drawImage(warpCanvas, 0, 0, wpx, hpx);
         ctx.restore();
+      }
+
+      function drawMirrorCover(targetCtx, videoEl, dstW, dstH, flipX) {
+        const vw = videoEl.videoWidth || dstW;
+        const vh = videoEl.videoHeight || dstH;
+        if (!vw || !vh) return;
+        const scale = Math.max(dstW / vw, dstH / vh);
+        const sw = dstW / scale;
+        const sh = dstH / scale;
+        const sx = (vw - sw) * 0.5;
+        const sy = (vh - sh) * 0.5;
+        if (flipX) {
+          targetCtx.save();
+          targetCtx.scale(-1, 1);
+          targetCtx.drawImage(videoEl, sx, sy, sw, sh, -dstW, 0, dstW, dstH);
+          targetCtx.restore();
+          return;
+        }
+        targetCtx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, dstW, dstH);
       }
 
       function draw() {
