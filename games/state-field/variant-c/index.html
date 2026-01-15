@@ -1387,6 +1387,25 @@
       if (presetBBtn) presetBBtn.addEventListener("click", () => applyPreset("noisy"));
       if (presetCBtn) presetCBtn.addEventListener("click", () => applyPreset("crystal"));
 
+      if (gravRadiusEl) {
+        gravRadiusEl.addEventListener("input", () => {
+          const radius = Math.max(1, +gravRadiusEl.value || 1);
+          for (let i = 0; i < wells.length; i++) {
+            wells[i].radius = radius;
+          }
+          draw();
+        });
+      }
+      if (gravStrengthEl) {
+        gravStrengthEl.addEventListener("input", () => {
+          const strength = Math.max(0, +gravStrengthEl.value || 0);
+          for (let i = 0; i < wells.length; i++) {
+            wells[i].strength = strength;
+          }
+          draw();
+        });
+      }
+
       cellSizeEl.addEventListener("input", () => {
         cellSize = +cellSizeEl.value;
         resize();
