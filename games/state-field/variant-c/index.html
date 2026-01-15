@@ -735,8 +735,8 @@
         drawHistogram(varSparkEl, bins, "rgba(231,238,247,.9)");
       }
 
-      function serializeSettings() {
-        return {
+      function serializeSettings(includeGrid = true) {
+        const settings = {
           cellSize: +cellSizeEl.value,
           speed: +speedEl.value,
           brush: +brushEl.value,
@@ -770,13 +770,16 @@
             radius: w.radius,
             strength: w.strength,
             mode: w.mode
-          })),
-          grid: {
+          }))
+        };
+        if (includeGrid) {
+          settings.grid = {
             cols,
             rows,
             data: encodeGridData(a)
-          }
-        };
+          };
+        }
+        return settings;
       }
 
       function applySettings(settings) {
@@ -818,20 +821,23 @@
       function loadSettingsFromUrl() {
         const params = new URLSearchParams(window.location.search);
         const raw = params.get("s");
-        if (!raw) return;
+        if (!raw) return false;
         try {
           applySettings(decodeSettings(raw));
+          return true;
         } catch (err) {
           try {
             applySettings(JSON.parse(raw));
+            return true;
           } catch (err2) {
             // Ignore malformed settings
           }
         }
+        return false;
       }
 
-      function buildShareUrl() {
-        const payload = encodeSettings(serializeSettings());
+      function buildShareUrl(includeGrid = false) {
+        const payload = encodeSettings(serializeSettings(includeGrid));
         const url = new URL(window.location.href);
         url.searchParams.set("s", payload);
         return url.toString();
@@ -911,12 +917,16 @@
       }
 
       async function shareUniverse() {
-
-        const url = buildShareUrl();
+        let url = buildShareUrl(true);
+        let text = "Shared Universe (may contain flashing lights)";
+        if (url.length > 1800) {
+          url = buildShareUrl(false);
+          text = "Shared Universe (short link)";
+        }
         if (navigator.share) {
           const data = {
             title: "State Field Universe",
-            text: "Shared Universe (may contain flashing lights)",
+            text,
             url
           };
           try {
@@ -1399,13 +1409,17 @@
       });
 
       // Boot
-      loadSettingsFromUrl();
+      const hasSharedSettings = loadSettingsFromUrl();
       rebuildPalette();
       setMirrorStrength(+mirrorStrengthEl.value);
       updateWellStats();
       computeMetrics();
       new ResizeObserver(resize).observe(canvas);
       resize();
+      if (hasSharedSettings) {
+        running = true;
+        toggleBtn.textContent = "Pause";
+      }
       syncHudForViewport();
       syncModeForViewport();
       window.addEventListener("resize", syncHudForViewport);
