@@ -208,6 +208,10 @@
             <span>Palette spread</span>
             <input id="spread" type="range" min="10" max="240" step="1" value="90">
           </label>
+          <label>
+            <span>Motion controls (mobile only)</span>
+            <input id="motionToggle" type="checkbox">
+          </label>
 
           <label>
             <span>Mirror strength</span>
@@ -407,6 +411,7 @@
       const brushEl = document.getElementById("brush");
       const shiftEl = document.getElementById("shift");
       const spreadEl = document.getElementById("spread");
+      const motionToggleEl = document.getElementById("motionToggle");
       const presetABtn = document.getElementById("presetA");
       const presetBBtn = document.getElementById("presetB");
       const presetCBtn = document.getElementById("presetC");
@@ -468,6 +473,7 @@
       let gyroBaseSpread = +spreadEl.value;
       let gyroPending = null;
       let gyroRaf = 0;
+      let gyroHandler = null;
       let draggingWell = -1;
       let selectedWell = -1;
       const entropyHistory = [];
@@ -1289,7 +1295,7 @@
 
       function initGyroPalette() {
         if (!("DeviceOrientationEvent" in window)) return;
-        const onGyro = (e) => {
+        gyroHandler = (e) => {
           if (!gyroEnabled) return;
           gyroPending = { beta: e.beta, gamma: e.gamma };
           if (gyroRaf) return;
@@ -1299,27 +1305,39 @@
             applyGyroPalette(gyroPending.beta, gyroPending.gamma);
           });
         };
-        const enableGyro = () => {
-          if (gyroEnabled) return;
+      }
+
+      function setGyroEnabled(next) {
+        if (!("DeviceOrientationEvent" in window)) {
+          if (motionToggleEl) motionToggleEl.checked = false;
+          return;
+        }
+        if (next === gyroEnabled) return;
+        if (!next) {
+          gyroEnabled = false;
+          if (gyroHandler) window.removeEventListener("deviceorientation", gyroHandler);
+          return;
+        }
+        const enable = () => {
           gyroEnabled = true;
           gyroBaseShift = +shiftEl.value;
           gyroBaseSpread = +spreadEl.value;
-          window.addEventListener("deviceorientation", onGyro);
+          if (gyroHandler) window.addEventListener("deviceorientation", gyroHandler);
         };
         if (typeof DeviceOrientationEvent.requestPermission === "function") {
-          const request = async () => {
-            try {
-              const res = await DeviceOrientationEvent.requestPermission();
-              if (res === "granted") enableGyro();
-            } catch {}
-          };
-          const once = () => {
-            document.removeEventListener("pointerdown", once, true);
-            request();
-          };
-          document.addEventListener("pointerdown", once, true);
+          DeviceOrientationEvent.requestPermission()
+            .then((res) => {
+              if (res === "granted") {
+                enable();
+              } else if (motionToggleEl) {
+                motionToggleEl.checked = false;
+              }
+            })
+            .catch(() => {
+              if (motionToggleEl) motionToggleEl.checked = false;
+            });
         } else {
-          enableGyro();
+          enable();
         }
       }
 
@@ -1659,6 +1677,11 @@
         rebuildPalette();
         draw();
       });
+      if (motionToggleEl) {
+        motionToggleEl.addEventListener("change", () => {
+          setGyroEnabled(motionToggleEl.checked);
+        });
+      }
 
       // Painting
       let painting = false;
