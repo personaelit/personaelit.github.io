@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-  <title>32 -State Grid — Modular Rules</title>
+  <meta name="description" content="An interactive grid simulation with modular rules, palette controls, and gravity wells." />
+  <title>Fluxweave</title>
   <style>
     :root{
       --bg:#0b0f14;
@@ -160,7 +161,7 @@
     <div class="hud">
       <div class="card main">
         <div class="title">
-          <h1>32-State Grid — Modular Rules</h1>
+          <h1>Fluxweave</h1>
           <div class="title-actions">
             <button class="ghost" id="presetA" type="button">Glass Drift</button>
             <button class="ghost" id="presetB" type="button">Noisy Bloom</button>
@@ -395,7 +396,7 @@
       const canvas = document.getElementById("c");
       const ctx = canvas.getContext("2d", { alpha: false });
 
-      const STATES = 32;
+      const STATES = 512;
       const TWO_PI = Math.PI * 2;
 
       // Buttons / general controls
