@@ -1633,9 +1633,15 @@
         stopCameraStream();
       }
 
-      async function ensureCameraStream(requireFront) {
-        if (mirrorStream && (!requireFront || streamIsFront(mirrorStream))) return mirrorStream;
-        const constraints = requireFront ? { facingMode: { exact: "user" } } : { facingMode: "user" };
+      async function ensureCameraStream(facingMode) {
+        if (!facingMode) {
+          if (mirrorStream) return mirrorStream;
+        } else if (mirrorStream) {
+          const track = mirrorStream.getVideoTracks ? mirrorStream.getVideoTracks()[0] : null;
+          const settings = track && track.getSettings ? track.getSettings() : null;
+          if (settings && settings.facingMode === facingMode) return mirrorStream;
+        }
+        const constraints = facingMode ? { facingMode: { exact: facingMode } } : { facingMode: "user" };
         const stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
         setCameraStream(stream);
         return stream;
@@ -1664,7 +1670,7 @@
           return;
         }
         try {
-          await ensureCameraStream(false);
+          await ensureCameraStream(null);
           mirrorEnabled = true;
           mirrorToggleBtn.textContent = "Mirror on";
         } catch (err) {
@@ -1685,7 +1691,7 @@
           return;
         }
         try {
-          await ensureCameraStream(true);
+          await ensureCameraStream("environment");
           arEnabled = true;
           arToggleBtn.textContent = "AR on";
         } catch (err) {
