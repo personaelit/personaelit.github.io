@@ -111,7 +111,6 @@
 
     .hud.collapsed .advanced{display:none}
     .hud.collapsed .help{display:none}
-    .hud.simple .advanced{display:none}
     .spark{
       width:120px;
       height:24px;
@@ -153,8 +152,10 @@
         <div class="title">
           <h1>32-State Grid — Modular Rules</h1>
           <div class="title-actions">
+            <button class="ghost" id="presetA" type="button">Glass Drift</button>
+            <button class="ghost" id="presetB" type="button">Noisy Bloom</button>
+            <button class="ghost" id="presetC" type="button">Crystal Pulse</button>
             <span class="pill" id="stats">0×0 • gen 0</span>
-            <button class="ghost" id="modeToggle" type="button">Advanced</button>
             <button class="ghost" id="hudToggle" type="button" aria-expanded="true">Collapse</button>
           </div>
         </div>
@@ -388,7 +389,6 @@
       const randomizeBtn = document.getElementById("randomize");
       const clearBtn = document.getElementById("clear");
       const hudToggleBtn = document.getElementById("hudToggle");
-      const modeToggleBtn = document.getElementById("modeToggle");
       const hudEl = document.querySelector(".hud");
       const statsEl = document.getElementById("stats");
       const cellSizeEl = document.getElementById("cellSize");
@@ -396,6 +396,9 @@
       const brushEl = document.getElementById("brush");
       const shiftEl = document.getElementById("shift");
       const spreadEl = document.getElementById("spread");
+      const presetABtn = document.getElementById("presetA");
+      const presetBBtn = document.getElementById("presetB");
+      const presetCBtn = document.getElementById("presetC");
       const legendEl = document.getElementById("legend");
       const mirrorEl = document.getElementById("mirror");
       const mirrorToggleBtn = document.getElementById("mirrorToggle");
@@ -441,8 +444,6 @@
       let gen = 0;
       let hudCollapsed = false;
       let hudTouched = false;
-      let simpleMode = false;
-      let modeTouched = false;
       let mirrorStream = null;
       let gravOn = true;
       const wells = [];
@@ -1113,13 +1114,6 @@
         hudToggleBtn.setAttribute("aria-expanded", String(!hudCollapsed));
       }
 
-      function setSimpleMode(next) {
-        simpleMode = next;
-        hudEl.classList.toggle("simple", simpleMode);
-        if (modeToggleBtn) {
-          modeToggleBtn.textContent = simpleMode ? "Advanced" : "Simple";
-        }
-      }
 
       function syncHudForViewport() {
         if (hudTouched) return;
@@ -1127,10 +1121,6 @@
         setHudCollapsed(compact);
       }
 
-      function syncModeForViewport() {
-        if (modeTouched) return;
-        setSimpleMode(false);
-      }
 
       toggleBtn.addEventListener("click", () => {
         running = !running;
@@ -1142,12 +1132,6 @@
         setHudCollapsed(!hudCollapsed);
       });
 
-      if (modeToggleBtn) {
-        modeToggleBtn.addEventListener("click", () => {
-          modeTouched = true;
-          setSimpleMode(!simpleMode);
-        });
-      }
 
       stepBtn.addEventListener("click", () => {
         if (running) return;
@@ -1306,6 +1290,103 @@
       }
 
 
+      function applyPreset(kind) {
+        if (kind === "glass") {
+          cellSizeEl.value = 10;
+          speedEl.value = 18;
+          brushEl.value = 4;
+          shiftEl.value = 210;
+          spreadEl.value = 140;
+          mirrorStrengthEl.value = 18;
+          rJumpOn.checked = false;
+          rJumpP.value = 0.04;
+          rWalkOn.checked = true;
+          rWalkP.value = 0.35;
+          rWalkStep.value = 2;
+          diffOn.checked = true;
+          diffStrength.value = 0.35;
+          diffP.value = 1;
+          oscOn.checked = false;
+          oscPeriod.value = 72;
+          oscAmp.value = 4;
+          crysOn.checked = false;
+          crysBands.value = 10;
+          crysStrength.value = 0.3;
+          edgeOn.checked = false;
+          edgeStrength.value = 0.2;
+          gravOn = false;
+          wells.length = 0;
+        } else if (kind === "noisy") {
+          cellSizeEl.value = 8;
+          speedEl.value = 24;
+          brushEl.value = 16;
+          shiftEl.value = 300;
+          spreadEl.value = 220;
+          mirrorStrengthEl.value = 12;
+          rJumpOn.checked = true;
+          rJumpP.value = 0.12;
+          rWalkOn.checked = true;
+          rWalkP.value = 0.45;
+          rWalkStep.value = 3;
+          diffOn.checked = true;
+          diffStrength.value = 0.75;
+          diffP.value = 0.7;
+          oscOn.checked = false;
+          oscPeriod.value = 48;
+          oscAmp.value = 3;
+          crysOn.checked = false;
+          crysBands.value = 6;
+          crysStrength.value = 0.2;
+          edgeOn.checked = true;
+          edgeStrength.value = 0.28;
+          gravOn = false;
+          wells.length = 0;
+        } else if (kind === "crystal") {
+          cellSizeEl.value = 11;
+          speedEl.value = 8;
+          brushEl.value = 8;
+          shiftEl.value = 160;
+          spreadEl.value = 90;
+          mirrorStrengthEl.value = 24;
+          rJumpOn.checked = false;
+          rJumpP.value = 0.04;
+          rWalkOn.checked = false;
+          rWalkP.value = 0.2;
+          rWalkStep.value = 1;
+          diffOn.checked = true;
+          diffStrength.value = 0.45;
+          diffP.value = 0.9;
+          oscOn.checked = true;
+          oscPeriod.value = 32;
+          oscAmp.value = 3;
+          crysOn.checked = true;
+          crysBands.value = 8;
+          crysStrength.value = 0.55;
+          edgeOn.checked = true;
+          edgeStrength.value = 0.22;
+          gravOn = true;
+          wells.length = 0;
+        }
+        if (gravToggleBtn) {
+          gravToggleBtn.textContent = gravOn ? "Gravity wells: On" : "Gravity wells: Off";
+        }
+        if (gravRadiusEl) gravRadiusEl.value = 22;
+        if (gravStrengthEl) gravStrengthEl.value = 0.28;
+        if (gravFalloffEl) gravFalloffEl.value = "gaussian";
+        selectedWell = -1;
+        updateWellStats();
+        running = true;
+        toggleBtn.textContent = "Pause";
+        cellSize = +cellSizeEl.value;
+        setMirrorStrength(+mirrorStrengthEl.value);
+        rebuildPalette();
+        resize();
+        draw();
+      }
+      if (presetABtn) presetABtn.addEventListener("click", () => applyPreset("glass"));
+      if (presetBBtn) presetBBtn.addEventListener("click", () => applyPreset("noisy"));
+      if (presetCBtn) presetCBtn.addEventListener("click", () => applyPreset("crystal"));
+
       cellSizeEl.addEventListener("input", () => {
         cellSize = +cellSizeEl.value;
         resize();
@@ -1409,7 +1490,6 @@
         toggleBtn.textContent = "Pause";
       }
       syncHudForViewport();
-      syncModeForViewport();
       window.addEventListener("resize", syncHudForViewport);
       requestAnimationFrame(loop);
     })();
