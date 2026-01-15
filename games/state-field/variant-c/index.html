@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-  <title>256 -State Grid — Modular Rules</title>
+  <title>32 -State Grid — Modular Rules</title>
   <style>
     :root{
       --bg:#0b0f14;
@@ -147,12 +147,11 @@
   <div id="app">
     <canvas id="c"></canvas>
     <video id="mirror" playsinline muted></video>
-    <button class="ghost share-btn" id="shareBtn" type="button">Share Universe</button>
 
     <div class="hud">
       <div class="card main">
         <div class="title">
-          <h1>256-State Grid — Modular Rules</h1>
+          <h1>32-State Grid — Modular Rules</h1>
           <div class="title-actions">
             <span class="pill" id="stats">0×0 • gen 0</span>
             <button class="ghost" id="modeToggle" type="button">Advanced</button>
@@ -310,7 +309,7 @@
             </div>
             <label>
               <span>Period (steps)</span>
-              <input id="oscPeriod" type="range" min="8" max="256" step="1" value="64">
+              <input id="oscPeriod" type="range" min="8" max="32" step="1" value="64">
             </label>
             <label>
               <span>Amplitude (states)</span>
@@ -378,7 +377,7 @@
       const canvas = document.getElementById("c");
       const ctx = canvas.getContext("2d", { alpha: false });
 
-      const STATES = 256;
+      const STATES = 32;
       const TWO_PI = Math.PI * 2;
 
       // Buttons / general controls
@@ -409,7 +408,6 @@
       const entropySparkEl = document.getElementById("entropySpark");
       const meanSparkEl = document.getElementById("meanSpark");
       const varSparkEl = document.getElementById("varSpark");
-      const shareBtn = document.getElementById("shareBtn");
 
       // Rule toggles + params
       const rJumpOn = document.getElementById("rJumpOn");
@@ -916,30 +914,6 @@
         stats();
       }
 
-      async function shareUniverse() {
-        let url = buildShareUrl(true);
-        let text = "Shared Universe (may contain flashing lights)";
-        if (url.length > 1800) {
-          url = buildShareUrl(false);
-          text = "Shared Universe (short link)";
-        }
-        if (navigator.share) {
-          const data = {
-            title: "State Field Universe",
-            text,
-            url
-          };
-          try {
-            await navigator.share(data);
-            return;
-          } catch (err) {
-            // Fall through to clipboard
-          }
-        }
-        if (navigator.clipboard && window.isSecureContext) {
-          try { await navigator.clipboard.writeText(url); } catch (err) {}
-        }
-      }
 
       function step() {
         const useJump = rJumpOn.checked;
@@ -1295,11 +1269,6 @@
         });
       }
 
-      if (shareBtn) {
-        shareBtn.addEventListener("click", () => {
-          shareUniverse();
-        });
-      }
 
       cellSizeEl.addEventListener("input", () => {
         cellSize = +cellSizeEl.value;
