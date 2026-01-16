@@ -368,3 +368,130 @@
     margin-block-start: -1.25rem;
   }
 }
+
+/* ------------------------------
+   Games index cards
+-------------------------------- */
+.page-hero {
+  padding-block: var(--s-12) var(--s-8);
+  display: grid;
+  gap: var(--s-4);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.intro {
+  max-inline-size: 60ch;
+}
+
+.section-title {
+  margin-block: var(--s-8) var(--s-4);
+}
+
+.games-grid {
+  display: grid;
+  gap: var(--s-6);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-6);
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in oklab, var(--border) 75%, transparent);
+  background:
+    radial-gradient(320px 160px at 20% 0%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in oklab, var(--surface) 92%, transparent), color-mix(in oklab, var(--surface) 70%, transparent));
+  box-shadow: var(--shadow-1);
+}
+
+.card-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.card-copy {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.card-link:hover {
+  background: color-mix(in oklab, var(--surface) 72%, transparent);
+}
+
+.variant-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.variant-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid color-mix(in oklab, var(--border) 65%, transparent);
+  background: color-mix(in oklab, var(--surface) 85%, transparent);
+}
+
+.variant-links a:hover {
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+}
+
+.card-divider {
+  height: 1px;
+  background: color-mix(in oklab, var(--border) 70%, transparent);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: var(--s-6) var(--s-10);
+  font-weight: 600;
+  text-decoration: none;
+}
