@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>The Seeker and the Mana — 3D</title>
+  <style>
+    html, body { margin:0; padding:0; overflow:hidden; background:#000; }
+    canvas { display:block; }
+    #nirvanaCounter{
+      display:none;
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      color:#fff;
+      font-family:Arial, sans-serif;
+      font-size:20px;
+      text-shadow:0 2px 12px rgba(0,0,0,.7);
+      user-select:none;
+      pointer-events:none;
+    }
+    #hint{
+      position:absolute;
+      left:12px;
+      bottom:10px;
+      color:rgba(255,255,255,.75);
+      font-family:Arial, sans-serif;
+      font-size:12px;
+      user-select:none;
+      pointer-events:none;
+    }
+  </style>
+</head>
+<body>
+  <div id="nirvanaCounter">Nirvana Progress: 0 / 42</div>
+  <div id="hint">Click the orb to start. (Drag to orbit camera, scroll to zoom.)</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from "three";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+
+//     import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+// import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+
+
+    // ---------- UI / State ----------
+    const counterDisplay = document.getElementById("nirvanaCounter");
+
+    const COUNT = 42;
+    let collisionCount = 0;
+    let chasing = false;
+    let achievedNirvana = false;
+
+    // ---------- Scene ----------
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x000000, 30, 140);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 1);
+    document.body.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+    camera.position.set(0, 38, 70);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.target.set(0, 0, 0);
+    controls.minDistance = 25;
+    controls.maxDistance = 140;
+    controls.maxPolarAngle = Math.PI * 0.48;
+
+    // Subtle lights (glowy materials do most of the work)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+    const key = new THREE.DirectionalLight(0xffffff, 0.35);
+    key.position.set(40, 70, 30);
+    scene.add(key);
+
+    // A faint starfield
+    {
+      const starCount = 1200;
+      const pos = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) {
+        const r = 220 * Math.random();
+        const t = Math.random() * Math.PI * 2;
+        const p = Math.acos(2 * Math.random() - 1);
+        pos[i * 3 + 0] = r * Math.sin(p) * Math.cos(t);
+        pos[i * 3 + 1] = r * Math.cos(p);
+        pos[i * 3 + 2] = r * Math.sin(p) * Math.sin(t);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const m = new THREE.PointsMaterial({ size: 0.8, transparent: true, opacity: 0.55, depthWrite: false });
+      const stars = new THREE.Points(g, m);
+      scene.add(stars);
+    }
+
+    // ---------- Helpers ----------
+    const tmpV3 = new THREE.Vector3();
+    const clock = new THREE.Clock();
+
+    function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+    function rand(a,b){ return a + Math.random()*(b-a); }
+    function hslToColor(h, s, l){
+      const c = new THREE.Color();
+      c.setHSL((h % 360) / 360, clamp(s,0,1), clamp(l,0,1));
+      return c;
+    }
+
+    // ---------- Playfield bounds (in XZ) ----------
+    const bounds = {
+      minX: -55, maxX: 55,
+      minZ: -38, maxZ: 38
+    };
+
+    // Visual boundary (very faint)
+    {
+      const boxGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(bounds.minX, 0, bounds.minZ),
+        new THREE.Vector3(bounds.maxX, 0, bounds.minZ),
+        new THREE.Vector3(bounds.maxX, 0, bounds.maxZ),
+        new THREE.Vector3(bounds.minX, 0, bounds.maxZ),
+        new THREE.Vector3(bounds.minX, 0, bounds.minZ),
+      ]);
+      const boxLine = new THREE.Line(
+        boxGeo,
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08 })
+      );
+      scene.add(boxLine);
+    }
+
+    // ---------- Orb (Seeker) ----------
+    const orb = {
+      radius: 3.2,
+      hue: 0,
+      speed: 0.75,          // gets faster as you collect
+      pos: new THREE.Vector3(0, 0, 0),
+      arrived: false
+    };
+
+    const orbGeo = new THREE.SphereGeometry(orb.radius, 48, 32);
+    const orbMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffffff,
+      emissiveIntensity: 1.4,
+      roughness: 0.25,
+      metalness: 0.0
+    });
+    const orbMesh = new THREE.Mesh(orbGeo, orbMat);
+    orbMesh.position.copy(orb.pos);
+    scene.add(orbMesh);
+
+    // Soft aura (billboard sprite)
+    const aura = (() => {
+      const s = 256;
+      const c = document.createElement("canvas");
+      c.width = c.height = s;
+      const g = c.getContext("2d");
+      const grad = g.createRadialGradient(s/2, s/2, 10, s/2, s/2, s/2);
+      grad.addColorStop(0, "rgba(255,255,255,0.75)");
+      grad.addColorStop(0.35, "rgba(255,255,255,0.25)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = grad;
+      g.fillRect(0,0,s,s);
+
+      const tex = new THREE.CanvasTexture(c);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.9 });
+      const spr = new THREE.Sprite(mat);
+      spr.scale.set(18, 18, 1);
+      spr.position.set(0, 0, 0);
+      scene.add(spr);
+      return spr;
+    })();
+
+    // ---------- Mana ----------
+    function makeManaMaterial(hue){
+      const col = hslToColor(hue, 1.0, 0.65);
+      return new THREE.MeshStandardMaterial({
+        color: col,
+        emissive: col,
+        emissiveIntensity: 1.1,
+        roughness: 0.35,
+        metalness: 0.0,
+        transparent: true,
+        opacity: 0.98
+      });
+    }
+
+    const mana = [];
+    const manaGroup = new THREE.Group();
+    scene.add(manaGroup);
+
+    for (let i = 0; i < COUNT; i++) {
+      const m = {
+        size: rand(1.0, 2.3),
+        hue: rand(260, 290),
+        canCollide: true,
+        collected: false,
+
+        // free-move state
+        vel: new THREE.Vector3(rand(-1,1), 0, rand(-1,1)).normalize().multiplyScalar(rand(0.55, 1.1)),
+
+        // orbit state (nirvana)
+        orbitalRadius: 0,
+        angularSpeed: 0,
+        inclination: 0,
+        angle: (i / COUNT) * Math.PI * 2,
+
+        mesh: null,
+        aura: null
+      };
+
+      const geo = new THREE.SphereGeometry(m.size, 24, 16);
+      const mesh = new THREE.Mesh(geo, makeManaMaterial(m.hue));
+
+      // initial ring around orb
+      const r = 18;
+      mesh.position.set(Math.cos(m.angle)*r, 0, Math.sin(m.angle)*r);
+
+      // tiny aura
+      const spr = (() => {
+        const s = 128;
+        const c = document.createElement("canvas");
+        c.width = c.height = s;
+        const g = c.getContext("2d");
+        const grad = g.createRadialGradient(s/2, s/2, 4, s/2, s/2, s/2);
+        grad.addColorStop(0, "rgba(255,255,255,0.55)");
+        grad.addColorStop(0.4, "rgba(255,255,255,0.15)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = grad;
+        g.fillRect(0,0,s,s);
+
+        const tex = new THREE.CanvasTexture(c);
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.75 });
+        const s2 = new THREE.Sprite(mat);
+        s2.scale.set(m.size * 6.2, m.size * 6.2, 1);
+        s2.position.copy(mesh.position);
+        return s2;
+      })();
+
+      m.mesh = mesh;
+      m.aura = spr;
+
+      manaGroup.add(mesh);
+      manaGroup.add(spr);
+      mana.push(m);
+    }
+
+    function scatterMana() {
+      // “push out” and randomize velocity from current relative direction
+      for (const m of mana) {
+        const dir = tmpV3.copy(m.mesh.position).sub(orbMesh.position);
+        if (dir.lengthSq() < 1e-6) dir.set(rand(-1,1), 0, rand(-1,1));
+        dir.normalize();
+        m.vel.copy(dir).multiplyScalar(rand(0.7, 1.45));
+        m.collected = false;
+        m.canCollide = true;
+        m.mesh.visible = true;
+        m.aura.visible = true;
+      }
+    }
+
+    function distXZ(a, b) {
+      const dx = a.x - b.x;
+      const dz = a.z - b.z;
+      return Math.hypot(dx, dz);
+    }
+
+    function findClosestMana() {
+      let best = null;
+      let bestD = Infinity;
+      for (const m of mana) {
+        if (m.collected || !m.canCollide) continue;
+        const d = distXZ(m.mesh.position, orbMesh.position);
+        if (d < bestD) { bestD = d; best = m; }
+      }
+      return best;
+    }
+
+    function moveOrbTowards(targetPos, step) {
+      const dir = tmpV3.copy(targetPos).sub(orbMesh.position);
+      dir.y = 0;
+      const len = dir.length();
+      if (len < 1e-6) return;
+      dir.multiplyScalar(1 / len);
+      orbMesh.position.addScaledVector(dir, step);
+      orbMesh.position.x = clamp(orbMesh.position.x, bounds.minX, bounds.maxX);
+      orbMesh.position.z = clamp(orbMesh.position.z, bounds.minZ, bounds.maxZ);
+    }
+
+    // ---------- Lines between mana ----------
+    // (This is O(n^2) = 861 lines for 42; fine for this.)
+    const linesGeo = new THREE.BufferGeometry();
+    const maxPairs = (COUNT * (COUNT - 1)) / 2;
+    const linePositions = new Float32Array(maxPairs * 2 * 3); // two points per segment
+    linesGeo.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
+    linesGeo.setDrawRange(0, 0);
+
+    const linesMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28 });
+    const lines = new THREE.LineSegments(linesGeo, linesMat);
+    scene.add(lines);
+
+    function updateLines() {
+      let ptr = 0;
+      let segs = 0;
+
+      // collect visible mana positions (skip collected before nirvana)
+      const visible = [];
+      for (const m of mana) {
+        if (!achievedNirvana && m.collected) continue;
+        visible.push(m.mesh.position);
+      }
+
+      for (let i = 0; i < visible.length; i++) {
+        const a = visible[i];
+        for (let j = i + 1; j < visible.length; j++) {
+          const b = visible[j];
+          // write segment
+          linePositions[ptr++] = a.x; linePositions[ptr++] = a.y; linePositions[ptr++] = a.z;
+          linePositions[ptr++] = b.x; linePositions[ptr++] = b.y; linePositions[ptr++] = b.z;
+          segs++;
+        }
+      }
+
+      linesGeo.attributes.position.needsUpdate = true;
+      linesGeo.setDrawRange(0, segs * 2);
+    }
+
+    // ---------- Nirvana orbit setup ----------
+    function enterNirvana() {
+      chasing = false;
+      achievedNirvana = true;
+      orb.arrived = false;
+
+      counterDisplay.style.display = "block";
+      counterDisplay.textContent = "You have reached Nirvana!";
+
+      // release mana into orbital rings
+      mana.forEach((m, idx) => {
+        m.collected = false;
+        m.canCollide = false;
+        m.mesh.visible = true;
+        m.aura.visible = true;
+
+        m.orbitalRadius = 8 + (idx % 7) * 4.2;
+        m.angularSpeed = 0.45 + Math.random() * 0.85; // radians/sec
+        m.inclination = (Math.PI / 8) * ((idx % 5) - 2); // -2..2 steps
+        m.angle = Math.random() * Math.PI * 2;
+      });
+    }
+
+    function resetRun() {
+      achievedNirvana = false;
+      chasing = true;
+      collisionCount = 0;
+      orb.speed = 0.75;
+      counterDisplay.style.display = "block";
+      counterDisplay.textContent = `Nirvana Progress: ${collisionCount} / ${COUNT}`;
+      scatterMana();
+    }
+
+    // ---------- Click handling (raycast orb) ----------
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function onPointerDown(ev) {
+      // normalized device coords
+      mouse.x = (ev.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(ev.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const hit = raycaster.intersectObject(orbMesh, false);
+      if (!hit.length) return;
+
+      // click orb
+      if (achievedNirvana) {
+        resetRun();
+      } else {
+        chasing = true;
+        counterDisplay.style.display = "block";
+        counterDisplay.textContent = `Nirvana Progress: ${collisionCount} / ${COUNT}`;
+        scatterMana();
+      }
+    }
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+
+    // ---------- Resize ----------
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener("resize", onResize);
+
+    // ---------- Animation ----------
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.033);
+
+      // hue cycle for orb
+      orb.hue = (orb.hue + 90 * dt) % 360;
+      const orbCol = hslToColor(orb.hue, 1.0, 0.6);
+      orbMat.emissive.copy(orbCol);
+      orbMat.color.copy(orbCol);
+
+      // keep aura on orb
+      aura.position.copy(orbMesh.position);
+      aura.position.y += 0.2;
+
+      if (achievedNirvana) {
+        // gentle “return to center”
+        moveOrbTowards(new THREE.Vector3(0,0,0), orb.speed * dt * 0.6);
+
+        // orbit mana around orb in 3D
+        for (const m of mana) {
+          m.angle += m.angularSpeed * dt;
+
+          const x = m.orbitalRadius * Math.cos(m.angle);
+          const z = m.orbitalRadius * Math.sin(m.angle);
+
+          // tilt by inclination -> lift into Y and squeeze Z
+          const y = z * Math.sin(m.inclination);
+          const z2 = z * Math.cos(m.inclination);
+
+          m.mesh.position.set(
+            orbMesh.position.x + x,
+            orbMesh.position.y + y,
+            orbMesh.position.z + z2
+          );
+          m.aura.position.copy(m.mesh.position);
+        }
+      } else {
+        // free move mana (bounce in bounds)
+        for (const m of mana) {
+          if (m.collected) {
+            // hide collected mana pre-nirvana (matches 2D behavior)
+            m.mesh.visible = false;
+            m.aura.visible = false;
+            continue;
+          } else {
+            m.mesh.visible = true;
+            m.aura.visible = true;
+          }
+
+          m.mesh.position.addScaledVector(m.vel, dt * 22);
+
+          if (m.mesh.position.x < bounds.minX || m.mesh.position.x > bounds.maxX) {
+            m.vel.x *= -1;
+            m.mesh.position.x = clamp(m.mesh.position.x, bounds.minX, bounds.maxX);
+          }
+          if (m.mesh.position.z < bounds.minZ || m.mesh.position.z > bounds.maxZ) {
+            m.vel.z *= -1;
+            m.mesh.position.z = clamp(m.mesh.position.z, bounds.minZ, bounds.maxZ);
+          }
+
+          m.aura.position.copy(m.mesh.position);
+        }
+
+        // chase behavior
+        if (chasing) {
+          const target = findClosestMana();
+          if (target) {
+            moveOrbTowards(target.mesh.position, orb.speed * dt * 18);
+
+            const hitDist = orb.radius + target.size * 1.05;
+            if (distXZ(orbMesh.position, target.mesh.position) < hitDist && target.canCollide) {
+              target.collected = true;
+              collisionCount++;
+              orb.speed += 0.02;
+
+              counterDisplay.style.display = "block";
+              counterDisplay.textContent = `Nirvana Progress: ${collisionCount} / ${COUNT}`;
+
+              if (collisionCount >= COUNT) enterNirvana();
+            }
+          }
+        }
+      }
+
+      updateLines();
+
+      // camera follow a touch (keeps things centered without fighting OrbitControls)
+      controls.target.lerp(orbMesh.position, 0.06);
+      controls.update();
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
