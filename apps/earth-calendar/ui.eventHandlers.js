@@ -2,7 +2,6 @@ import { state, updateEarthPosition } from './script.js';
 import { updateDailyModalContent } from './services.mood.js';
 import { showReportModal } from './services.reports.js';
 import { toggleSettingsPanel } from './services.settings.js';
-import { setWeather } from './services.weather.js';
 import { updateDateLabel, updateDatePicker } from './ui.js';
 import { hideModal } from './ui.modal.js';
 import { createShootingStar } from './ui.stars.js';
@@ -90,8 +89,6 @@ export function handleDragEnd(event) {
 }
 
 export function handleCanvasInteraction(event) {
-    
-    setWeather(-1);
 
     if (event.type === 'touchend') {
         const now = new Date().getTime();

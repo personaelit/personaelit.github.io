@@ -1,7 +1,6 @@
 import { isToday, isInFuture, isInPast, calculateDaysAlive, getTimeOfDay } from './services.date.js';
 import { addNotesSection } from './services.notes.js';
 import { saveToLocalStorage, loadFromLocalStorage } from './services.storage.js';
-import { setWeather } from './services.weather.js';
 import { addModalContent, showModal } from './ui.modal.js';
 
 
@@ -29,7 +28,6 @@ function addMoodSelector(dateStamp, modalContent) {
     }
     moodSelector.addEventListener('change', (e) => {
         saveMood(dateStamp, e.target.value);
-        setWeather(e.target.value);
         updateJumboMoodEmoji(e.target.value, modalContent);
     });
     modalContent.appendChild(moodSelector);
