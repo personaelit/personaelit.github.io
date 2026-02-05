@@ -79,9 +79,14 @@ export function getMoodData() {
     return moodData;
 }
 
+let chartInstance = null;
+
 export function createMoodChart(moodData) {
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
     const ctx = document.getElementById('moodChart').getContext('2d');
-    new Chart(ctx, {
+    chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: moodData.map(data => data.date),
