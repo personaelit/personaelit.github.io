@@ -7,7 +7,7 @@ import { getStateRef, setState, radiansToDay, dayToRadians, getDaysInYear } from
 import { getDimensions, getCenter } from '../canvas/renderer.js';
 import { isPointOnEarth, getAngleFromCenter } from '../canvas/earth.js';
 import { isPointOnSettingsIcon, isPointOnReportIcon } from '../canvas/ui-icons.js';
-import { dayOfYearToDate, formatDateKey, formatDateLong, isToday, isInPast, isInFuture } from '../utils/date.js';
+import { dayOfYearToDate, formatDateKey, formatDateLong, isToday, isInPast, isInFuture, getDayOfYear } from '../utils/date.js';
 import { showModal, hideModal } from './modal.js';
 import { createMoodSelector, createJumboEmoji, loadMood, getMoodEmoji } from '../features/mood.js';
 import { createNotesSection } from '../features/notes.js';
@@ -233,9 +233,7 @@ function setupDatePickerEvents() {
     datePicker.addEventListener('change', () => {
         const date = new Date(datePicker.value + 'T12:00:00');
         const year = date.getFullYear();
-        const dayOfYear = Math.ceil(
-            (date - new Date(year, 0, 1)) / (1000 * 60 * 60 * 24)
-        ) + 1;
+        const dayOfYear = getDayOfYear(date);
 
         setState({
             currentYear: year,
@@ -295,9 +293,7 @@ function navigateDay(delta) {
 function navigateToToday() {
     const today = new Date();
     const year = today.getFullYear();
-    const dayOfYear = Math.ceil(
-        (today - new Date(year, 0, 1)) / (1000 * 60 * 60 * 24)
-    ) + 1;
+    const dayOfYear = getDayOfYear(today);
 
     setState({
         currentYear: year,
