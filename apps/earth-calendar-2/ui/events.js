@@ -26,6 +26,9 @@ let datePicker = null;
 /** @type {HTMLElement|null} */
 let dateLabel = null;
 
+/** @type {{ x: number, y: number }|null} */
+let touchStartPos = null;
+
 /**
  * Initialize event handlers
  * @param {Object} elements - DOM element references
@@ -58,7 +61,7 @@ function setupCanvasEvents() {
     // Touch events
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handlePointerUp);
+    canvas.addEventListener('touchend', handleTouchEnd);
 
     // Cursor style
     canvas.addEventListener('mousemove', updateCursor);
@@ -104,7 +107,9 @@ function handlePointerDown(e) {
 function handleTouchStart(e) {
     e.preventDefault();
     if (e.touches.length === 1) {
-        handlePointerDown(e.touches[0]);
+        const touch = e.touches[0];
+        touchStartPos = getPointerPosition(touch);
+        handlePointerDown(touch);
     }
 }
 
@@ -153,6 +158,29 @@ function handleTouchMove(e) {
     if (e.touches.length === 1) {
         handlePointerMove(e.touches[0]);
     }
+}
+
+/**
+ * Handle touch end - detect taps and trigger click logic
+ * @param {TouchEvent} e
+ */
+function handleTouchEnd(e) {
+    handlePointerUp();
+
+    if (!touchStartPos) return;
+
+    const touch = e.changedTouches[0];
+    const pos = getPointerPosition(touch);
+    const dx = pos.x - touchStartPos.x;
+    const dy = pos.y - touchStartPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Treat as tap if finger barely moved
+    if (distance < 10) {
+        handleCanvasClick({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+
+    touchStartPos = null;
 }
 
 /**
