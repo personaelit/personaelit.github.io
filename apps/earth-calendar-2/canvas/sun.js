@@ -4,6 +4,7 @@
  */
 
 import { SUN } from '../constants.js';
+import { isSpecialDay, getSpecialDayInfo } from './seasons.js';
 
 /** @type {number} */
 let pulsePhase = 0;
@@ -57,6 +58,24 @@ export function drawSun(ctx, dimensions, deltaTime, state) {
     ctx.beginPath();
     ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
     ctx.fill();
+
+    // Solstice/equinox flare
+    const specialInfo = getSpecialDayInfo(state.currentDayOfYear);
+    if (specialInfo) {
+        const flareRadius = currentRadius * 2.8 + Math.sin(pulsePhase * 1.5) * 8;
+        const flareGradient = ctx.createRadialGradient(
+            centerX, centerY, currentRadius,
+            centerX, centerY, flareRadius
+        );
+        flareGradient.addColorStop(0, specialInfo.color + '44');
+        flareGradient.addColorStop(0.5, specialInfo.color + '18');
+        flareGradient.addColorStop(1, specialInfo.color + '00');
+
+        ctx.fillStyle = flareGradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, flareRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
     // Draw year text
     ctx.fillStyle = '#000000';

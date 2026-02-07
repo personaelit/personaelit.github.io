@@ -95,6 +95,26 @@ export const MOOD_TRAIL = {
     GLOW_ALPHA: 0.3,
 };
 
+// Seasons & Solstice/Equinox
+export const SEASONS = {
+    BAND_OFFSET: -6,       // pixels inside the orbit radius
+    BAND_WIDTH: 3,
+    BAND_ALPHA: 0.45,
+    MARKER_SIZE: 5,
+    MARKER_GLOW: 10,
+    PARTICLE_COUNT: 12,
+    PARTICLE_LIFETIME: 1500, // ms
+    PARTICLE_SPEED: 0.04,
+    LIST: [
+        { name: 'spring', color: '#4ade80', startDay: 80,  endDay: 172 },
+        { name: 'summer', color: '#facc15', startDay: 172, endDay: 266 },
+        { name: 'autumn', color: '#f59e0b', startDay: 266, endDay: 356 },
+        { name: 'winter', color: '#60a5fa', startDay: 356, endDay: 80  },
+    ],
+    /** Day-of-year values for solstices/equinoxes */
+    SPECIAL_DAYS: [80, 172, 266, 356],
+};
+
 // Animation
 export const ANIMATION = {
     TARGET_FPS: 60,

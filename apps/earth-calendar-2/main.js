@@ -10,6 +10,7 @@ import { initStars, drawStars, onStarsResize } from './canvas/stars.js';
 import { drawSun } from './canvas/sun.js';
 import { drawEarth, drawMonthLabels, initEarthPosition } from './canvas/earth.js';
 import { drawMoodTrail } from './canvas/mood-trail.js';
+import { drawSeasonBands } from './canvas/seasons.js';
 import { drawSettingsIcon, drawReportIcon } from './canvas/ui-icons.js';
 import { initModal } from './ui/modal.js';
 import { initEvents, updateUIFromState } from './ui/events.js';
@@ -49,6 +50,7 @@ function init() {
     // Register render callbacks (order matters for layering)
     onRender(drawStars, onStarsResize);
     onRender(drawMonthLabels);
+    onRender(drawSeasonBands);
     onRender(drawMoodTrail);
     onRender(drawSun);
     onRender(drawEarth);
