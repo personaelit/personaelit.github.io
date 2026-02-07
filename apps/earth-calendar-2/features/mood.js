@@ -6,6 +6,7 @@
 import { MOOD, STORAGE_KEYS, CALENDAR } from '../constants.js';
 import { save, load } from '../utils/storage.js';
 import { formatDateKey } from '../utils/date.js';
+import { invalidateMoodCache } from '../canvas/mood-trail.js';
 
 /**
  * Save mood for a date
@@ -14,6 +15,7 @@ import { formatDateKey } from '../utils/date.js';
  */
 export function saveMood(dateKey, mood) {
     save(STORAGE_KEYS.MOOD(dateKey), String(mood));
+    invalidateMoodCache();
 }
 
 /**

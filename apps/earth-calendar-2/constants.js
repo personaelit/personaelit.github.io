@@ -80,6 +80,21 @@ export const STORAGE_KEYS = {
     USER_DOB: `${STORAGE_PREFIX}userDOB`,
 };
 
+// Mood trail (colored orbit segments)
+export const MOOD_TRAIL = {
+    COLORS: {
+        1: '#7c3aed', // violet (sad)
+        2: '#6366f1', // indigo (uneasy)
+        3: '#94a3b8', // slate (neutral)
+        4: '#fbbf24', // amber (pleasant)
+        5: '#34d399', // emerald (joyful)
+    },
+    DEFAULT_COLOR: 'rgba(255, 255, 255, 0.1)',
+    LINE_WIDTH: 3,
+    GLOW_WIDTH: 7,
+    GLOW_ALPHA: 0.3,
+};
+
 // Animation
 export const ANIMATION = {
     TARGET_FPS: 60,
