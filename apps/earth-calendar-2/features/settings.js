@@ -76,6 +76,7 @@ export function getSavedToggles() {
         showMonthLabels: getToggle(STORAGE_KEYS.SHOW_MONTH_LABELS),
         showSeasons: getToggle(STORAGE_KEYS.SHOW_SEASONS),
         showMoodTrail: getToggle(STORAGE_KEYS.SHOW_MOOD_TRAIL),
+        showMoon: getToggle(STORAGE_KEYS.SHOW_MOON),
     };
 }
 
@@ -114,6 +115,10 @@ export function createSettingsForm(onSave) {
                 <input type="checkbox" id="toggle-mood-trail" ${toggles.showMoodTrail ? 'checked' : ''} />
                 <span>Mood Trail</span>
             </label>
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-moon" ${toggles.showMoon ? 'checked' : ''} />
+                <span>Moon Phase</span>
+            </label>
         </fieldset>
         <button type="button" class="save-button">Save Settings</button>
     `;
@@ -138,6 +143,10 @@ export function createSettingsForm(onSave) {
     container.querySelector('#toggle-mood-trail').addEventListener('change', (e) => {
         save(STORAGE_KEYS.SHOW_MOOD_TRAIL, String(e.target.checked));
         setState({ showMoodTrail: e.target.checked });
+    });
+    container.querySelector('#toggle-moon').addEventListener('change', (e) => {
+        save(STORAGE_KEYS.SHOW_MOON, String(e.target.checked));
+        setState({ showMoon: e.target.checked });
     });
 
     // Save handler

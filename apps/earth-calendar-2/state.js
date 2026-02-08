@@ -25,6 +25,7 @@ import { CALENDAR } from './constants.js';
  * @property {boolean} showMonthLabels - Whether to show month labels
  * @property {boolean} showSeasons - Whether to show season bands and markers
  * @property {boolean} showMoodTrail - Whether to show mood trail on orbit
+ * @property {boolean} showMoon - Whether to show moon phase companion
  */
 
 /** @type {AppState} */
@@ -40,6 +41,7 @@ const state = {
     showMonthLabels: true,
     showSeasons: true,
     showMoodTrail: true,
+    showMoon: true,
 };
 
 /** @type {Set<Function>} */

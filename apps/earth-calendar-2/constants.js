@@ -26,6 +26,20 @@ export const EARTH = {
     ORBIT_COLOR: 'rgba(255, 255, 255, 0.1)',
 };
 
+// Moon configuration
+export const MOON = {
+    RADIUS: 5,
+    ORBIT_RADIUS_FACTOR: 4.8,
+    COLOR: '#E8E8E8',
+    SHADOW_COLOR: '#1a1a2e',
+    GLOW_COLOR: 'rgba(232, 232, 232, 0.3)',
+    GLOW_RADIUS_FACTOR: 2.5,
+    FULL_MOON_THRESHOLD: 0.05,
+    SYNODIC_PERIOD: 29.53059,
+    /** Reference new moon: December 30, 2024 at 22:27 UTC */
+    REFERENCE_NEW_MOON: Date.UTC(2024, 11, 30, 22, 27) / (1000 * 60 * 60 * 24),
+};
+
 // Star configuration
 export const STARS = {
     COUNT: 200,
@@ -81,6 +95,7 @@ export const STORAGE_KEYS = {
     SHOW_MONTH_LABELS: `${STORAGE_PREFIX}showMonthLabels`,
     SHOW_SEASONS: `${STORAGE_PREFIX}showSeasons`,
     SHOW_MOOD_TRAIL: `${STORAGE_PREFIX}showMoodTrail`,
+    SHOW_MOON: `${STORAGE_PREFIX}showMoon`,
 };
 
 // Mood trail (colored orbit segments)

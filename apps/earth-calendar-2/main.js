@@ -11,6 +11,7 @@ import { drawSun } from './canvas/sun.js';
 import { drawEarth, drawMonthLabels, initEarthPosition } from './canvas/earth.js';
 import { drawMoodTrail } from './canvas/mood-trail.js';
 import { drawSeasonBands } from './canvas/seasons.js';
+import { drawMoon } from './canvas/moon.js';
 import { drawSettingsIcon, drawReportIcon } from './canvas/ui-icons.js';
 import { initModal } from './ui/modal.js';
 import { initEvents, updateUIFromState } from './ui/events.js';
@@ -58,6 +59,7 @@ function init() {
     onRender(drawMoodTrail);
     onRender(drawSun);
     onRender(drawEarth);
+    onRender(drawMoon);
     onRender(drawSettingsIcon);
     onRender(drawReportIcon);
 
