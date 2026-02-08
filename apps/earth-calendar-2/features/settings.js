@@ -69,7 +69,7 @@ function getToggle(key) {
 
 /**
  * Get saved toggle values for initializing state
- * @returns {{ showMonthLabels: boolean, showSeasons: boolean, showMoodTrail: boolean, showMoon: boolean, showZodiac: boolean }}
+ * @returns {{ showMonthLabels: boolean, showSeasons: boolean, showMoodTrail: boolean, showMoon: boolean, showZodiac: boolean, showNebula: boolean }}
  */
 export function getSavedToggles() {
     return {
@@ -78,6 +78,7 @@ export function getSavedToggles() {
         showMoodTrail: getToggle(STORAGE_KEYS.SHOW_MOOD_TRAIL),
         showMoon: getToggle(STORAGE_KEYS.SHOW_MOON),
         showZodiac: getToggle(STORAGE_KEYS.SHOW_ZODIAC),
+        showNebula: getToggle(STORAGE_KEYS.SHOW_NEBULA),
     };
 }
 
@@ -123,6 +124,10 @@ export function createSettingsForm(onSave) {
             <label class="toggle-label">
                 <input type="checkbox" id="toggle-zodiac" ${toggles.showZodiac ? 'checked' : ''} />
                 <span>Zodiac Constellations</span>
+            </label>
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-nebula" ${toggles.showNebula ? 'checked' : ''} />
+                <span>Nebula Background</span>
             </label>
         </fieldset>
         <button type="button" class="save-button">Save Settings</button>
@@ -179,6 +184,10 @@ export function createSettingsForm(onSave) {
     container.querySelector('#toggle-zodiac').addEventListener('change', (e) => {
         save(STORAGE_KEYS.SHOW_ZODIAC, String(e.target.checked));
         setState({ showZodiac: e.target.checked });
+    });
+    container.querySelector('#toggle-nebula').addEventListener('change', (e) => {
+        save(STORAGE_KEYS.SHOW_NEBULA, String(e.target.checked));
+        setState({ showNebula: e.target.checked });
     });
 
     // Save handler

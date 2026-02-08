@@ -13,6 +13,7 @@ import { drawZodiacRing } from './canvas/zodiac.js';
 import { drawMoodTrail } from './canvas/mood-trail.js';
 import { drawSeasonBands } from './canvas/seasons.js';
 import { drawMoon } from './canvas/moon.js';
+import { drawNebula, onNebulaResize } from './canvas/nebula.js';
 import { drawSettingsIcon, drawReportIcon } from './canvas/ui-icons.js';
 import { initModal } from './ui/modal.js';
 import { initEvents, updateUIFromState } from './ui/events.js';
@@ -54,6 +55,7 @@ function init() {
     });
 
     // Register render callbacks (order matters for layering)
+    onRender(drawNebula, onNebulaResize);
     onRender(drawStars, onStarsResize);
     onRender(drawZodiacRing);
     onRender(drawMonthLabels);

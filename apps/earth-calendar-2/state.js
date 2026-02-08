@@ -27,6 +27,7 @@ import { CALENDAR } from './constants.js';
  * @property {boolean} showMoodTrail - Whether to show mood trail on orbit
  * @property {boolean} showMoon - Whether to show moon phase companion
  * @property {boolean} showZodiac - Whether to show zodiac constellation ring
+ * @property {boolean} showNebula - Whether to show nebula background
  * @property {string|null} zodiacHoverSign - Zodiac sign currently hovered
  * @property {string|null} zodiacActiveSign - Zodiac sign selected/tapped
  */
@@ -46,6 +47,7 @@ const state = {
     showMoodTrail: true,
     showMoon: true,
     showZodiac: true,
+    showNebula: true,
     zodiacHoverSign: null,
     zodiacActiveSign: null,
 };

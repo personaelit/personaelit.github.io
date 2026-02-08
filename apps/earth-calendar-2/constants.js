@@ -97,6 +97,7 @@ export const STORAGE_KEYS = {
     SHOW_MOOD_TRAIL: `${STORAGE_PREFIX}showMoodTrail`,
     SHOW_MOON: `${STORAGE_PREFIX}showMoon`,
     SHOW_ZODIAC: `${STORAGE_PREFIX}showZodiac`,
+    SHOW_NEBULA: `${STORAGE_PREFIX}showNebula`,
 };
 
 // Mood trail (colored orbit segments)
@@ -125,10 +126,10 @@ export const SEASONS = {
     PARTICLE_LIFETIME: 1500, // ms
     PARTICLE_SPEED: 0.04,
     LIST: [
-        { name: 'spring', color: '#4ade80', startDay: 80,  endDay: 172 },
+        { name: 'spring', color: '#4ade80', startDay: 80, endDay: 172 },
         { name: 'summer', color: '#facc15', startDay: 172, endDay: 266 },
         { name: 'autumn', color: '#f59e0b', startDay: 266, endDay: 356 },
-        { name: 'winter', color: '#60a5fa', startDay: 356, endDay: 80  },
+        { name: 'winter', color: '#60a5fa', startDay: 356, endDay: 80 },
     ],
     /** Day-of-year values for solstices/equinoxes */
     SPECIAL_DAYS: [80, 172, 266, 356],
@@ -225,6 +226,30 @@ export const ZODIAC = {
     ],
 };
 
+
+// Nebula Background
+export const NEBULA = {
+    SEED: 42,
+    SCALE_FACTOR: 2,
+    OVERSCAN: 1.2,
+    DRIFT_X: 0.4,
+    DRIFT_Y: 0.15,
+    RESIZE_THRESHOLD: 50,
+    LACUNARITY: 2.0,
+    PERSISTENCE: 0.5,
+    VIGNETTE_STRENGTH: 0.4,
+    LAYERS: [
+        // Big structure (slow, bold)
+        { r: 120, g: 60, b: 180, frequency: 0.0018, octaves: 5, opacity: 0.22 },
+
+        // Mid structure (definition)
+        { r: 60, g: 120, b: 160, frequency: 0.0045, octaves: 4, opacity: 0.14 },
+
+        // Fine detail (sparkle / wisps)
+        { r: 160, g: 90, b: 120, frequency: 0.012, octaves: 3, opacity: 0.08 },
+    ],
+
+};
 
 // Animation
 export const ANIMATION = {
