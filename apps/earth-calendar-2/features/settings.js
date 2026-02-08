@@ -6,6 +6,7 @@
 import { STORAGE_KEYS } from '../constants.js';
 import { save, load } from '../utils/storage.js';
 import { calculateDaysAlive, getTimeOfDay } from '../utils/date.js';
+import { setState } from '../state.js';
 
 /**
  * Get user name
@@ -57,6 +58,28 @@ export function createGreeting() {
 }
 
 /**
+ * Get a boolean toggle value from storage
+ * @param {string} key - Storage key
+ * @returns {boolean}
+ */
+function getToggle(key) {
+    const value = load(key);
+    return value === null ? true : value === 'true';
+}
+
+/**
+ * Get saved toggle values for initializing state
+ * @returns {{ showMonthLabels: boolean, showSeasons: boolean, showMoodTrail: boolean }}
+ */
+export function getSavedToggles() {
+    return {
+        showMonthLabels: getToggle(STORAGE_KEYS.SHOW_MONTH_LABELS),
+        showSeasons: getToggle(STORAGE_KEYS.SHOW_SEASONS),
+        showMoodTrail: getToggle(STORAGE_KEYS.SHOW_MOOD_TRAIL),
+    };
+}
+
+/**
  * Create settings form element
  * @param {Function} onSave - Callback when settings are saved
  * @returns {HTMLElement}
@@ -64,6 +87,8 @@ export function createGreeting() {
 export function createSettingsForm(onSave) {
     const container = document.createElement('div');
     container.className = 'settings-form';
+
+    const toggles = getSavedToggles();
 
     container.innerHTML = `
         <h2>Settings</h2>
@@ -75,6 +100,21 @@ export function createSettingsForm(onSave) {
             <label for="settings-dob">Date of Birth</label>
             <input type="date" id="settings-dob" />
         </div>
+        <fieldset class="toggle-group">
+            <legend>Display</legend>
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-month-labels" ${toggles.showMonthLabels ? 'checked' : ''} />
+                <span>Month Labels</span>
+            </label>
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-seasons" ${toggles.showSeasons ? 'checked' : ''} />
+                <span>Seasons & Equinoxes</span>
+            </label>
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-mood-trail" ${toggles.showMoodTrail ? 'checked' : ''} />
+                <span>Mood Trail</span>
+            </label>
+        </fieldset>
         <button type="button" class="save-button">Save Settings</button>
     `;
 
@@ -85,6 +125,20 @@ export function createSettingsForm(onSave) {
 
     nameInput.value = getUserName();
     dobInput.value = getUserDOB() || '';
+
+    // Toggle change handlers (apply immediately)
+    container.querySelector('#toggle-month-labels').addEventListener('change', (e) => {
+        save(STORAGE_KEYS.SHOW_MONTH_LABELS, String(e.target.checked));
+        setState({ showMonthLabels: e.target.checked });
+    });
+    container.querySelector('#toggle-seasons').addEventListener('change', (e) => {
+        save(STORAGE_KEYS.SHOW_SEASONS, String(e.target.checked));
+        setState({ showSeasons: e.target.checked });
+    });
+    container.querySelector('#toggle-mood-trail').addEventListener('change', (e) => {
+        save(STORAGE_KEYS.SHOW_MOOD_TRAIL, String(e.target.checked));
+        setState({ showMoodTrail: e.target.checked });
+    });
 
     // Save handler
     saveButton.addEventListener('click', () => {

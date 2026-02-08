@@ -118,6 +118,12 @@ function updateParticles(ctx, deltaTime) {
  * @param {Object} state
  */
 export function drawSeasonBands(ctx, dimensions, deltaTime, state) {
+    // Still update particles so they fade out gracefully when toggled off
+    if (!state.showSeasons) {
+        updateParticles(ctx, deltaTime);
+        return;
+    }
+
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
     const orbitRadius = getOrbitRadius(dimensions);

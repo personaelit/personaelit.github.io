@@ -58,6 +58,17 @@ export function drawMoodTrail(ctx, dimensions, deltaTime, state) {
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
     const orbitRadius = getOrbitRadius(dimensions);
+
+    // When toggled off, draw just the faint orbit ring
+    if (!state.showMoodTrail) {
+        ctx.strokeStyle = MOOD_TRAIL.DEFAULT_COLOR;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        return;
+    }
+
     const daysInYear = getDaysInYear();
 
     // Rebuild cache if needed

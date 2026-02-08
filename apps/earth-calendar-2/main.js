@@ -14,6 +14,7 @@ import { drawSeasonBands } from './canvas/seasons.js';
 import { drawSettingsIcon, drawReportIcon } from './canvas/ui-icons.js';
 import { initModal } from './ui/modal.js';
 import { initEvents, updateUIFromState } from './ui/events.js';
+import { getSavedToggles } from './features/settings.js';
 
 /**
  * Initialize the application
@@ -44,8 +45,11 @@ function init() {
     const today = getCurrentDayOfYear();
     initEarthPosition(today);
 
-    // Set current year in state
-    setState({ currentYear: new Date().getFullYear() });
+    // Set current year and saved toggle preferences in state
+    setState({
+        currentYear: new Date().getFullYear(),
+        ...getSavedToggles(),
+    });
 
     // Register render callbacks (order matters for layering)
     onRender(drawStars, onStarsResize);

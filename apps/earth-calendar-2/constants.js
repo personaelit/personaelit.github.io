@@ -78,6 +78,9 @@ export const STORAGE_KEYS = {
     NOTES: (date) => `${STORAGE_PREFIX}notes_${date}`,
     USER_NAME: `${STORAGE_PREFIX}userName`,
     USER_DOB: `${STORAGE_PREFIX}userDOB`,
+    SHOW_MONTH_LABELS: `${STORAGE_PREFIX}showMonthLabels`,
+    SHOW_SEASONS: `${STORAGE_PREFIX}showSeasons`,
+    SHOW_MOOD_TRAIL: `${STORAGE_PREFIX}showMoodTrail`,
 };
 
 // Mood trail (colored orbit segments)

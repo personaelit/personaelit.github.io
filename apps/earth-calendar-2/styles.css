@@ -386,6 +386,41 @@ body {
 }
 
 /* ==========================================================================
+   Toggle Group
+   ========================================================================== */
+
+.toggle-group {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.toggle-group legend {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    padding: 0 var(--spacing-xs);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+}
+
+.toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+}
+
+/* ==========================================================================
    Reports
    ========================================================================== */
 

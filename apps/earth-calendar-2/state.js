@@ -22,6 +22,9 @@ import { CALENDAR } from './constants.js';
  * @property {number} dragStartAngle - Angle when drag started
  * @property {number} dragStartTime - Time value when drag started
  * @property {boolean} isPaused - Whether animation is paused
+ * @property {boolean} showMonthLabels - Whether to show month labels
+ * @property {boolean} showSeasons - Whether to show season bands and markers
+ * @property {boolean} showMoodTrail - Whether to show mood trail on orbit
  */
 
 /** @type {AppState} */
@@ -34,6 +37,9 @@ const state = {
     dragStartAngle: 0,
     dragStartTime: 0,
     isPaused: false,
+    showMonthLabels: true,
+    showSeasons: true,
+    showMoodTrail: true,
 };
 
 /** @type {Set<Function>} */

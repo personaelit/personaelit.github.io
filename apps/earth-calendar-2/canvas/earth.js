@@ -96,7 +96,9 @@ export function drawEarth(ctx, dimensions, deltaTime, state) {
  * @param {{ width: number, height: number }} dimensions
  * @param {Object} state
  */
-export function drawMonthLabels(ctx, dimensions, state) {
+export function drawMonthLabels(ctx, dimensions, deltaTime, state) {
+    if (!state.showMonthLabels) return;
+
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
     const orbitRadius = getOrbitRadius(dimensions);
