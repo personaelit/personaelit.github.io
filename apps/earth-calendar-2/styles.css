@@ -67,6 +67,12 @@ body {
     line-height: 1.5;
 }
 
+a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
 /* ==========================================================================
    Layout
    ========================================================================== */
@@ -195,7 +201,6 @@ body {
     padding: var(--spacing-xl);
     max-width: 90vw;
     max-height: 85vh;
-    width: 400px;
     overflow-y: auto;
     z-index: var(--z-modal);
     opacity: 0;

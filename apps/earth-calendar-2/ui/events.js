@@ -6,6 +6,7 @@
 import { getStateRef, setState, radiansToDay, dayToRadians, getDaysInYear } from '../state.js';
 import { getDimensions, getCenter } from '../canvas/renderer.js';
 import { isPointOnEarth, getAngleFromCenter } from '../canvas/earth.js';
+import { getZodiacSignAtPoint } from '../canvas/zodiac.js';
 import { isPointOnSettingsIcon, isPointOnReportIcon } from '../canvas/ui-icons.js';
 import { dayOfYearToDate, formatDateKey, formatDateLong, isToday, isInPast, isInFuture, getDayOfYear } from '../utils/date.js';
 import { showModal, hideModal } from './modal.js';
@@ -57,6 +58,7 @@ function setupCanvasEvents() {
     canvas.addEventListener('mouseup', handlePointerUp);
     canvas.addEventListener('mouseleave', handlePointerUp);
     canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('mouseleave', clearZodiacHover);
 
     // Touch events
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -65,6 +67,16 @@ function setupCanvasEvents() {
 
     // Cursor style
     canvas.addEventListener('mousemove', updateCursor);
+}
+
+/**
+ * Clear zodiac hover state
+ */
+function clearZodiacHover() {
+    const state = getStateRef();
+    if (state.zodiacHoverSign !== null) {
+        setState({ zodiacHoverSign: null });
+    }
 }
 
 /**
@@ -211,6 +223,16 @@ function handleCanvasClick(e) {
         return;
     }
 
+    const dimensions = getDimensions();
+    const zodiacHit = getZodiacSignAtPoint(pos.x, pos.y, dimensions, state);
+    if (zodiacHit) {
+        setState({
+            zodiacActiveSign: state.zodiacActiveSign === zodiacHit ? null : zodiacHit,
+            zodiacHoverSign: null
+        });
+        return;
+    }
+
     // Check earth click
     if (isPointOnEarth(pos.x, pos.y, state)) {
         showDayModal();
@@ -224,11 +246,18 @@ function handleCanvasClick(e) {
 function updateCursor(e) {
     const pos = getPointerPosition(e);
     const state = getStateRef();
+    const dimensions = getDimensions();
+    const zodiacHit = getZodiacSignAtPoint(pos.x, pos.y, dimensions, state);
+
+    if (state.zodiacHoverSign !== zodiacHit) {
+        setState({ zodiacHoverSign: zodiacHit });
+    }
 
     const isOverClickable =
         isPointOnEarth(pos.x, pos.y, state) ||
         isPointOnSettingsIcon(pos.x, pos.y) ||
-        isPointOnReportIcon(pos.x, pos.y);
+        isPointOnReportIcon(pos.x, pos.y) ||
+        Boolean(zodiacHit);
 
     canvas.style.cursor = isOverClickable ? 'pointer' : 'default';
 }

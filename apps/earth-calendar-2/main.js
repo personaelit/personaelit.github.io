@@ -9,6 +9,7 @@ import { initRenderer, onRender, startRenderLoop, getDimensions } from './canvas
 import { initStars, drawStars, onStarsResize } from './canvas/stars.js';
 import { drawSun } from './canvas/sun.js';
 import { drawEarth, drawMonthLabels, initEarthPosition } from './canvas/earth.js';
+import { drawZodiacRing } from './canvas/zodiac.js';
 import { drawMoodTrail } from './canvas/mood-trail.js';
 import { drawSeasonBands } from './canvas/seasons.js';
 import { drawMoon } from './canvas/moon.js';
@@ -54,6 +55,7 @@ function init() {
 
     // Register render callbacks (order matters for layering)
     onRender(drawStars, onStarsResize);
+    onRender(drawZodiacRing);
     onRender(drawMonthLabels);
     onRender(drawSeasonBands);
     onRender(drawMoodTrail);
