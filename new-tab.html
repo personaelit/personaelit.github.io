@@ -663,22 +663,34 @@
     window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
     function createButterflies(count) {
-      return Array.from({ length: count }, () => ({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-      }));
+      return Array.from({ length: count }, () => {
+        const vx = (Math.random() - 0.5) * 2;
+        const vy = (Math.random() - 0.5) * 2;
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          vx, vy,
+          cvx: vx, cvy: vy  // cruise (natural) velocity
+        };
+      });
     }
 
     const EVASION_RADIUS = 120;
     const EVASION_FORCE = 4;
     const MAX_SPEED = 5;
+    const CRUISE_SPEED = 2;
 
     function drawButterflies() {
       ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
       ctx.font = "24px serif";
       for (const b of butterflies) {
+        // Slowly drift cruise velocity for natural wandering
+        b.cvx += (Math.random() - 0.5) * 0.05;
+        b.cvy += (Math.random() - 0.5) * 0.05;
+        const cs = Math.sqrt(b.cvx * b.cvx + b.cvy * b.cvy);
+        if (cs > CRUISE_SPEED) { b.cvx = b.cvx / cs * CRUISE_SPEED; b.cvy = b.cvy / cs * CRUISE_SPEED; }
+
+        // Evasion force when near cursor
         const dx = b.x - mouse.x;
         const dy = b.y - mouse.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -687,16 +699,22 @@
           b.vx += (dx / dist) * force;
           b.vy += (dy / dist) * force;
         }
+
+        // Pull back toward cruise velocity
+        b.vx += (b.cvx - b.vx) * 0.03;
+        b.vy += (b.cvy - b.vy) * 0.03;
+
         // Cap speed
         const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
         if (speed > MAX_SPEED) {
           b.vx = (b.vx / speed) * MAX_SPEED;
           b.vy = (b.vy / speed) * MAX_SPEED;
         }
+
         ctx.fillText("🦋", b.x, b.y);
         b.x += b.vx; b.y += b.vy;
-        if (b.x < 0 || b.x > window.innerWidth) b.vx *= -1;
-        if (b.y < 0 || b.y > window.innerHeight) b.vy *= -1;
+        if (b.x < 0 || b.x > window.innerWidth) { b.vx *= -1; b.cvx *= -1; }
+        if (b.y < 0 || b.y > window.innerHeight) { b.vy *= -1; b.cvy *= -1; }
       }
       animationFrame = requestAnimationFrame(drawButterflies);
     }
