@@ -648,6 +648,7 @@
     Butterflies: Off</button>
 
   <script>
+    const BUTTERFLY_KEY = "soDashboard.butterflies";
     const butterflyCanvas = document.getElementById("butterflyCanvas");
     const toggleBtn = document.getElementById("toggleButterflies");
     const ctx = butterflyCanvas.getContext("2d");
@@ -657,23 +658,42 @@
     let butterflies = [];
     let animationFrame;
     let isRunning = false;
+    let mouse = { x: -9999, y: -9999 };
+
+    window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
     function createButterflies(count) {
-      const emojis = ["🦋", "🦋", "🦋", "🦋"];
       return Array.from({ length: count }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
         vx: (Math.random() - 0.5) * 2,
         vy: (Math.random() - 0.5) * 2,
-        emoji: emojis[Math.floor(Math.random() * emojis.length)]
       }));
     }
+
+    const EVASION_RADIUS = 120;
+    const EVASION_FORCE = 4;
+    const MAX_SPEED = 5;
 
     function drawButterflies() {
       ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
       ctx.font = "24px serif";
       for (const b of butterflies) {
-        ctx.fillText(b.emoji, b.x, b.y);
+        const dx = b.x - mouse.x;
+        const dy = b.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < EVASION_RADIUS && dist > 0) {
+          const force = (EVASION_RADIUS - dist) / EVASION_RADIUS * EVASION_FORCE;
+          b.vx += (dx / dist) * force;
+          b.vy += (dy / dist) * force;
+        }
+        // Cap speed
+        const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+        if (speed > MAX_SPEED) {
+          b.vx = (b.vx / speed) * MAX_SPEED;
+          b.vy = (b.vy / speed) * MAX_SPEED;
+        }
+        ctx.fillText("🦋", b.x, b.y);
         b.x += b.vx; b.y += b.vy;
         if (b.x < 0 || b.x > window.innerWidth) b.vx *= -1;
         if (b.y < 0 || b.y > window.innerHeight) b.vy *= -1;
@@ -681,23 +701,33 @@
       animationFrame = requestAnimationFrame(drawButterflies);
     }
 
+    function startButterflies() {
+      butterflies = createButterflies(20);
+      drawButterflies();
+      toggleBtn.textContent = "🦋 Butterflies: On";
+      isRunning = true;
+      localStorage.setItem(BUTTERFLY_KEY, "on");
+    }
+
+    function stopButterflies() {
+      cancelAnimationFrame(animationFrame);
+      ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
+      toggleBtn.textContent = "🦋 Butterflies: Off";
+      isRunning = false;
+      localStorage.setItem(BUTTERFLY_KEY, "off");
+    }
+
     toggleBtn.addEventListener("click", () => {
-      if (isRunning) {
-        cancelAnimationFrame(animationFrame);
-        ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
-        toggleBtn.textContent = "🦋 Butterflies: Off";
-      } else {
-        butterflies = createButterflies(20);
-        drawButterflies();
-        toggleBtn.textContent = "🦋 Butterflies: On";
-      }
-      isRunning = !isRunning;
+      if (isRunning) stopButterflies(); else startButterflies();
     });
 
     window.addEventListener("resize", () => {
       butterflyCanvas.width = window.innerWidth;
       butterflyCanvas.height = window.innerHeight;
     });
+
+    // Restore saved state
+    if (localStorage.getItem(BUTTERFLY_KEY) === "on") startButterflies();
   </script>
 </body>
 </html>
