@@ -596,6 +596,13 @@
       content.className = "block-content";
       content.innerHTML = linkify(data?.content || "Content...");
       content.contentEditable = true;
+      content.addEventListener("mousedown", (e) => {
+        if (e.target.tagName === "A") {
+          e.preventDefault();   // prevent contentEditable from grabbing focus
+          e.stopPropagation();  // prevent block drag
+          window.open(e.target.href, "_blank");
+        }
+      });
       content.addEventListener("focus", () => {
         content.textContent = content.textContent;
       });
