@@ -302,6 +302,13 @@
       font-size: 14px;
       margin-bottom: 12px;
       line-height: 1.4;
+      overflow: auto;
+    }
+
+    .block-content a {
+      color: var(--if-blue);
+      text-decoration: underline;
+      word-break: break-all;
     }
 
     .block-date {
@@ -563,6 +570,14 @@
       }
     }
 
+    // Linkify plain text: convert URLs to <a> tags
+    function linkify(text) {
+      const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return escaped.replace(/(https?:\/\/[^\s]+)/g, url =>
+        `<a href="${url}" target="_blank" onclick="event.stopPropagation()">${url}</a>`
+      );
+    }
+
     // Sticky Blocks
     function createBlock(data = null) {
       const block = document.createElement("div");
@@ -579,8 +594,15 @@
 
       const content = document.createElement("div");
       content.className = "block-content";
-      content.textContent = data?.content || "Content...";
+      content.innerHTML = linkify(data?.content || "Content...");
       content.contentEditable = true;
+      content.addEventListener("focus", () => {
+        content.textContent = content.textContent;
+      });
+      content.addEventListener("blur", () => {
+        content.innerHTML = linkify(content.textContent);
+        saveBlocks();
+      });
       content.addEventListener("input", saveBlocks);
       block.appendChild(content);
 
@@ -600,6 +622,7 @@
 
       block.onmousedown = function (e) {
         if (e.target.className && String(e.target.className).includes("delete-btn")) return;
+        if (e.target.tagName === "A") return;
         let offsetX = e.clientX - block.getBoundingClientRect().left;
         let offsetY = e.clientY - block.getBoundingClientRect().top;
         document.onmousemove = function (e) {
