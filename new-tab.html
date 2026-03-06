@@ -30,7 +30,6 @@
       color-scheme: light;
     }
 
-    /* Dark scheme via data attribute */
     [data-theme="dark"] {
       --bg: radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%);
       --surface: #0f172a;
@@ -48,7 +47,6 @@
       color-scheme: dark;
     }
 
-    /* Respect system preference by default; user toggle overrides via data-theme */
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg: radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%);
@@ -75,7 +73,7 @@
       background: var(--bg);
       margin: 0;
       padding: 20px;
-      overflow-x: hidden;
+      overflow: hidden;
       color: var(--text);
     }
 
@@ -151,9 +149,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    button:active {
-      transform: translateY(0);
-    }
+    button:active { transform: translateY(0); }
 
     /* === QUICK LINKS === */
     .quick-links {
@@ -174,6 +170,7 @@
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
       transition: transform 0.15s ease, box-shadow 0.2s ease;
+      cursor: pointer;
     }
 
     .quick-link:hover {
@@ -320,11 +317,86 @@
     /* === CONTROLS === */
     #controls { text-align: center; margin-bottom: 20px; }
     #controls button { margin: 0 5px; }
+
+    /* === EFFECTS PANEL === */
+    #effectsPanel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    #effectsList {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    #effectsList.open { display: flex; }
+
+    #effectsList button {
+      padding: 8px 14px;
+      font-size: 0.82em;
+      font-weight: 500;
+      text-align: left;
+      border-radius: 8px;
+      white-space: nowrap;
+      background: linear-gradient(135deg, #005fa8, #004d90);
+      opacity: 0.85;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    #effectsList button[data-active="true"] {
+      background: linear-gradient(135deg, #0080d4, #006ab3);
+      opacity: 1;
+      box-shadow: 0 0 0 2px rgba(100,180,255,0.4), 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    #effectsToggle {
+      padding: 9px 16px;
+      font-size: 0.88em;
+    }
+
+    /* === BREATHING GUIDE === */
+    #breathingGuide {
+      display: none;
+      position: fixed;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      text-align: center;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #breathCircle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 32%, rgba(160,220,255,0.55), rgba(80,130,220,0.15));
+      border: 1.5px solid rgba(130,190,255,0.4);
+      margin: 0 auto 10px;
+      transform-origin: center;
+      will-change: transform, opacity;
+    }
+
+    #breathLabel {
+      color: var(--muted);
+      font-size: 0.78em;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 
 <body>
-  <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓 Theme</button>
+  <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#127763; Theme</button>
 
   <h1>Search</h1>
 
@@ -353,9 +425,32 @@
     </div>
   </div>
 
+  <!-- Breathing guide -->
+  <div id="breathingGuide">
+    <div id="breathCircle"></div>
+    <div id="breathLabel">Inhale</div>
+  </div>
+
+  <!-- Effects panel -->
+  <div id="effectsPanel">
+    <div id="effectsList">
+      <button id="btn-butterflies" data-active="false" onclick="toggleEffect('butterflies')">&#x1F98B; Butterflies: Off</button>
+      <button id="btn-fireflies"   data-active="false" onclick="toggleEffect('fireflies')"  >&#x2728; Fireflies: Off</button>
+      <button id="btn-leaves"      data-active="false" onclick="toggleEffect('leaves')"     >&#x1F342; Leaves: Off</button>
+      <button id="btn-rain"        data-active="false" onclick="toggleEffect('rain')"       >&#x1F327; Rain: Off</button>
+      <button id="btn-breathe"     data-active="false" onclick="toggleEffect('breathe')"    >&#x1FAC1; Breathe: Off</button>
+      <button id="btn-aurora"      data-active="false" onclick="toggleEffect('aurora')"     >&#x1F30C; Aurora: Off</button>
+    </div>
+    <button id="effectsToggle" onclick="document.getElementById('effectsList').classList.toggle('open')">&#x2699; Effects</button>
+  </div>
+
+  <!-- Particle canvas: butterflies, fireflies, leaves, rain -->
+  <canvas id="particleCanvas"
+    style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;"></canvas>
+
   <script>
     /* =========================
-       THEME: system + toggle
+       THEME
        ========================= */
     const THEME_KEY = "soDashboard.theme";
     const rootEl = document.documentElement;
@@ -365,97 +460,64 @@
       return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     function applyTheme(theme) {
-      // theme = 'light' | 'dark' | null (system)
-      if (!theme) {
-        rootEl.removeAttribute("data-theme");
-        localStorage.removeItem(THEME_KEY);
-        return;
-      }
+      if (!theme) { rootEl.removeAttribute("data-theme"); localStorage.removeItem(THEME_KEY); return; }
       rootEl.setAttribute("data-theme", theme);
       localStorage.setItem(THEME_KEY, theme);
     }
     function initTheme() {
       const saved = localStorage.getItem(THEME_KEY);
-      if (saved === "light" || saved === "dark") {
-        applyTheme(saved);
-      } else {
-        // follow system by default
-        applyTheme(null);
-      }
+      if (saved === "light" || saved === "dark") applyTheme(saved);
+      else applyTheme(null);
       themeToggleBtn.addEventListener("click", () => {
         const current = rootEl.getAttribute("data-theme");
-        if (!current) {
-          // currently following system; flip to explicit opposite of system
-          applyTheme(getSystemPrefersDark() ? "light" : "dark");
-        } else if (current === "light") {
-          applyTheme("dark");
-        } else if (current === "dark") {
-          applyTheme(null); // back to system
-        }
+        if (!current) applyTheme(getSystemPrefersDark() ? "light" : "dark");
+        else if (current === "light") applyTheme("dark");
+        else if (current === "dark") applyTheme(null);
         themeToggleBtn.blur();
       });
-
-      // Live-update if following system (no data-theme attr)
       if (!rootEl.getAttribute("data-theme") && window.matchMedia) {
-        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
-          if (!localStorage.getItem(THEME_KEY)) {
-            applyTheme(null); // keep following system
-          }
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+          if (!localStorage.getItem(THEME_KEY)) applyTheme(null);
         });
       }
     }
 
-    /* ======================================
-       AVATAR/FAVICON: SVG fallback generator
-       ====================================== */
+    /* =========================
+       AVATAR/FAVICON
+       ========================= */
     function hostnameFromUrl(url) {
       try { return new URL(url).hostname; }
       catch { return location.hostname; }
     }
     function pickColorFromString(str) {
-      // deterministic pastel-ish
       let hash = 0;
       for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      const h = Math.abs(hash) % 360;
-      return `hsl(${h}, 65%, 55%)`;
+      return `hsl(${Math.abs(hash) % 360}, 65%, 55%)`;
     }
     function generateAvatarDataURL(urlOrHost, size = 64) {
       const host = urlOrHost.includes(".") ? hostnameFromUrl("https://" + urlOrHost.replace(/^https?:\/\//, "")) : hostnameFromUrl(urlOrHost);
-      const initial = (host[0] || "•").toUpperCase();
+      const initial = (host[0] || "\u2022").toUpperCase();
       const bg = pickColorFromString(host);
-      const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-           <defs>
-             <filter id="s">
-               <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.2"/>
-             </filter>
-           </defs>
-           <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 2}" fill="${bg}" filter="url(#s)"/>
-           <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
-                 font-family="Inter,Segoe UI,Arial" font-size="${size*0.52}" fill="#fff">${initial}</text>
-         </svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+        <defs><filter id="s"><feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.2"/></filter></defs>
+        <circle cx="${size/2}" cy="${size/2}" r="${size/2-2}" fill="${bg}" filter="url(#s)"/>
+        <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+          font-family="Inter,Segoe UI,Arial" font-size="${size*0.52}" fill="#fff">${initial}</text>
+      </svg>`;
       return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
     }
-
-    // Check page favicon and replace if 404
     function ensurePageFavicon() {
       const link = document.getElementById("page-favicon");
       if (!link || !link.href) return;
-
       const testImg = new Image();
-      testImg.onload = () => { /* ok */ };
-      testImg.onerror = () => {
-        const host = location.hostname || "site";
-        link.href = generateAvatarDataURL(host, 64);
-      };
+      testImg.onerror = () => { link.href = generateAvatarDataURL(location.hostname || "site", 64); };
       testImg.src = link.href;
     }
 
     /* =========================
-       Existing app state/logic
+       APP STATE / LINKS / BLOCKS
        ========================= */
     const quickLinksKey = "quickLinks";
-    const blocksKey = "stickyBlocks";
     const searchKey = "recentSearches";
 
     function saveRecentSearch(query) {
@@ -464,79 +526,47 @@
       localStorage.setItem(searchKey, JSON.stringify(history));
       renderRecentSearches();
     }
-
     function renderRecentSearches() {
       const container = document.getElementById("recentSearches");
       const history = JSON.parse(localStorage.getItem(searchKey)) || [];
-      if (history.length === 0) {
-        container.innerHTML = "";
-        return;
-      }
+      if (history.length === 0) { container.innerHTML = ""; return; }
       container.innerHTML = `<strong>Recent Searches:</strong> ${history.map(query =>
         `<a href="#" onclick="execSearch('${query.replace(/'/g, "\\'")}');return false;">${query}</a>`
-      ).join(" • ")}`;
+      ).join(" \u2022 ")}`;
     }
-
     function getFavicon(url) {
       try { return new URL(url).origin + "/favicon.ico"; }
       catch { return "https://www.stayonline.com/favicon.ico"; }
     }
-
     function loadLinks() {
-      const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
-      renderLinks(links);
+      renderLinks(JSON.parse(localStorage.getItem(quickLinksKey)) || []);
     }
-
     function renderLinks(links) {
       const container = document.getElementById("quickLinksContainer");
       container.innerHTML = "";
       links.forEach((link, i) => {
         const div = document.createElement("div");
         div.className = "quick-link";
-
         const a = document.createElement("a");
         a.href = link.url;
-
         const info = document.createElement("div");
         info.className = "link-info";
-
         const img = document.createElement("img");
-        img.alt = "icon";
-        img.referrerPolicy = "no-referrer";
+        img.alt = "icon"; img.referrerPolicy = "no-referrer";
         img.src = link.favicon || getFavicon(link.url);
-
-        // If favicon fails, swap to generated avatar
-        img.onerror = () => {
-          img.onerror = null;
-          img.src = generateAvatarDataURL(hostnameFromUrl(link.url), 22);
-        };
-
+        img.onerror = () => { img.onerror = null; img.src = generateAvatarDataURL(hostnameFromUrl(link.url), 22); };
         const text = document.createElement("span");
         text.textContent = link.text;
-
-        info.appendChild(img);
-        info.appendChild(text);
-        a.appendChild(info);
-
+        info.appendChild(img); info.appendChild(text); a.appendChild(info);
         const del = document.createElement("button");
-        del.className = "delete-btn";
-        del.textContent = "✕";
+        del.className = "delete-btn"; del.textContent = "\u2715";
         del.onclick = () => deleteLink(i);
-
-        div.appendChild(a);
-        div.appendChild(del);
-
+        div.appendChild(a); div.appendChild(del);
         container.appendChild(div);
       });
     }
-
-    function openModal() {
-      document.getElementById("linkModal").style.display = "flex";
-    }
-    function closeModal() {
-      document.getElementById("linkModal").style.display = "none";
-    }
-
+    function openModal() { document.getElementById("linkModal").style.display = "flex"; }
+    function closeModal() { document.getElementById("linkModal").style.display = "none"; }
     function saveLink() {
       const url = document.getElementById("linkUrl").value.trim();
       const text = document.getElementById("linkText").value.trim();
@@ -547,87 +577,64 @@
       localStorage.setItem(quickLinksKey, JSON.stringify(links));
       closeModal(); renderLinks(links);
     }
-
     function deleteLink(index) {
       const links = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
       links.splice(index, 1);
       localStorage.setItem(quickLinksKey, JSON.stringify(links));
       renderLinks(links);
     }
-
     function execSearch(searchQuery) {
       const query = searchQuery || document.getElementById("search").value.trim();
-      if (query) {
-        let url;
-        if (query.includes("!p ")) {
-          url = `https://www.perplexity.ai/search?q=${encodeURIComponent(query.replace("!p ", "").trim())}`;
-        } else if (query.includes("!s")){
-          url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(query.replace("!s ", "").trim())})`;
-        } else {
-          url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        }
-        saveRecentSearch(query);
-        window.location = url;
+      if (!query) return;
+      let url;
+      if (query.includes("!p ")) {
+        url = `https://www.perplexity.ai/search?q=${encodeURIComponent(query.replace("!p ", "").trim())}`;
+      } else if (query.includes("!s")) {
+        url = `https://www.stayonline.com/pc_combined_results.asp?search_prod=(searchlike~p.sku~${encodeURIComponent(query.replace("!s ", "").trim())})`;
+      } else {
+        url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
       }
+      saveRecentSearch(query);
+      window.location = url;
     }
-
-    // Linkify plain text: convert URLs to <a> tags
     function linkify(text) {
       const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return escaped.replace(/(https?:\/\/[^\s]+)/g, url =>
         `<a href="${url}" target="_blank" onclick="event.stopPropagation()">${url}</a>`
       );
     }
-
-    // Sticky Blocks
     function createBlock(data = null) {
       const block = document.createElement("div");
       block.className = "block";
       block.style.left = (data?.x || Math.random() * window.innerWidth * 0.6) + "px";
-      block.style.top = (data?.y || Math.random() * window.innerHeight * 0.6) + "px";
-
+      block.style.top  = (data?.y || Math.random() * window.innerHeight * 0.6) + "px";
       const title = document.createElement("div");
       title.className = "block-title";
       title.textContent = data?.title || "Title...";
       title.contentEditable = true;
       title.addEventListener("input", saveBlocks);
       block.appendChild(title);
-
       const content = document.createElement("div");
       content.className = "block-content";
       content.innerHTML = linkify(data?.content || "Content...");
       content.contentEditable = true;
       content.addEventListener("mousedown", (e) => {
-        if (e.target.tagName === "A") {
-          e.preventDefault();   // prevent contentEditable from grabbing focus
-          e.stopPropagation();  // prevent block drag
-          window.open(e.target.href, "_blank");
-        }
+        if (e.target.tagName === "A") { e.preventDefault(); e.stopPropagation(); window.open(e.target.href, "_blank"); }
       });
-      content.addEventListener("focus", () => {
-        content.textContent = content.textContent;
-      });
-      content.addEventListener("blur", () => {
-        content.innerHTML = linkify(content.textContent);
-        saveBlocks();
-      });
+      content.addEventListener("focus", () => { content.textContent = content.textContent; });
+      content.addEventListener("blur", () => { content.innerHTML = linkify(content.textContent); saveBlocks(); });
       content.addEventListener("input", saveBlocks);
       block.appendChild(content);
-
       const deleteBtn = document.createElement("a");
-      deleteBtn.className = "delete-btn";
-      deleteBtn.textContent = "X";
+      deleteBtn.className = "delete-btn"; deleteBtn.textContent = "X";
       deleteBtn.style.marginRight = "10px";
       deleteBtn.onclick = () => { block.remove(); saveBlocks(); };
       block.appendChild(deleteBtn);
-
       const date = document.createElement("div");
       date.className = "block-date";
       date.textContent = "Created: " + (data?.created || new Date().toLocaleString());
       block.appendChild(date);
-
       document.body.appendChild(block);
-
       block.onmousedown = function (e) {
         if (e.target.className && String(e.target.className).includes("delete-btn")) return;
         if (e.target.tagName === "A") return;
@@ -635,148 +642,346 @@
         let offsetY = e.clientY - block.getBoundingClientRect().top;
         document.onmousemove = function (e) {
           block.style.left = e.clientX - offsetX + "px";
-          block.style.top = e.clientY - offsetY + "px";
+          block.style.top  = e.clientY - offsetY + "px";
         };
-        document.onmouseup = () => {
-          document.onmousemove = null;
-          document.onmouseup = null;
-          saveBlocks();
-        };
+        document.onmouseup = () => { document.onmousemove = null; document.onmouseup = null; saveBlocks(); };
       };
     }
-
     function saveBlocks() {
       const blocks = [...document.querySelectorAll(".block")].map(b => ({
-        x: parseFloat(b.style.left),
-        y: parseFloat(b.style.top),
+        x: parseFloat(b.style.left), y: parseFloat(b.style.top),
         title: b.querySelector(".block-title").textContent,
         content: b.querySelector(".block-content").textContent,
         created: b.querySelector(".block-date").textContent.replace("Created: ", "")
       }));
       localStorage.setItem("stickyBlocks", JSON.stringify(blocks));
     }
-
     function loadBlocks() {
-      const blocks = JSON.parse(localStorage.getItem("stickyBlocks") || "[]");
-      blocks.forEach(createBlock);
+      JSON.parse(localStorage.getItem("stickyBlocks") || "[]").forEach(createBlock);
     }
 
-    // Boot
+    /* ======================================================
+       EFFECTS SYSTEM
+       ====================================================== */
+
+    const EFFECT_KEYS = {
+      butterflies: 'soDashboard.butterflies',
+      fireflies:   'soDashboard.fireflies',
+      leaves:      'soDashboard.leaves',
+      rain:        'soDashboard.rain',
+      breathe:     'soDashboard.breathe',
+      aurora:      'soDashboard.aurora'
+    };
+    const EFFECT_LABELS = {
+      butterflies: '\u{1F98B} Butterflies',
+      fireflies:   '\u2728 Fireflies',
+      leaves:      '\u{1F342} Leaves',
+      rain:        '\u{1F327} Rain',
+      breathe:     '\u{1FAC1} Breathe',
+      aurora:      '\u{1F30C} Aurora'
+    };
+    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false };
+
+    /* --- Particle canvas --- */
+    const particleCanvas = document.getElementById('particleCanvas');
+    const pctx = particleCanvas.getContext('2d');
+    particleCanvas.width = window.innerWidth;
+    particleCanvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      particleCanvas.width = window.innerWidth;
+      particleCanvas.height = window.innerHeight;
+    });
+
+    let mouse = { x: -9999, y: -9999 };
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+    /* --- Butterflies --- */
+    let butterfliesList = [];
+    const EVASION_RADIUS = 120, EVASION_FORCE = 4, MAX_SPEED = 5, CRUISE_SPEED = 2;
+
+    function mkButterfly() {
+      const vx = (Math.random() - 0.5) * 2, vy = (Math.random() - 0.5) * 2;
+      return { x: Math.random() * innerWidth, y: Math.random() * innerHeight, vx, vy, cvx: vx, cvy: vy };
+    }
+    function tickButterfly(b) {
+      b.cvx += (Math.random() - 0.5) * 0.05;
+      b.cvy += (Math.random() - 0.5) * 0.05;
+      const cs = Math.hypot(b.cvx, b.cvy);
+      if (cs > CRUISE_SPEED) { b.cvx = b.cvx/cs*CRUISE_SPEED; b.cvy = b.cvy/cs*CRUISE_SPEED; }
+      const dx = b.x - mouse.x, dy = b.y - mouse.y, dist = Math.hypot(dx, dy);
+      if (dist < EVASION_RADIUS && dist > 0) {
+        const f = (EVASION_RADIUS - dist) / EVASION_RADIUS * EVASION_FORCE;
+        b.vx += dx/dist*f; b.vy += dy/dist*f;
+      }
+      b.vx += (b.cvx - b.vx) * 0.03; b.vy += (b.cvy - b.vy) * 0.03;
+      const s = Math.hypot(b.vx, b.vy);
+      if (s > MAX_SPEED) { b.vx = b.vx/s*MAX_SPEED; b.vy = b.vy/s*MAX_SPEED; }
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < 0 || b.x > innerWidth)  { b.vx *= -1; b.cvx *= -1; }
+      if (b.y < 0 || b.y > innerHeight) { b.vy *= -1; b.cvy *= -1; }
+    }
+
+    /* --- Fireflies --- */
+    let firefliesList = [];
+
+    function mkFirefly() {
+      return {
+        x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+        opacity: Math.random(), opDir: Math.random() > 0.5 ? 1 : -1,
+        r: 2.5 + Math.random() * 2,
+        hue: 55 + Math.floor(Math.random() * 55)
+      };
+    }
+    function tickFirefly(f) {
+      f.vx += (Math.random() - 0.5) * 0.04; f.vy += (Math.random() - 0.5) * 0.04;
+      const s = Math.hypot(f.vx, f.vy);
+      if (s > 0.7) { f.vx = f.vx/s*0.7; f.vy = f.vy/s*0.7; }
+      f.opacity += f.opDir * 0.01;
+      if (f.opacity >= 1)    { f.opacity = 1;    f.opDir = -1; }
+      if (f.opacity <= 0.05) { f.opacity = 0.05; f.opDir =  1; }
+      f.x += f.vx; f.y += f.vy;
+      if (f.x < 0) f.x = innerWidth;  else if (f.x > innerWidth)  f.x = 0;
+      if (f.y < 0) f.y = innerHeight; else if (f.y > innerHeight) f.y = 0;
+    }
+    function drawFirefly(f) {
+      const g = pctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 5);
+      g.addColorStop(0, `hsla(${f.hue},100%,78%,${f.opacity})`);
+      g.addColorStop(1, `hsla(${f.hue},100%,60%,0)`);
+      pctx.fillStyle = g;
+      pctx.beginPath(); pctx.arc(f.x, f.y, f.r * 5, 0, Math.PI*2); pctx.fill();
+      pctx.fillStyle = `hsla(${f.hue},100%,97%,${f.opacity})`;
+      pctx.beginPath(); pctx.arc(f.x, f.y, f.r * 0.45, 0, Math.PI*2); pctx.fill();
+    }
+
+    /* --- Falling leaves --- */
+    let leavesList = [];
+    const LEAF_EMOJIS = ['\u{1F342}', '\u{1F341}', '\u{1F343}'];
+
+    function mkLeaf(startY) {
+      return {
+        x: Math.random() * innerWidth,
+        y: startY !== undefined ? startY : -30,
+        vy: 0.8 + Math.random() * 1.2,
+        rot: Math.random() * Math.PI * 2,
+        rotSpd: (Math.random() - 0.5) * 0.04,
+        swayA: Math.random() * Math.PI * 2,
+        swaySpd: 0.018 + Math.random() * 0.02,
+        swayAmp: 0.4 + Math.random() * 0.9,
+        size: 16 + Math.floor(Math.random() * 12),
+        emoji: LEAF_EMOJIS[Math.floor(Math.random() * 3)]
+      };
+    }
+    function initLeaves() {
+      leavesList = Array.from({length: 20}, () => mkLeaf(Math.random() * innerHeight));
+    }
+    function tickLeaf(l) {
+      l.swayA += l.swaySpd;
+      l.rot += l.rotSpd;
+      l.x += Math.sin(l.swayA) * l.swayAmp;
+      l.y += l.vy;
+    }
+    function drawLeaf(l) {
+      pctx.save();
+      pctx.translate(l.x, l.y);
+      pctx.rotate(l.rot);
+      pctx.font = `${l.size}px serif`;
+      pctx.fillText(l.emoji, -l.size/2, l.size/2);
+      pctx.restore();
+    }
+
+    /* --- Rain --- */
+    let rainDrops = [];
+
+    function mkDrop(spreadY) {
+      return {
+        x: Math.random() * (innerWidth + 300) - 100,
+        y: spreadY ? Math.random() * innerHeight : -20,
+        len: 12 + Math.random() * 14,
+        spd: 10 + Math.random() * 7,
+        op: 0.22 + Math.random() * 0.32
+      };
+    }
+    function initRain() {
+      rainDrops = Array.from({length: 130}, () => mkDrop(true));
+    }
+    function drawDrop(r) {
+      pctx.beginPath();
+      pctx.moveTo(r.x, r.y);
+      pctx.lineTo(r.x - r.len * 0.25, r.y + r.len);
+      pctx.strokeStyle = `rgba(174,210,240,${r.op})`;
+      pctx.lineWidth = 1;
+      pctx.stroke();
+    }
+
+    /* --- Main particle loop --- */
+    let particleRaf = null;
+
+    function particleLoop() {
+      pctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+
+      if (effects.butterflies) {
+        pctx.font = '24px serif';
+        for (const b of butterfliesList) { tickButterfly(b); pctx.fillText('\u{1F98B}', b.x, b.y); }
+      }
+      if (effects.fireflies) {
+        for (const f of firefliesList) { tickFirefly(f); drawFirefly(f); }
+      }
+      if (effects.leaves) {
+        for (let i = leavesList.length - 1; i >= 0; i--) {
+          const l = leavesList[i]; tickLeaf(l); drawLeaf(l);
+          if (l.y > innerHeight + 30) leavesList.splice(i, 1, mkLeaf());
+        }
+      }
+      if (effects.rain) {
+        for (let i = rainDrops.length - 1; i >= 0; i--) {
+          const r = rainDrops[i];
+          r.x -= 2.5; r.y += r.spd;
+          drawDrop(r);
+          if (r.y > innerHeight + 20 || r.x < -60) rainDrops.splice(i, 1, mkDrop(false));
+        }
+      }
+
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain) {
+        particleRaf = requestAnimationFrame(particleLoop);
+      } else {
+        particleRaf = null;
+        pctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+      }
+    }
+
+    function ensureParticleLoop() {
+      if (!particleRaf) particleLoop();
+    }
+
+    /* --- Breathing guide --- */
+    let breathPhase = 'inhale', breathStart = 0, breathRaf = null;
+    const BREATH = {
+      inhale: { dur: 4000, next: 'hold',   label: 'Inhale' },
+      hold:   { dur: 2000, next: 'exhale', label: 'Hold'   },
+      exhale: { dur: 6000, next: 'pause',  label: 'Exhale' },
+      pause:  { dur: 2000, next: 'inhale', label: 'Pause'  }
+    };
+
+    function breathLoop() {
+      // Advance phase on completion
+      while (Date.now() - breathStart >= BREATH[breathPhase].dur) {
+        breathStart += BREATH[breathPhase].dur;
+        breathPhase = BREATH[breathPhase].next;
+      }
+      const t = (Date.now() - breathStart) / BREATH[breathPhase].dur;
+      document.getElementById('breathLabel').textContent = BREATH[breathPhase].label;
+      let scale;
+      if      (breathPhase === 'inhale') scale = 0.5 + t * 0.5;
+      else if (breathPhase === 'hold')   scale = 1.0;
+      else if (breathPhase === 'exhale') scale = 1.0 - t * 0.5;
+      else                               scale = 0.5;
+      const circle = document.getElementById('breathCircle');
+      circle.style.transform = `scale(${scale})`;
+      circle.style.opacity = 0.3 + scale * 0.7;
+      breathRaf = requestAnimationFrame(breathLoop);
+    }
+
+    /* --- Aurora --- */
+    let auroraRaf = null, auroraTime = 0;
+
+    function isDarkMode() {
+      return rootEl.getAttribute('data-theme') === 'dark' ||
+        (!rootEl.getAttribute('data-theme') && getSystemPrefersDark());
+    }
+    function auroraLoop() {
+      auroraTime += 0.003;
+      const x1 = 50 + Math.sin(auroraTime * 0.7) * 30;
+      const y1 = 20 + Math.cos(auroraTime * 0.5) * 15;
+      const x2 = 65 + Math.sin(auroraTime * 0.4 + 1.2) * 28;
+      const y2 = 55 + Math.cos(auroraTime * 0.6 + 2.1) * 22;
+      const x3 = 35 + Math.sin(auroraTime * 0.3 + 2.5) * 20;
+      const y3 = 40 + Math.cos(auroraTime * 0.8 + 0.8) * 18;
+      if (isDarkMode()) {
+        document.body.style.background = `
+          radial-gradient(ellipse 90% 55% at ${x1}% ${y1}%, rgba(0,255,150,0.09) 0%, transparent 65%),
+          radial-gradient(ellipse 65% 75% at ${x2}% ${y2}%, rgba(90,40,255,0.09) 0%, transparent 65%),
+          radial-gradient(ellipse 70% 50% at ${x3}% ${y3}%, rgba(0,200,255,0.07) 0%, transparent 60%),
+          radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%)`;
+      } else {
+        document.body.style.background = `
+          radial-gradient(ellipse 90% 55% at ${x1}% ${y1}%, rgba(0,190,130,0.07) 0%, transparent 65%),
+          radial-gradient(ellipse 65% 75% at ${x2}% ${y2}%, rgba(100,70,220,0.06) 0%, transparent 65%),
+          radial-gradient(ellipse 70% 50% at ${x3}% ${y3}%, rgba(0,160,220,0.05) 0%, transparent 60%),
+          linear-gradient(135deg, #f9f9f9, #eef3f9)`;
+      }
+      auroraRaf = requestAnimationFrame(auroraLoop);
+    }
+    function stopAurora() {
+      cancelAnimationFrame(auroraRaf); auroraRaf = null;
+      document.body.style.background = '';
+    }
+
+    /* --- Toggle logic --- */
+    function toggleEffect(name) {
+      effects[name] = !effects[name];
+      localStorage.setItem(EFFECT_KEYS[name], effects[name] ? 'on' : 'off');
+      updateEffectBtn(name);
+
+      switch (name) {
+        case 'butterflies':
+          if (effects.butterflies) butterfliesList = Array.from({length: 20}, mkButterfly);
+          else butterfliesList = [];
+          break;
+        case 'fireflies':
+          if (effects.fireflies) firefliesList = Array.from({length: 45}, mkFirefly);
+          else firefliesList = [];
+          break;
+        case 'leaves':
+          if (effects.leaves) initLeaves();
+          else leavesList = [];
+          break;
+        case 'rain':
+          if (effects.rain) initRain();
+          else rainDrops = [];
+          break;
+        case 'breathe': {
+          const guide = document.getElementById('breathingGuide');
+          if (effects.breathe) {
+            guide.style.display = 'block';
+            breathPhase = 'inhale'; breathStart = Date.now();
+            breathLoop();
+          } else {
+            guide.style.display = 'none';
+            cancelAnimationFrame(breathRaf); breathRaf = null;
+          }
+          break;
+        }
+        case 'aurora':
+          if (effects.aurora) auroraLoop();
+          else stopAurora();
+          break;
+      }
+
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain) ensureParticleLoop();
+    }
+
+    function updateEffectBtn(name) {
+      const btn = document.getElementById('btn-' + name);
+      btn.textContent = `${EFFECT_LABELS[name]}: ${effects[name] ? 'On' : 'Off'}`;
+      btn.dataset.active = effects[name] ? 'true' : 'false';
+    }
+
+    function restoreEffects() {
+      for (const name of Object.keys(effects)) {
+        if (localStorage.getItem(EFFECT_KEYS[name]) === 'on') toggleEffect(name);
+      }
+    }
+
+    /* === BOOT === */
     window.onload = () => {
       initTheme();
       ensurePageFavicon();
       loadLinks();
       loadBlocks();
       renderRecentSearches();
+      restoreEffects();
     };
-  </script>
-
-  <!-- Butterflies canvas + toggle (unchanged) -->
-  <canvas id="butterflyCanvas"
-    style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1;"></canvas>
-  <button id="toggleButterflies"
-    style="position:fixed;bottom:20px;right:20px;z-index:1000;padding:10px;border:none;border-radius:6px;background:#0069bb;color:white;cursor:pointer;">🦋
-    Butterflies: Off</button>
-
-  <script>
-    const BUTTERFLY_KEY = "soDashboard.butterflies";
-    const butterflyCanvas = document.getElementById("butterflyCanvas");
-    const toggleBtn = document.getElementById("toggleButterflies");
-    const ctx = butterflyCanvas.getContext("2d");
-    butterflyCanvas.width = window.innerWidth;
-    butterflyCanvas.height = window.innerHeight;
-
-    let butterflies = [];
-    let animationFrame;
-    let isRunning = false;
-    let mouse = { x: -9999, y: -9999 };
-
-    window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-
-    function createButterflies(count) {
-      return Array.from({ length: count }, () => {
-        const vx = (Math.random() - 0.5) * 2;
-        const vy = (Math.random() - 0.5) * 2;
-        return {
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight,
-          vx, vy,
-          cvx: vx, cvy: vy  // cruise (natural) velocity
-        };
-      });
-    }
-
-    const EVASION_RADIUS = 120;
-    const EVASION_FORCE = 4;
-    const MAX_SPEED = 5;
-    const CRUISE_SPEED = 2;
-
-    function drawButterflies() {
-      ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
-      ctx.font = "24px serif";
-      for (const b of butterflies) {
-        // Slowly drift cruise velocity for natural wandering
-        b.cvx += (Math.random() - 0.5) * 0.05;
-        b.cvy += (Math.random() - 0.5) * 0.05;
-        const cs = Math.sqrt(b.cvx * b.cvx + b.cvy * b.cvy);
-        if (cs > CRUISE_SPEED) { b.cvx = b.cvx / cs * CRUISE_SPEED; b.cvy = b.cvy / cs * CRUISE_SPEED; }
-
-        // Evasion force when near cursor
-        const dx = b.x - mouse.x;
-        const dy = b.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < EVASION_RADIUS && dist > 0) {
-          const force = (EVASION_RADIUS - dist) / EVASION_RADIUS * EVASION_FORCE;
-          b.vx += (dx / dist) * force;
-          b.vy += (dy / dist) * force;
-        }
-
-        // Pull back toward cruise velocity
-        b.vx += (b.cvx - b.vx) * 0.03;
-        b.vy += (b.cvy - b.vy) * 0.03;
-
-        // Cap speed
-        const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
-        if (speed > MAX_SPEED) {
-          b.vx = (b.vx / speed) * MAX_SPEED;
-          b.vy = (b.vy / speed) * MAX_SPEED;
-        }
-
-        ctx.fillText("🦋", b.x, b.y);
-        b.x += b.vx; b.y += b.vy;
-        if (b.x < 0 || b.x > window.innerWidth) { b.vx *= -1; b.cvx *= -1; }
-        if (b.y < 0 || b.y > window.innerHeight) { b.vy *= -1; b.cvy *= -1; }
-      }
-      animationFrame = requestAnimationFrame(drawButterflies);
-    }
-
-    function startButterflies() {
-      butterflies = createButterflies(20);
-      drawButterflies();
-      toggleBtn.textContent = "🦋 Butterflies: On";
-      isRunning = true;
-      localStorage.setItem(BUTTERFLY_KEY, "on");
-    }
-
-    function stopButterflies() {
-      cancelAnimationFrame(animationFrame);
-      ctx.clearRect(0, 0, butterflyCanvas.width, butterflyCanvas.height);
-      toggleBtn.textContent = "🦋 Butterflies: Off";
-      isRunning = false;
-      localStorage.setItem(BUTTERFLY_KEY, "off");
-    }
-
-    toggleBtn.addEventListener("click", () => {
-      if (isRunning) stopButterflies(); else startButterflies();
-    });
-
-    window.addEventListener("resize", () => {
-      butterflyCanvas.width = window.innerWidth;
-      butterflyCanvas.height = window.innerHeight;
-    });
-
-    // Restore saved state
-    if (localStorage.getItem(BUTTERFLY_KEY) === "on") startButterflies();
   </script>
 </body>
 </html>
