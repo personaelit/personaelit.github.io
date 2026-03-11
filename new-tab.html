@@ -363,34 +363,45 @@
     }
 
     /* === BREATHING GUIDE === */
+    #breathDim {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      z-index: 1002;
+      transition: opacity 0.4s ease;
+    }
+
     #breathingGuide {
       display: none;
       position: fixed;
-      bottom: 130px;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      z-index: 999;
+      transform: translate(-50%, -50%);
+      z-index: 1003;
       text-align: center;
       pointer-events: none;
       user-select: none;
     }
 
     #breathCircle {
-      width: 90px;
-      height: 90px;
+      width: 280px;
+      height: 280px;
       border-radius: 50%;
       background: radial-gradient(circle at 38% 32%, rgba(160,220,255,0.55), rgba(80,130,220,0.15));
-      border: 1.5px solid rgba(130,190,255,0.4);
-      margin: 0 auto 10px;
+      border: 2px solid rgba(130,190,255,0.45);
+      margin: 0 auto 20px;
       transform-origin: center;
       will-change: transform, opacity;
     }
 
     #breathLabel {
-      color: var(--muted);
-      font-size: 0.78em;
-      letter-spacing: 0.14em;
+      color: #c8dff5;
+      font-size: 1.1em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.6);
     }
   </style>
 </head>
@@ -425,6 +436,9 @@
     </div>
   </div>
 
+  <!-- Breathing dim overlay -->
+  <div id="breathDim"></div>
+
   <!-- Breathing guide -->
   <div id="breathingGuide">
     <div id="breathCircle"></div>
@@ -440,6 +454,7 @@
       <button id="btn-rain"        data-active="false" onclick="toggleEffect('rain')"       >&#x1F327; Rain: Off</button>
       <button id="btn-breathe"     data-active="false" onclick="toggleEffect('breathe')"    >&#x1FAC1; Breathe: Off</button>
       <button id="btn-aurora"      data-active="false" onclick="toggleEffect('aurora')"     >&#x1F30C; Aurora: Off</button>
+      <button id="btn-sunny"       data-active="false" onclick="toggleEffect('sunny')"      >&#x2600;&#xFE0F; Sunny Day: Off</button>
     </div>
     <button id="effectsToggle" onclick="document.getElementById('effectsList').classList.toggle('open')">&#x2699; Effects</button>
   </div>
@@ -670,7 +685,8 @@
       leaves:      'soDashboard.leaves',
       rain:        'soDashboard.rain',
       breathe:     'soDashboard.breathe',
-      aurora:      'soDashboard.aurora'
+      aurora:      'soDashboard.aurora',
+      sunny:       'soDashboard.sunny'
     };
     const EFFECT_LABELS = {
       butterflies: '\u{1F98B} Butterflies',
@@ -678,9 +694,10 @@
       leaves:      '\u{1F342} Leaves',
       rain:        '\u{1F327} Rain',
       breathe:     '\u{1FAC1} Breathe',
-      aurora:      '\u{1F30C} Aurora'
+      aurora:      '\u{1F30C} Aurora',
+      sunny:       '\u2600\uFE0F Sunny Day'
     };
-    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false };
+    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false, sunny: false };
 
     /* --- Particle canvas --- */
     const particleCanvas = document.getElementById('particleCanvas');
@@ -814,6 +831,115 @@
       pctx.stroke();
     }
 
+    /* --- Sunny Day --- */
+    let sunTime = 0;
+    let cloudsList = [];
+
+    function mkCloud(spreadX) {
+      return {
+        x: spreadX !== undefined ? spreadX : -220,
+        y: 40 + Math.random() * innerHeight * 0.28,
+        speed: 0.15 + Math.random() * 0.25,
+        scale: 0.7 + Math.random() * 0.9,
+        opacity: 0.75 + Math.random() * 0.2,
+        dir: 1
+      };
+    }
+    function initSunny() {
+      cloudsList = Array.from({length: 5}, () => mkCloud(Math.random() * innerWidth));
+    }
+    function drawCloud(c) {
+      pctx.save();
+      pctx.globalAlpha = c.opacity;
+      pctx.fillStyle = 'rgba(255,255,255,0.95)';
+      const s = c.scale;
+      pctx.beginPath();
+      pctx.arc(c.x,          c.y,          s * 28, 0, Math.PI * 2);
+      pctx.arc(c.x + s * 40, c.y - s * 12, s * 38, 0, Math.PI * 2);
+      pctx.arc(c.x + s * 82, c.y,          s * 28, 0, Math.PI * 2);
+      pctx.arc(c.x + s * 44, c.y + s * 14, s * 25, 0, Math.PI * 2);
+      pctx.fill();
+      pctx.restore();
+    }
+    function drawSunOnCanvas() {
+      sunTime += 0.001;
+      const sx = innerWidth - 110, sy = 95, r = 48;
+      const numRays = 10, halfWidth = 0.055;
+      const maxDist = Math.hypot(innerWidth, innerHeight) * 1.5;
+
+      // Full-viewport ray beams (drawn before glow so sun sits on top)
+      for (let i = 0; i < numRays; i++) {
+        const angle = (i / numRays) * Math.PI * 2 + sunTime;
+        const la = angle - halfWidth, ra = angle + halfWidth;
+        const ex = sx + Math.cos(angle) * maxDist;
+        const ey = sy + Math.sin(angle) * maxDist;
+        const grad = pctx.createLinearGradient(sx, sy, ex, ey);
+        grad.addColorStop(0,    'rgba(255,235,80,0.32)');
+        grad.addColorStop(0.12, 'rgba(255,220,60,0.15)');
+        grad.addColorStop(0.45, 'rgba(255,200,40,0.06)');
+        grad.addColorStop(1,    'rgba(255,180,0,0)');
+        pctx.save();
+        pctx.fillStyle = grad;
+        pctx.beginPath();
+        pctx.moveTo(sx + Math.cos(la) * r, sy + Math.sin(la) * r);
+        pctx.lineTo(sx + Math.cos(la) * maxDist, sy + Math.sin(la) * maxDist);
+        pctx.lineTo(sx + Math.cos(ra) * maxDist, sy + Math.sin(ra) * maxDist);
+        pctx.lineTo(sx + Math.cos(ra) * r, sy + Math.sin(ra) * r);
+        pctx.closePath();
+        pctx.fill();
+        pctx.restore();
+      }
+
+      // Outer glow
+      const glow = pctx.createRadialGradient(sx, sy, 0, sx, sy, r * 3);
+      glow.addColorStop(0,   'rgba(255,240,80,0.35)');
+      glow.addColorStop(0.5, 'rgba(255,200,0,0.12)');
+      glow.addColorStop(1,   'rgba(255,180,0,0)');
+      pctx.fillStyle = glow;
+      pctx.beginPath();
+      pctx.arc(sx, sy, r * 3, 0, Math.PI * 2);
+      pctx.fill();
+
+      // Sun body
+      const sunGrad = pctx.createRadialGradient(sx - 12, sy - 12, 0, sx, sy, r);
+      sunGrad.addColorStop(0,    '#fffde0');
+      sunGrad.addColorStop(0.35, '#ffe030');
+      sunGrad.addColorStop(1,    '#ff8c00');
+      pctx.fillStyle = sunGrad;
+      pctx.beginPath();
+      pctx.arc(sx, sy, r, 0, Math.PI * 2);
+      pctx.fill();
+    }
+
+    /* --- Rainbow (sun + rain combo) --- */
+    function drawRainbow() {
+      const cx = innerWidth / 2;
+      const cy = innerHeight * 1.05;
+      const outerR = innerWidth * 0.62;
+      const bandW = 18;
+      const bands = [
+        [255,  20,  20],
+        [255, 110,   0],
+        [255, 220,   0],
+        [  0, 195,  50],
+        [  0, 105, 255],
+        [ 75,   0, 195],
+        [170,   0, 215],
+      ];
+      pctx.save();
+      for (let i = 0; i < bands.length; i++) {
+        const [r, g, b] = bands[i];
+        const radius = outerR - i * bandW;
+        if (radius <= 0) continue;
+        pctx.beginPath();
+        pctx.arc(cx, cy, radius, Math.PI, 0); // clockwise through top → arch shape
+        pctx.strokeStyle = `rgba(${r},${g},${b},0.45)`;
+        pctx.lineWidth = bandW + 2;
+        pctx.stroke();
+      }
+      pctx.restore();
+    }
+
     /* --- Main particle loop --- */
     let particleRaf = null;
 
@@ -833,6 +959,7 @@
           if (l.y > innerHeight + 30) leavesList.splice(i, 1, mkLeaf());
         }
       }
+      if (effects.sunny && effects.rain) drawRainbow();
       if (effects.rain) {
         for (let i = rainDrops.length - 1; i >= 0; i--) {
           const r = rainDrops[i];
@@ -842,7 +969,17 @@
         }
       }
 
-      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain) {
+      if (effects.sunny) {
+        drawSunOnCanvas();
+        for (let i = cloudsList.length - 1; i >= 0; i--) {
+          const c = cloudsList[i];
+          c.x += c.speed * c.dir;
+          drawCloud(c);
+          if (c.x > innerWidth + 220) cloudsList.splice(i, 1, mkCloud());
+        }
+      }
+
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny) {
         particleRaf = requestAnimationFrame(particleLoop);
       } else {
         particleRaf = null;
@@ -942,11 +1079,14 @@
           break;
         case 'breathe': {
           const guide = document.getElementById('breathingGuide');
+          const dim   = document.getElementById('breathDim');
           if (effects.breathe) {
+            dim.style.display = 'block';
             guide.style.display = 'block';
             breathPhase = 'inhale'; breathStart = Date.now();
             breathLoop();
           } else {
+            dim.style.display = 'none';
             guide.style.display = 'none';
             cancelAnimationFrame(breathRaf); breathRaf = null;
           }
@@ -956,9 +1096,22 @@
           if (effects.aurora) auroraLoop();
           else stopAurora();
           break;
+        case 'sunny':
+          if (effects.sunny) {
+            initSunny();
+            if (isDarkMode()) {
+              document.body.style.background = 'radial-gradient(ellipse at 85% 12%, rgba(255,210,60,0.18) 0%, transparent 45%), radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%)';
+            } else {
+              document.body.style.background = 'linear-gradient(180deg, #87ceeb 0%, #b8e4f7 30%, #dff0f8 65%, #f0f8ff 100%)';
+            }
+          } else {
+            cloudsList = [];
+            document.body.style.background = '';
+          }
+          break;
       }
 
-      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain) ensureParticleLoop();
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny) ensureParticleLoop();
     }
 
     function updateEffectBtn(name) {
