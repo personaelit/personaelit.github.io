@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mandala Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background: #f2f1ec;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #1a1a1a;
+    }
+
+    /* ── Canvas area ─────────────────────────────────────── */
+    #canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      min-width: 0;
+    }
+
+    #mandala {
+      display: block;
+      background: white;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* ── Controls panel ──────────────────────────────────── */
+    #panel {
+      width: 220px;
+      flex-shrink: 0;
+      background: white;
+      border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem 1rem 1rem;
+      gap: 1.1rem;
+      overflow-y: auto;
+    }
+
+    #panel h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e8e8e4;
+    }
+
+    .ctrl {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .ctrl label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #888;
+    }
+
+    /* button group */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem;
+    }
+
+    .btn-row button {
+      flex: 1;
+      min-width: 1.8rem;
+      padding: 0.28rem 0.3rem;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      color: #444;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+
+    .btn-row button:hover { border-color: #999; background: #f5f5f5; }
+
+    .btn-row button.on {
+      background: #1a1a1a;
+      color: white;
+      border-color: #1a1a1a;
+    }
+
+    /* slider */
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .range-row input[type=range] {
+      flex: 1;
+      accent-color: #1a1a1a;
+      cursor: pointer;
+    }
+
+    .range-val {
+      min-width: 1.4rem;
+      text-align: right;
+      font-size: 0.82rem;
+      color: #555;
+    }
+
+    /* checkbox */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: #444;
+      cursor: pointer;
+    }
+
+    .check-row input { cursor: pointer; accent-color: #1a1a1a; }
+
+    /* spacer pushes buttons to bottom */
+    .spacer { flex: 1; }
+
+    .seed-label {
+      font-size: 0.68rem;
+      color: #bbb;
+      text-align: center;
+      font-family: monospace;
+      letter-spacing: 0.03em;
+    }
+
+    /* action buttons */
+    .action {
+      width: 100%;
+      padding: 0.6rem 0;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #333;
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    .action:hover { background: #f0f0f0; border-color: #999; }
+
+    .action.primary {
+      background: #1a1a1a;
+      color: white;
+      border-color: #1a1a1a;
+    }
+
+    .action.primary:hover { background: #333; border-color: #333; }
+
+    /* ── Print ───────────────────────────────────────────── */
+    @media print {
+      body { background: white; overflow: visible; height: auto; }
+      #panel { display: none; }
+      #canvas-wrap { padding: 0; flex: none; width: 100vw; height: 100vh; }
+      #mandala { box-shadow: none; width: 100vmin !important; height: 100vmin !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="canvas-wrap">
+  <canvas id="mandala"></canvas>
+</div>
+
+<aside id="panel">
+  <h1>Mandala</h1>
+  <hr class="divider">
+
+  <div class="ctrl">
+    <label>Symmetry</label>
+    <div class="btn-row" id="seg-btns">
+      <button data-v="6">6</button>
+      <button data-v="8" class="on">8</button>
+      <button data-v="10">10</button>
+      <button data-v="12">12</button>
+      <button data-v="16">16</button>
+      <button data-v="24">24</button>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Rings</label>
+    <div class="range-row">
+      <input type="range" id="rings-r" min="3" max="10" value="6">
+      <span class="range-val" id="rings-v">6</span>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Line Weight</label>
+    <div class="btn-row" id="weight-btns">
+      <button data-v="0.7">Thin</button>
+      <button data-v="1.4" class="on">Med</button>
+      <button data-v="2.4">Thick</button>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Style</label>
+    <div class="btn-row" id="style-btns">
+      <button data-v="any" class="on">Any</button>
+      <button data-v="floral">Floral</button>
+      <button data-v="geo">Geo</button>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label class="check-row">
+      <input type="checkbox" id="dividers-cb" checked>
+      Ring dividers
+    </label>
+    <label class="check-row">
+      <input type="checkbox" id="radials-cb">
+      Radial guides
+    </label>
+  </div>
+
+  <div class="spacer"></div>
+  <hr class="divider">
+
+  <div id="seed-disp" class="seed-label">seed —</div>
+  <button class="action primary" id="rnd-btn">Randomize</button>
+  <button class="action" id="dl-btn">Download PNG</button>
+  <button class="action" id="print-btn">Print</button>
+</aside>
+
+<script>
+// ── Seeded RNG (mulberry32) ──────────────────────────────
+function rng(seed) {
+  let s = seed >>> 0;
+  function next() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
+  }
+  return {
+    next,
+    choice: arr => arr[Math.floor(next() * arr.length)],
+  };
+}
+
+// ── Pattern library ──────────────────────────────────────
+// Context is translated to mandala center and rotated so this
+// segment faces along the +X axis. inner/outer are radial bounds.
+// halfAngle is half the segment angle in radians.
+
+const FLORAL = ['petal', 'lotus', 'teardrop', 'droplet', 'nested', 'circle'];
+const GEO    = ['diamond', 'spike', 'fan', 'arch', 'chevron', 'hex'];
+const ANY    = [...FLORAL, ...GEO];
+
+const P = {
+
+  petal(ctx, inner, outer, ha) {
+    const mid = (inner + outer) / 2;
+    const sp  = Math.sin(ha) * mid * 0.84;
+    const q1  = inner + (outer - inner) * 0.28;
+    const q3  = inner + (outer - inner) * 0.72;
+    ctx.beginPath();
+    ctx.moveTo(inner, 0);
+    ctx.bezierCurveTo(q1, -sp, q3, -sp, outer, 0);
+    ctx.bezierCurveTo(q3,  sp, q1,  sp, inner, 0);
+    ctx.closePath();
+    ctx.stroke();
+  },
+
+  lotus(ctx, inner, outer, ha) {
+    const mid = (inner + outer) / 2;
+    const sp  = Math.sin(ha) * mid * 0.78;
+    const tip = inner + (outer - inner) * 0.15;
+    // Pointed petal
+    ctx.beginPath();
+    ctx.moveTo(inner, 0);
+    ctx.quadraticCurveTo(mid, -sp, outer, 0);
+    ctx.quadraticCurveTo(mid,  sp, inner, 0);
+    ctx.closePath();
+    ctx.stroke();
+    // Midrib
+    ctx.beginPath();
+    ctx.moveTo(tip, 0);
+    ctx.lineTo(outer - (outer - inner) * 0.1, 0);
+    ctx.stroke();
+  },
+
+  teardrop(ctx, inner, outer, ha) {
+    const bulge = inner + (outer - inner) * 0.32;
+    const sp    = Math.sin(ha) * bulge * 0.82;
+    ctx.beginPath();
+    ctx.moveTo(outer, 0);
+    ctx.bezierCurveTo(
+      outer - (outer - inner) * 0.22, -sp * 1.1,
+      bulge, -sp,
+      inner, 0
+    );
+    ctx.bezierCurveTo(
+      bulge, sp,
+      outer - (outer - inner) * 0.22, sp * 1.1,
+      outer, 0
+    );
+    ctx.closePath();
+    ctx.stroke();
+  },
+
+  droplet(ctx, inner, outer, ha) {
+    // Wide at outer, pointed at inner
+    const bulge = inner + (outer - inner) * 0.68;
+    const sp    = Math.sin(ha) * bulge * 0.82;
+    ctx.beginPath();
+    ctx.moveTo(inner, 0);
+    ctx.bezierCurveTo(
+      inner + (outer - inner) * 0.22, -sp * 1.1,
+      bulge, -sp,
+      outer, 0
+    );
+    ctx.bezierCurveTo(
+      bulge, sp,
+      inner + (outer - inner) * 0.22, sp * 1.1,
+      inner, 0
+    );
+    ctx.closePath();
+    ctx.stroke();
+  },
+
+  nested(ctx, inner, outer, ha) {
+    // Outer petal
+    const mid = (inner + outer) / 2;
+    const sp  = Math.sin(ha) * mid * 0.82;
+    const q1  = inner + (outer - inner) * 0.28;
+    const q3  = inner + (outer - inner) * 0.72;
+    ctx.beginPath();
+    ctx.moveTo(inner, 0);
+    ctx.bezierCurveTo(q1, -sp, q3, -sp, outer, 0);
+    ctx.bezierCurveTo(q3,  sp, q1,  sp, inner, 0);
+    ctx.closePath();
+    ctx.stroke();
+    // Inner smaller petal
+    const imid = inner + (mid - inner) * 0.55;
+    const isp  = Math.sin(ha) * imid * 0.72;
+    const iq1  = inner + (imid - inner) * 0.28;
+    const iq3  = inner + (imid - inner) * 0.72;
+    const ioff = inner + (outer - inner) * 0.04;
+    ctx.beginPath();
+    ctx.moveTo(ioff, 0);
+    ctx.bezierCurveTo(iq1, -isp, iq3, -isp, imid, 0);
+    ctx.bezierCurveTo(iq3,  isp, iq1,  isp, ioff, 0);
+    ctx.closePath();
+    ctx.stroke();
+  },
+
+  circle(ctx, inner, outer, ha) {
+    const mid  = (inner + outer) / 2;
+    const maxR = Math.sin(ha) * mid;
+    const r    = Math.min(maxR, (outer - inner) * 0.44) * 0.9;
+    ctx.beginPath();
+    ctx.arc(mid, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+  },
+
+  diamond(ctx, inner, outer, ha) {
+    const mid = (inner + outer) / 2;
+    const sp  = Math.sin(ha) * mid * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(inner, 0);
+    ctx.lineTo(mid, -sp);
+    ctx.lineTo(outer, 0);
+    ctx.lineTo(mid,  sp);
+    ctx.closePath();
+    ctx.stroke();
+  },
+
+  spike(ctx, inner, outer, ha) {
+    const base = Math.max(inner, outer * 0.14);
+    const sp   = Math.sin(ha) * base * 0.88;
+    ctx.beginPath();
+    ctx.moveTo(base, -sp);
+    ctx.lineTo(outer, 0);
+    ctx.lineTo(base,  sp);
+    ctx.closePath();
+    ctx.stroke();
+  },
+
+  fan(ctx, inner, outer, ha) {
+    // 3 radial divisions with arc caps
+    const divs = 3;
+    for (let i = 0; i <= divs; i++) {
+      const a = -ha + (i / divs) * ha * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * inner, Math.sin(a) * inner);
+      ctx.lineTo(Math.cos(a) * outer, Math.sin(a) * outer);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, outer, -ha, ha);
+    ctx.stroke();
+    if (inner > 0) {
+      ctx.beginPath();
+      ctx.arc(0, 0, inner, -ha, ha);
+      ctx.stroke();
+    }
+  },
+
+  arch(ctx, inner, outer, ha) {
+    // 3 concentric arcs with side connectors
+    const arcs = 3;
+    for (let i = 1; i <= arcs; i++) {
+      const r = inner + (outer - inner) * (i / (arcs + 1));
+      ctx.beginPath();
+      ctx.arc(0, 0, r, -ha * 0.88, ha * 0.88);
+      ctx.stroke();
+    }
+    const a = ha * 0.88;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos( a) * inner, Math.sin( a) * inner);
+    ctx.lineTo(Math.cos( a) * outer, Math.sin( a) * outer);
+    ctx.moveTo(Math.cos(-a) * inner, Math.sin(-a) * inner);
+    ctx.lineTo(Math.cos(-a) * outer, Math.sin(-a) * outer);
+    ctx.stroke();
+  },
+
+  chevron(ctx, inner, outer, ha) {
+    const mid = (inner + outer) / 2;
+    const bi  = Math.max(inner, outer * 0.1);
+    const si  = Math.sin(ha) * bi  * 0.8;
+    const sm  = Math.sin(ha) * mid * 0.8;
+    // Inner V
+    ctx.beginPath();
+    ctx.moveTo(bi, -si);
+    ctx.lineTo(mid, 0);
+    ctx.lineTo(bi,  si);
+    ctx.stroke();
+    // Outer V
+    ctx.beginPath();
+    ctx.moveTo(mid, -sm);
+    ctx.lineTo(outer, 0);
+    ctx.lineTo(mid,  sm);
+    ctx.stroke();
+  },
+
+  hex(ctx, inner, outer, ha) {
+    // Hexagon-ish shape: two arcs + two straight sides
+    const sp = Math.sin(ha) * ((inner + outer) / 2) * 0.78;
+    const c1 = inner + (outer - inner) * 0.22;
+    const c2 = inner + (outer - inner) * 0.78;
+    ctx.beginPath();
+    ctx.moveTo(inner,  0);
+    ctx.lineTo(c1,    -sp);
+    ctx.lineTo(c2,    -sp);
+    ctx.lineTo(outer,  0);
+    ctx.lineTo(c2,     sp);
+    ctx.lineTo(c1,     sp);
+    ctx.closePath();
+    ctx.stroke();
+  },
+};
+
+// ── Draw mandala ─────────────────────────────────────────
+function draw(canvas, cfg) {
+  const ctx  = canvas.getContext('2d');
+  const W    = canvas.width;
+  const H    = canvas.height;
+  const cx   = W / 2, cy = H / 2;
+  const maxR = Math.min(cx, cy) * 0.93;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#0f0f0f';
+  ctx.lineCap   = 'round';
+  ctx.lineJoin  = 'round';
+
+  const N  = cfg.segments;
+  const R  = cfg.rings;
+  const ha = Math.PI / N;       // half-angle per segment
+  const sa = (Math.PI * 2) / N; // full segment angle
+  const rh = maxR / R;          // ring height
+
+  // Choose pattern pool
+  const pool = cfg.style === 'floral' ? FLORAL
+             : cfg.style === 'geo'    ? GEO
+             : ANY;
+
+  const rand = rng(cfg.seed);
+  const ringPatterns = Array.from({ length: R }, () => rand.choice(pool));
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // ── Draw each ring ──
+  for (let r = 0; r < R; r++) {
+    const inner = r * rh;
+    const outer = (r + 1) * rh;
+    const pat   = ringPatterns[r];
+
+    ctx.lineWidth = cfg.weight;
+
+    for (let s = 0; s < N; s++) {
+      ctx.save();
+      ctx.rotate(s * sa);
+      P[pat](ctx, inner, outer, ha);
+      ctx.restore();
+    }
+  }
+
+  // ── Ring dividers ──
+  if (cfg.dividers) {
+    ctx.lineWidth = cfg.weight * 0.65;
+    for (let r = 1; r <= R; r++) {
+      ctx.beginPath();
+      ctx.arc(0, 0, r * rh, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // ── Radial guides ──
+  if (cfg.radials) {
+    ctx.lineWidth = cfg.weight * 0.5;
+    for (let s = 0; s < N; s++) {
+      const a = s * sa;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * maxR, Math.sin(a) * maxR);
+      ctx.stroke();
+    }
+  }
+
+  // ── Outer boundary circle ──
+  ctx.lineWidth = cfg.weight;
+  ctx.beginPath();
+  ctx.arc(0, 0, maxR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // ── Center circle ──
+  ctx.beginPath();
+  ctx.arc(0, 0, rh * 0.2, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── State ────────────────────────────────────────────────
+const state = {
+  segments: 8,
+  rings:    6,
+  weight:   1.4,
+  style:    'any',
+  dividers: true,
+  radials:  false,
+  seed:     Math.floor(Math.random() * 0xFFFFFF),
+};
+
+// ── Canvas sizing ────────────────────────────────────────
+const canvas = document.getElementById('mandala');
+const wrap   = document.getElementById('canvas-wrap');
+
+function resize() {
+  const dpr  = window.devicePixelRatio || 1;
+  const rect = wrap.getBoundingClientRect();
+  const size = Math.floor(Math.min(rect.width - 32, rect.height - 32));
+  canvas.style.width  = size + 'px';
+  canvas.style.height = size + 'px';
+  canvas.width  = size * dpr;
+  canvas.height = size * dpr;
+  render();
+}
+
+function render() {
+  const dpr = window.devicePixelRatio || 1;
+  draw(canvas, { ...state, weight: state.weight * dpr });
+}
+
+// ── Button groups ────────────────────────────────────────
+function bindGroup(id, key) {
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll(`#${id} button`).forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    state[key] = isNaN(+btn.dataset.v) ? btn.dataset.v : +btn.dataset.v;
+    render();
+  });
+}
+
+bindGroup('seg-btns',    'segments');
+bindGroup('weight-btns', 'weight');
+bindGroup('style-btns',  'style');
+
+// Rings slider
+const ringsR = document.getElementById('rings-r');
+const ringsV = document.getElementById('rings-v');
+ringsR.addEventListener('input', () => {
+  state.rings  = +ringsR.value;
+  ringsV.textContent = state.rings;
+  render();
+});
+
+// Checkboxes
+document.getElementById('dividers-cb').addEventListener('change', e => {
+  state.dividers = e.target.checked;
+  render();
+});
+document.getElementById('radials-cb').addEventListener('change', e => {
+  state.radials = e.target.checked;
+  render();
+});
+
+// ── Randomize ────────────────────────────────────────────
+function updateSeed() {
+  document.getElementById('seed-disp').textContent =
+    'seed ' + state.seed.toString(16).padStart(6, '0');
+}
+
+document.getElementById('rnd-btn').addEventListener('click', () => {
+  state.seed = Math.floor(Math.random() * 0xFFFFFF);
+  updateSeed();
+  render();
+});
+
+// ── Download PNG ─────────────────────────────────────────
+document.getElementById('dl-btn').addEventListener('click', () => {
+  // Render at 2× current size for better quality
+  const dpr    = window.devicePixelRatio || 1;
+  const size   = canvas.width / dpr;
+  const hiSize = Math.round(size * 2);
+  const tmp    = document.createElement('canvas');
+  tmp.width = tmp.height = hiSize;
+  draw(tmp, { ...state, weight: state.weight * (hiSize / size) });
+  const a = document.createElement('a');
+  a.download = 'mandala-' + state.seed.toString(16).padStart(6, '0') + '.png';
+  a.href = tmp.toDataURL('image/png');
+  a.click();
+});
+
+// ── Print ─────────────────────────────────────────────────
+document.getElementById('print-btn').addEventListener('click', () => {
+  window.print();
+});
+
+// ── Init ─────────────────────────────────────────────────
+updateSeed();
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>
