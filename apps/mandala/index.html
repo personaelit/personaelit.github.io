@@ -206,6 +206,17 @@
       letter-spacing: 0.03em;
     }
 
+    .pat-sep {
+      grid-column: 1 / -1;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #bbb;
+      padding-top: 0.4rem;
+      border-top: 1px solid #ececec;
+      margin-top: 0.1rem;
+    }
+
     /* ── Print ───────────────────────────────────────────── */
     @media print {
       body { background: white; overflow: visible; height: auto; }
@@ -260,6 +271,14 @@
       <button data-v="any" class="on">Any</button>
       <button data-v="floral">Floral</button>
       <button data-v="geo">Geo</button>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Scale</label>
+    <div class="range-row">
+      <input type="range" id="scale-r" min="30" max="200" step="5" value="100">
+      <span class="range-val" id="scale-v">100%</span>
     </div>
   </div>
 
@@ -539,10 +558,12 @@ function draw(canvas, cfg) {
   const rh = maxR / R;          // ring height
 
   // Choose pattern pool — a locked pattern overrides the style pool
-  const pool = cfg.pattern  ? [cfg.pattern]
-             : cfg.style === 'floral' ? FLORAL
-             : cfg.style === 'geo'    ? GEO
-             : ANY;
+  const isSvgLock = cfg.pattern && cfg.pattern.startsWith('svg:');
+  const pool = (!cfg.pattern || isSvgLock) ? (
+                 cfg.style === 'floral' ? FLORAL
+               : cfg.style === 'geo'    ? GEO
+               : ANY)
+             : [cfg.pattern];
 
   const rand = rng(cfg.seed);
   const ringPatterns = Array.from({ length: R }, () => rand.choice(pool));
@@ -554,13 +575,40 @@ function draw(canvas, cfg) {
   for (let r = 0; r < R; r++) {
     const inner = r * rh;
     const outer = (r + 1) * rh;
-    const pat   = ringPatterns[r];
 
     ctx.lineWidth = cfg.weight;
 
+    // Scale transform: shrink/grow the pattern around the ring's radial midpoint
+    const mid = (inner + outer) / 2;
+    const applyScale = ctx => {
+      if (cfg.scale !== 1) {
+        ctx.translate(mid, 0);
+        ctx.scale(cfg.scale, cfg.scale);
+        ctx.translate(-mid, 0);
+      }
+    };
+
+    // SVG lock applies the same image to every ring
+    if (isSvgLock) {
+      const svgName = cfg.pattern.slice(4);
+      const img = svgImages[svgName];
+      if (img) {
+        for (let s = 0; s < N; s++) {
+          ctx.save();
+          ctx.rotate(s * sa);
+          applyScale(ctx);
+          drawSvgSeg(ctx, img, inner, outer, ha);
+          ctx.restore();
+        }
+      }
+      continue;
+    }
+
+    const pat = ringPatterns[r];
     for (let s = 0; s < N; s++) {
       ctx.save();
       ctx.rotate(s * sa);
+      applyScale(ctx);
       P[pat](ctx, inner, outer, ha);
       ctx.restore();
     }
@@ -609,6 +657,7 @@ const state = {
   weight:   1.4,
   style:    'any',
   pattern:  null,   // null = use style pool; string = lock all rings to this pattern
+  scale:    1,
   dividers: true,
   radials:  false,
   seed:     Math.floor(Math.random() * 0xFFFFFF),
@@ -632,6 +681,51 @@ function resize() {
 function render() {
   const dpr = window.devicePixelRatio || 1;
   draw(canvas, { ...state, weight: state.weight * dpr });
+}
+
+// ── SVG pattern registry ─────────────────────────────────
+const SVG_PATTERNS = [
+  { name: 'eye',      label: 'Eye'      },
+  { name: 'tulip',    label: 'Tulip'    },
+  { name: 'kite',     label: 'Kite'     },
+  { name: 'crescent', label: 'Crescent' },
+  { name: 'feather',  label: 'Feather'  },
+  { name: 'arrow',    label: 'Arrow'    },
+  { name: 'sun',      label: 'Sun'      },
+];
+
+const svgImages = {};  // name → HTMLImageElement
+
+function loadSvgPatterns() {
+  return Promise.all(SVG_PATTERNS.map(({ name }) =>
+    new Promise(resolve => {
+      const img = new Image();
+      img.onload  = () => { svgImages[name] = img; resolve(); };
+      img.onerror = () => resolve();
+      img.src = `patterns/${name}.svg`;
+    })
+  ));
+}
+
+// Render an SVG image into the current segment's local coordinate space,
+// clipped to the annular wedge so it doesn't bleed into adjacent segments.
+function drawSvgSeg(ctx, img, inner, outer, ha) {
+  const h = (inner + outer) * Math.sin(ha);
+  ctx.save();
+  ctx.beginPath();
+  if (inner > 0) {
+    ctx.moveTo(Math.cos(-ha) * inner, Math.sin(-ha) * inner);
+    ctx.arc(0, 0, inner, -ha, ha);
+    ctx.lineTo(Math.cos(ha) * outer, Math.sin(ha) * outer);
+    ctx.arc(0, 0, outer, ha, -ha, true);
+  } else {
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, outer, -ha, ha);
+  }
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(img, inner, -h / 2, outer - inner, h);
+  ctx.restore();
 }
 
 // ── Pattern thumbnails ───────────────────────────────────
@@ -678,31 +772,62 @@ function drawThumb(canvas, patName) {
   ctx.restore();
 }
 
+function drawSvgThumb(canvas, img) {
+  const SZ = canvas.width;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, SZ, SZ);
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, SZ, SZ);
+
+  const inner = SZ * 0.16;
+  const outer = SZ * 0.44;
+  const N  = 8;
+  const ha = Math.PI / N;
+  const sa = (Math.PI * 2) / N;
+
+  ctx.save();
+  ctx.translate(SZ / 2, SZ / 2);
+  for (let s = 0; s < N; s++) {
+    ctx.save();
+    ctx.rotate(s * sa);
+    drawSvgSeg(ctx, img, inner, outer, ha);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function makePatBtn(grid, patKey, label, drawFn) {
+  const btn = document.createElement('button');
+  btn.className   = 'pat-btn';
+  btn.dataset.pat = patKey;
+
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 60;
+  drawFn(cv);
+
+  const lbl = document.createElement('span');
+  lbl.textContent = label;
+
+  btn.appendChild(cv);
+  btn.appendChild(lbl);
+  grid.appendChild(btn);
+  return btn;
+}
+
 function buildPatGrid() {
   const grid = document.getElementById('pat-grid');
+
+  // Canvas patterns
   ANY.forEach(name => {
-    const btn = document.createElement('button');
-    btn.className   = 'pat-btn';
-    btn.dataset.pat = name;
-
-    const cv = document.createElement('canvas');
-    cv.width = cv.height = 60;
-    drawThumb(cv, name);
-
-    const lbl = document.createElement('span');
-    lbl.textContent = PAT_LABELS[name];
-
-    btn.appendChild(cv);
-    btn.appendChild(lbl);
-    grid.appendChild(btn);
+    makePatBtn(grid, name, PAT_LABELS[name], cv => drawThumb(cv, name));
   });
 
+  // Grid click handler (covers both canvas and SVG buttons)
   grid.addEventListener('click', e => {
     const btn = e.target.closest('.pat-btn');
     if (!btn) return;
     const pat = btn.dataset.pat;
     if (state.pattern === pat) {
-      // toggle off — revert to pool mode
       state.pattern = null;
       btn.classList.remove('on');
     } else {
@@ -711,6 +836,23 @@ function buildPatGrid() {
       state.pattern = pat;
     }
     render();
+  });
+}
+
+function buildSvgPatGrid() {
+  const grid = document.getElementById('pat-grid');
+
+  // Section label
+  const sep = document.createElement('div');
+  sep.className   = 'pat-sep';
+  sep.textContent = 'SVG';
+  grid.appendChild(sep);
+
+  // One button per loaded SVG
+  SVG_PATTERNS.forEach(({ name, label }) => {
+    const img = svgImages[name];
+    if (!img) return;
+    makePatBtn(grid, `svg:${name}`, label, cv => drawSvgThumb(cv, img));
   });
 }
 
@@ -741,6 +883,15 @@ const ringsV = document.getElementById('rings-v');
 ringsR.addEventListener('input', () => {
   state.rings  = +ringsR.value;
   ringsV.textContent = state.rings;
+  render();
+});
+
+// Scale slider
+const scaleR = document.getElementById('scale-r');
+const scaleV = document.getElementById('scale-v');
+scaleR.addEventListener('input', () => {
+  state.scale = +scaleR.value / 100;
+  scaleV.textContent = scaleR.value + '%';
   render();
 });
 
@@ -787,10 +938,11 @@ document.getElementById('print-btn').addEventListener('click', () => {
 });
 
 // ── Init ─────────────────────────────────────────────────
-buildPatGrid();
+buildPatGrid();                          // canvas patterns — immediate
 updateSeed();
 window.addEventListener('resize', resize);
 resize();
+loadSvgPatterns().then(buildSvgPatGrid); // SVG patterns — async, appends when ready
 </script>
 </body>
 </html>

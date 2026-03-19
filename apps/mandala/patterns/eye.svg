@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -50 100 100"
+     fill="none" stroke="#1a1a1a" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+  <!-- outer vesica outline -->
+  <path d="M 5,0 Q 50,-88 95,0 Q 50,88 5,0 Z"/>
+  <!-- iris -->
+  <circle cx="50" cy="0" r="17"/>
+  <!-- pupil -->
+  <circle cx="50" cy="0" r="6.5"/>
+  <!-- lash lines (top) -->
+  <line x1="28" y1="-34" x2="24" y2="-49"/>
+  <line x1="50" y1="-44" x2="50" y2="-50"/>
+  <line x1="72" y1="-34" x2="76" y2="-49"/>
+  <!-- lash lines (bottom) -->
+  <line x1="28" y1="34" x2="24" y2="49"/>
+  <line x1="50" y1="44" x2="50" y2="50"/>
+  <line x1="72" y1="34" x2="76" y2="49"/>
+</svg>

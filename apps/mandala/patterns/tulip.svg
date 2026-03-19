@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -50 100 100"
+     fill="none" stroke="#1a1a1a" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+  <!-- stem -->
+  <line x1="5" y1="0" x2="36" y2="0"/>
+  <!-- base calyx -->
+  <path d="M 5,0 Q 14,-14 22,-8 Q 22,-2 36,-2"/>
+  <path d="M 5,0 Q 14,14 22,8 Q 22,2 36,2"/>
+  <!-- center petal -->
+  <path d="M 36,0 Q 58,-50 93,0 Q 58,50 36,0 Z"/>
+  <!-- upper side petal -->
+  <path d="M 33,-7 Q 50,-46 88,-24 Q 64,-8 33,-7 Z"/>
+  <!-- lower side petal -->
+  <path d="M 33,7 Q 50,46 88,24 Q 64,8 33,7 Z"/>
+</svg>

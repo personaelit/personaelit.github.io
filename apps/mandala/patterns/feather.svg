@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -50 100 100"
+     fill="none" stroke="#1a1a1a" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+  <!-- central spine -->
+  <line x1="6" y1="0" x2="93" y2="0"/>
+  <!-- upper barbs (inner to outer) -->
+  <line x1="22" y1="0" x2="15" y2="-26"/>
+  <line x1="35" y1="0" x2="26" y2="-34"/>
+  <line x1="50" y1="0" x2="40" y2="-40"/>
+  <line x1="64" y1="0" x2="55" y2="-38"/>
+  <line x1="78" y1="0" x2="72" y2="-28"/>
+  <!-- lower barbs -->
+  <line x1="22" y1="0" x2="15" y2="26"/>
+  <line x1="35" y1="0" x2="26" y2="34"/>
+  <line x1="50" y1="0" x2="40" y2="40"/>
+  <line x1="64" y1="0" x2="55" y2="38"/>
+  <line x1="78" y1="0" x2="72" y2="28"/>
+  <!-- outer barb connectors (vane edge) -->
+  <path d="M 15,-26 Q 26,-38 40,-40 Q 55,-38 72,-28"/>
+  <path d="M 15,26 Q 26,38 40,40 Q 55,38 72,28"/>
+  <!-- tip -->
+  <path d="M 78,-4 Q 90,-2 93,0 Q 90,2 78,4"/>
+</svg>

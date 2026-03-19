@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -50 100 100"
+     fill="none" stroke="#1a1a1a" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+  <!-- outer kite: wide at top, narrow at bottom, tip at outer edge -->
+  <path d="M 8,0 L 42,-44 L 93,0 L 42,20 Z"/>
+  <!-- inner accent kite (smaller, offset down) -->
+  <path d="M 20,0 L 44,-24 L 75,0 L 44,10 Z"/>
+  <!-- spine line -->
+  <line x1="8" y1="0" x2="93" y2="0"/>
+</svg>

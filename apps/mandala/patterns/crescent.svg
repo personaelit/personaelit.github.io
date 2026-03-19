@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -50 100 100"
+     fill="none" stroke="#1a1a1a" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+  <!-- crescent: outer arc sweeps right, inner arc cuts back left -->
+  <path d="
+    M 32,-42
+    C 78,-44 95,-18 95,0
+    C 95,18 78,44 32,42
+    C 50,36 62,20 62,0
+    C 62,-20 50,-36 32,-42
+    Z
+  "/>
+  <!-- center dot in the crescent body -->
+  <circle cx="72" cy="0" r="5"/>
+</svg>
