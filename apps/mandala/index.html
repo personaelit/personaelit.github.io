@@ -168,6 +168,44 @@
 
     .action.primary:hover { background: #333; border-color: #333; }
 
+    /* ── Pattern grid ───────────────────────────────────── */
+    .pat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.28rem;
+    }
+
+    .pat-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      padding: 3px 2px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: white;
+      transition: border-color 0.1s, background 0.1s;
+    }
+
+    .pat-btn:hover { border-color: #999; background: #f5f5f5; }
+
+    .pat-btn.on {
+      border-color: #1a1a1a;
+      background: #efefef;
+    }
+
+    .pat-btn canvas { display: block; width: 100%; image-rendering: crisp-edges; }
+
+    .pat-btn span {
+      font-size: 0.52rem;
+      color: #888;
+      text-align: center;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
     /* ── Print ───────────────────────────────────────────── */
     @media print {
       body { background: white; overflow: visible; height: auto; }
@@ -223,6 +261,11 @@
       <button data-v="floral">Floral</button>
       <button data-v="geo">Geo</button>
     </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Pattern</label>
+    <div id="pat-grid" class="pat-grid"></div>
   </div>
 
   <div class="ctrl">
@@ -495,8 +538,9 @@ function draw(canvas, cfg) {
   const sa = (Math.PI * 2) / N; // full segment angle
   const rh = maxR / R;          // ring height
 
-  // Choose pattern pool
-  const pool = cfg.style === 'floral' ? FLORAL
+  // Choose pattern pool — a locked pattern overrides the style pool
+  const pool = cfg.pattern  ? [cfg.pattern]
+             : cfg.style === 'floral' ? FLORAL
              : cfg.style === 'geo'    ? GEO
              : ANY;
 
@@ -564,6 +608,7 @@ const state = {
   rings:    6,
   weight:   1.4,
   style:    'any',
+  pattern:  null,   // null = use style pool; string = lock all rings to this pattern
   dividers: true,
   radials:  false,
   seed:     Math.floor(Math.random() * 0xFFFFFF),
@@ -589,6 +634,86 @@ function render() {
   draw(canvas, { ...state, weight: state.weight * dpr });
 }
 
+// ── Pattern thumbnails ───────────────────────────────────
+const PAT_LABELS = {
+  petal:    'Petal',
+  lotus:    'Lotus',
+  teardrop: 'Tear',
+  droplet:  'Drop',
+  nested:   'Nested',
+  circle:   'Circle',
+  diamond:  'Diamond',
+  spike:    'Spike',
+  fan:      'Fan',
+  arch:     'Arch',
+  chevron:  'Chevron',
+  hex:      'Hex',
+};
+
+function drawThumb(canvas, patName) {
+  const SZ = canvas.width;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, SZ, SZ);
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, SZ, SZ);
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth   = Math.max(1, SZ * 0.028);
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+
+  const inner = SZ * 0.16;
+  const outer = SZ * 0.44;
+  const N  = 8;
+  const ha = Math.PI / N;
+  const sa = (Math.PI * 2) / N;
+
+  ctx.save();
+  ctx.translate(SZ / 2, SZ / 2);
+  for (let s = 0; s < N; s++) {
+    ctx.save();
+    ctx.rotate(s * sa);
+    P[patName](ctx, inner, outer, ha);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function buildPatGrid() {
+  const grid = document.getElementById('pat-grid');
+  ANY.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className   = 'pat-btn';
+    btn.dataset.pat = name;
+
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 60;
+    drawThumb(cv, name);
+
+    const lbl = document.createElement('span');
+    lbl.textContent = PAT_LABELS[name];
+
+    btn.appendChild(cv);
+    btn.appendChild(lbl);
+    grid.appendChild(btn);
+  });
+
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('.pat-btn');
+    if (!btn) return;
+    const pat = btn.dataset.pat;
+    if (state.pattern === pat) {
+      // toggle off — revert to pool mode
+      state.pattern = null;
+      btn.classList.remove('on');
+    } else {
+      grid.querySelectorAll('.pat-btn').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      state.pattern = pat;
+    }
+    render();
+  });
+}
+
 // ── Button groups ────────────────────────────────────────
 function bindGroup(id, key) {
   document.getElementById(id).addEventListener('click', e => {
@@ -597,6 +722,11 @@ function bindGroup(id, key) {
     document.querySelectorAll(`#${id} button`).forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     state[key] = isNaN(+btn.dataset.v) ? btn.dataset.v : +btn.dataset.v;
+    // Clicking a style pool clears any specific pattern lock
+    if (key === 'style') {
+      state.pattern = null;
+      document.querySelectorAll('#pat-grid .pat-btn').forEach(b => b.classList.remove('on'));
+    }
     render();
   });
 }
@@ -657,6 +787,7 @@ document.getElementById('print-btn').addEventListener('click', () => {
 });
 
 // ── Init ─────────────────────────────────────────────────
+buildPatGrid();
 updateSeed();
 window.addEventListener('resize', resize);
 resize();
