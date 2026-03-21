@@ -733,6 +733,12 @@
       b.vx += (b.cvx - b.vx) * 0.03; b.vy += (b.cvy - b.vy) * 0.03;
       const s = Math.hypot(b.vx, b.vy);
       if (s > MAX_SPEED) { b.vx = b.vx/s*MAX_SPEED; b.vy = b.vy/s*MAX_SPEED; }
+      const sp = Math.hypot(b.vx, b.vy);
+      if (sp > 0) {
+        const px = -b.vy / sp, py = b.vx / sp;
+        const zig = Math.sin(b.wingPhase) * 0.25;
+        b.vx += px * zig; b.vy += py * zig;
+      }
       b.x += b.vx; b.y += b.vy;
       if (b.x < 0 || b.x > innerWidth)  { b.vx *= -1; b.cvx *= -1; }
       if (b.y < 0 || b.y > innerHeight) { b.vy *= -1; b.cvy *= -1; }
