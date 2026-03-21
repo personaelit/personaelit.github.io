@@ -757,8 +757,9 @@
         if (Math.hypot(dx, dy) < EVASION_RADIUS) { wakeButterfly(b); return; }
         const tx = b.landX - b.x, ty = b.landY - b.y, td = Math.hypot(tx, ty);
         if (td < 3) { b.x = b.landX; b.y = b.landY; b.vx = 0; b.vy = 0; b.state = 'landed'; return; }
-        b.vx += (tx / td) * 0.15; b.vy += (ty / td) * 0.15;
-        b.vx *= 0.92; b.vy *= 0.92;
+        const accel = Math.min(0.6, 0.15 + td * 0.004);
+        b.vx += (tx / td) * accel; b.vy += (ty / td) * accel;
+        b.vx *= 0.88; b.vy *= 0.88;
         b.x += b.vx; b.y += b.vy;
         b.wingPhase += b.wingSpeed;
         return;
