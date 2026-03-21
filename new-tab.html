@@ -714,6 +714,7 @@
     /* --- Butterflies --- */
     let butterfliesList = [];
     const EVASION_RADIUS = 120, EVASION_FORCE = 4, MAX_SPEED = 5, CRUISE_SPEED = 2;
+    let bfLandTimer = 600 + Math.random() * 400;
 
     function mkButterfly() {
       const heading = Math.random() * Math.PI * 2;
@@ -721,9 +722,49 @@
       return { x: Math.random() * innerWidth, y: Math.random() * innerHeight, vx, vy, cvx: vx, cvy: vy,
                wingPhase: Math.random() * Math.PI * 2, wingSpeed: 0.18 + Math.random() * 0.12,
                heading, turnRate: (Math.random() * 0.018 + 0.006) * (Math.random() < 0.5 ? 1 : -1),
-               turnTimer: 80 + Math.random() * 160 };
+               turnTimer: 80 + Math.random() * 160,
+               state: 'flying', landX: 0, landY: 0 };
     }
+
+    function landButterflies() {
+      const cx = 150 + Math.random() * (innerWidth  - 300);
+      const cy = 150 + Math.random() * (innerHeight - 300);
+      for (const b of butterfliesList) {
+        if (b.state !== 'flying') continue;
+        b.state = 'landing';
+        b.landX = cx + (Math.random() - 0.5) * 80;
+        b.landY = cy + (Math.random() - 0.5) * 60;
+      }
+    }
+
+    function wakeButterfly(b) {
+      b.state = 'flying';
+      const a = Math.random() * Math.PI * 2;
+      b.heading = a;
+      b.vx = Math.cos(a) * MAX_SPEED; b.vy = Math.sin(a) * MAX_SPEED;
+    }
+
     function tickButterfly(b) {
+      if (b.state === 'landed') {
+        const dx = b.x - mouse.x, dy = b.y - mouse.y;
+        if (Math.hypot(dx, dy) < EVASION_RADIUS) wakeButterfly(b);
+        b.wingPhase += b.wingSpeed * 0.08;  // slow resting flutter
+        return;
+      }
+
+      if (b.state === 'landing') {
+        const dx = b.x - mouse.x, dy = b.y - mouse.y;
+        if (Math.hypot(dx, dy) < EVASION_RADIUS) { wakeButterfly(b); return; }
+        const tx = b.landX - b.x, ty = b.landY - b.y, td = Math.hypot(tx, ty);
+        if (td < 3) { b.x = b.landX; b.y = b.landY; b.vx = 0; b.vy = 0; b.state = 'landed'; return; }
+        b.vx += (tx / td) * 0.15; b.vy += (ty / td) * 0.15;
+        b.vx *= 0.92; b.vy *= 0.92;
+        b.x += b.vx; b.y += b.vy;
+        b.wingPhase += b.wingSpeed;
+        return;
+      }
+
+      // flying
       if (--b.turnTimer <= 0) {
         b.turnRate = (Math.random() * 0.018 + 0.006) * (Math.random() < 0.5 ? 1 : -1);
         b.turnTimer = 80 + Math.random() * 160;
@@ -960,10 +1001,16 @@
       pctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
 
       if (effects.butterflies) {
+        if (--bfLandTimer <= 0) {
+          landButterflies();
+          bfLandTimer = 700 + Math.random() * 500;
+        }
         pctx.font = '24px serif';
         for (const b of butterfliesList) {
           tickButterfly(b);
-          const scaleX = Math.abs(Math.sin(b.wingPhase)) * 0.85 + 0.15;
+          // landed: wings fully open; landing: slowing flutter; flying: full flutter
+          const flutterAmt = b.state === 'landed' ? 0.32 : 1;
+          const scaleX = Math.abs(Math.sin(b.wingPhase)) * (0.85 * flutterAmt) + (1 - 0.85 * flutterAmt);
           pctx.save();
           pctx.translate(b.x + 12, b.y - 12);
           pctx.scale(scaleX, 1);
