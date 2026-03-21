@@ -716,15 +716,21 @@
     const EVASION_RADIUS = 120, EVASION_FORCE = 4, MAX_SPEED = 5, CRUISE_SPEED = 2;
 
     function mkButterfly() {
-      const vx = (Math.random() - 0.5) * 2, vy = (Math.random() - 0.5) * 2;
+      const heading = Math.random() * Math.PI * 2;
+      const vx = Math.cos(heading) * 1.5, vy = Math.sin(heading) * 1.5;
       return { x: Math.random() * innerWidth, y: Math.random() * innerHeight, vx, vy, cvx: vx, cvy: vy,
-               wingPhase: Math.random() * Math.PI * 2, wingSpeed: 0.18 + Math.random() * 0.12 };
+               wingPhase: Math.random() * Math.PI * 2, wingSpeed: 0.18 + Math.random() * 0.12,
+               heading, turnRate: (Math.random() * 0.018 + 0.006) * (Math.random() < 0.5 ? 1 : -1),
+               turnTimer: 80 + Math.random() * 160 };
     }
     function tickButterfly(b) {
-      b.cvx += (Math.random() - 0.5) * 0.05;
-      b.cvy += (Math.random() - 0.5) * 0.05;
-      const cs = Math.hypot(b.cvx, b.cvy);
-      if (cs > CRUISE_SPEED) { b.cvx = b.cvx/cs*CRUISE_SPEED; b.cvy = b.cvy/cs*CRUISE_SPEED; }
+      if (--b.turnTimer <= 0) {
+        b.turnRate = (Math.random() * 0.018 + 0.006) * (Math.random() < 0.5 ? 1 : -1);
+        b.turnTimer = 80 + Math.random() * 160;
+      }
+      b.heading += b.turnRate;
+      b.cvx = Math.cos(b.heading) * CRUISE_SPEED;
+      b.cvy = Math.sin(b.heading) * CRUISE_SPEED;
       const dx = b.x - mouse.x, dy = b.y - mouse.y, dist = Math.hypot(dx, dy);
       if (dist < EVASION_RADIUS && dist > 0) {
         const f = (EVASION_RADIUS - dist) / EVASION_RADIUS * EVASION_FORCE;
@@ -740,8 +746,8 @@
         b.vx += px * zig; b.vy += py * zig;
       }
       b.x += b.vx; b.y += b.vy;
-      if (b.x < 0 || b.x > innerWidth)  { b.vx *= -1; b.cvx *= -1; }
-      if (b.y < 0 || b.y > innerHeight) { b.vy *= -1; b.cvy *= -1; }
+      if (b.x < 0 || b.x > innerWidth)  { b.vx *= -1; b.heading = Math.PI - b.heading; }
+      if (b.y < 0 || b.y > innerHeight) { b.vy *= -1; b.heading = -b.heading; }
       b.wingPhase += b.wingSpeed;
     }
 
