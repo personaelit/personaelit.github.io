@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish Tank — Personaelit</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #001122; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+
+    #back {
+      position: fixed;
+      top: 14px; left: 16px;
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      font: 13px/1 system-ui, sans-serif;
+      letter-spacing: 0.03em;
+      z-index: 10;
+      transition: color 0.2s;
+    }
+    #back:hover { color: rgba(255,255,255,0.9); }
+
+    #title {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(200, 230, 255, 0.7);
+      font: 300 2.2rem/1 system-ui, sans-serif;
+      letter-spacing: 0.15em;
+      text-align: center;
+      pointer-events: none;
+      animation: fadeTitle 4s ease forwards;
+    }
+    @keyframes fadeTitle {
+      0%   { opacity: 0; }
+      20%  { opacity: 1; }
+      70%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a href="/" id="back">← back</a>
+  <div id="title">🐠 fish tank</div>
+  <canvas id="tank"></canvas>
+
+<script>
+const canvas = document.getElementById('tank');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+const rand  = (a, b) => a + Math.random() * (b - a);
+const pick  = arr => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ── config ───────────────────────────────────────────────────────────────────
+const FISH_SPECS = [
+  { emoji: '🐟', minSz: 22, maxSz: 38, weight: 4 },
+  { emoji: '🐠', minSz: 22, maxSz: 36, weight: 3 },
+  { emoji: '🐡', minSz: 28, maxSz: 46, weight: 2 },
+  { emoji: '🦈', minSz: 44, maxSz: 72, weight: 1 },
+];
+
+const BOTTOM_EMOJIS = ['🦞','🦀','⭐','🐚','🪸','🦀','🐚','⭐','🪸'];
+const JELLY_EMOJI   = '🪼';
+
+// build weighted fish pool
+const FISH_POOL = [];
+FISH_SPECS.forEach(s => { for (let i = 0; i < s.weight; i++) FISH_POOL.push(s); });
+
+// ── factories ─────────────────────────────────────────────────────────────────
+function makeFish() {
+  const spec = pick(FISH_POOL);
+  const sz   = rand(spec.minSz, spec.maxSz);
+  const dir  = Math.random() < 0.5 ? 1 : -1;
+  const baseY = rand(90, H - 140);
+  return {
+    emoji: spec.emoji,
+    x: rand(0, W),
+    y: baseY,
+    baseY,
+    driftY: rand(0, Math.PI * 2),       // slow Y drift phase
+    vx: dir * rand(0.35, 1.6),
+    sz,
+    bobPhase:  rand(0, Math.PI * 2),
+    bobSpeed:  rand(0.6, 1.8),
+    bobAmp:    rand(14, 38),
+    depth:     Math.random(),            // 0=back 1=front
+    // whimsy state
+    spinning:  false,
+    spinAngle: 0,
+    spinDir:   1,
+    bursting:  false,
+    burstTimer: 0,
+  };
+}
+
+function makeBubble(randomY = false) {
+  return {
+    x:     rand(30, W - 30),
+    y:     randomY ? rand(0, H) : rand(H - 90, H - 30),
+    r:     rand(2.5, 9),
+    speed: rand(0.35, 1.1),
+    wFreq: rand(0.7, 2.2),
+    wAmp:  rand(12, 32),
+    wOff:  rand(0, Math.PI * 2),
+    alpha: rand(0.25, 0.65),
+    t:     randomY ? rand(0, 60) : 0,
+  };
+}
+
+function makeJelly() {
+  const baseY = rand(70, H - 220);
+  return {
+    x:         rand(80, W - 80),
+    y:         baseY,
+    baseY,
+    sz:        rand(32, 58),
+    floatPhase: rand(0, Math.PI * 2),
+    floatSpeed: rand(0.25, 0.55),
+    floatAmp:   rand(28, 55),
+    driftY:    rand(0, Math.PI * 2),
+    vx:        rand(-0.15, 0.15) || 0.05,
+    t:         rand(0, 40),
+  };
+}
+
+// ── world ─────────────────────────────────────────────────────────────────────
+const NUM_FISH    = 20;
+const NUM_BUBBLES = 28;
+const NUM_JELLIES = 3;
+
+let fishes  = Array.from({ length: NUM_FISH    }, makeFish);
+let bubbles = Array.from({ length: NUM_BUBBLES }, () => makeBubble(true));
+let jellies = Array.from({ length: NUM_JELLIES }, makeJelly);
+
+// sort fish by depth so back fish render first
+fishes.sort((a, b) => a.depth - b.depth);
+
+const bottomItems = BOTTOM_EMOJIS.map(emoji => ({
+  emoji,
+  x:  rand(40, W - 40),
+  sz: rand(18, 34),
+}));
+
+// seaweed
+const seaweeds = Array.from({ length: 10 }, () => ({
+  x:        rand(0, W),
+  height:   rand(55, 115),
+  segments: Math.round(rand(5, 9)),
+  phase:    rand(0, Math.PI * 2),
+  hue:      rand(110, 145),
+}));
+
+// caustic ray data (fixed, animated by time)
+const caustics = Array.from({ length: 6 }, () => ({
+  xFrac:  rand(0, 1),
+  speed:  rand(18, 35) * (Math.random() < 0.5 ? 1 : -1),
+  width:  rand(60, 140),
+  alpha:  rand(0.03, 0.07),
+}));
+
+// ── update ────────────────────────────────────────────────────────────────────
+let globalT = 0;
+
+function update(dt) {
+  globalT += dt;
+
+  // fish
+  fishes.forEach(f => {
+    // spin
+    if (f.spinning) {
+      f.spinAngle += 5 * dt * f.spinDir;
+      if (Math.abs(f.spinAngle) >= Math.PI * 2) {
+        f.spinning   = false;
+        f.spinAngle  = 0;
+      }
+    } else if (Math.random() < 0.0008) {
+      f.spinning  = true;
+      f.spinAngle = 0;
+      f.spinDir   = Math.random() < 0.5 ? 1 : -1;
+    }
+
+    // burst
+    if (f.bursting) {
+      f.burstTimer -= dt;
+      if (f.burstTimer <= 0) f.bursting = false;
+    } else if (Math.random() < 0.0007) {
+      f.bursting   = true;
+      f.burstTimer = rand(0.3, 0.7);
+    }
+
+    const spd = f.bursting ? 3.2 : 1;
+    f.x += f.vx * spd * 60 * dt;
+
+    // wrap
+    if (f.vx > 0 && f.x >  W + f.sz) f.x = -f.sz;
+    if (f.vx < 0 && f.x < -f.sz)     f.x =  W + f.sz;
+
+    // bob
+    f.y = f.baseY + Math.sin(globalT * f.bobSpeed + f.bobPhase) * f.bobAmp;
+
+    // drift base Y slowly
+    f.baseY += Math.sin(globalT * 0.12 + f.driftY) * 0.25 * dt;
+    f.baseY  = clamp(f.baseY, 75, H - 125);
+  });
+
+  // bubbles
+  bubbles.forEach(b => {
+    b.t += dt;
+    b.y -= b.speed * 60 * dt;
+    b.x += Math.sin(b.t * b.wFreq + b.wOff) * b.wAmp * 0.014;
+
+    if (b.y < -16) {
+      b.x = rand(30, W - 30);
+      b.y = rand(H - 90, H - 30);
+      b.t = 0;
+    }
+  });
+
+  // jellies
+  jellies.forEach(j => {
+    j.t += dt;
+    j.x    += j.vx * 60 * dt;
+    j.y     = j.baseY + Math.sin(j.t * j.floatSpeed + j.floatPhase) * j.floatAmp;
+    j.baseY += Math.sin(j.t * 0.09 + j.driftY) * 0.18 * dt;
+    j.baseY  = clamp(j.baseY, 55, H - 200);
+    if (j.x >  W + j.sz) j.x = -j.sz;
+    if (j.x < -j.sz)     j.x =  W + j.sz;
+  });
+}
+
+// ── draw ──────────────────────────────────────────────────────────────────────
+function drawBg() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0,   '#001a33');
+  g.addColorStop(0.65,'#002244');
+  g.addColorStop(1,   '#001018');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawCaustics() {
+  caustics.forEach(c => {
+    const x = ((c.xFrac * W + globalT * c.speed) % (W + c.width * 2)) - c.width;
+    const g = ctx.createLinearGradient(x, 0, x + c.width, H * 0.55);
+    g.addColorStop(0,   `rgba(120,190,255,${c.alpha})`);
+    g.addColorStop(0.5, `rgba(120,190,255,${c.alpha * 0.5})`);
+    g.addColorStop(1,   'rgba(120,190,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x - c.width * 0.4, 0);
+    ctx.lineTo(x + c.width * 0.6, 0);
+    ctx.lineTo(x + c.width,        H * 0.55);
+    ctx.lineTo(x - c.width * 0.05, H * 0.55);
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
+function drawSeaweeds() {
+  seaweeds.forEach(sw => {
+    ctx.save();
+    ctx.translate(sw.x, H - 52);
+    ctx.lineWidth  = 3.5;
+    ctx.lineCap    = 'round';
+    ctx.lineJoin   = 'round';
+
+    const segH = sw.height / sw.segments;
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0
+        ? `hsla(${sw.hue}, 60%, 20%, 0.9)`
+        : `hsla(${sw.hue}, 55%, 38%, 0.8)`;
+      ctx.lineWidth = pass === 0 ? 4 : 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      for (let i = 1; i <= sw.segments; i++) {
+        const sway     = Math.sin(globalT * 1.3 + sw.phase + i * 0.6) * (i * 2.8);
+        const prevSway = Math.sin(globalT * 1.3 + sw.phase + (i - 1) * 0.6) * ((i - 1) * 2.8);
+        ctx.bezierCurveTo(
+          prevSway + 14, -segH * (i - 0.65),
+          sway    - 14, -segH * (i - 0.35),
+          sway,         -segH * i
+        );
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+}
+
+function drawSand() {
+  const g = ctx.createLinearGradient(0, H - 65, 0, H);
+  g.addColorStop(0, '#c8a56c');
+  g.addColorStop(1, '#7a5e38');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-1, H + 1);
+  ctx.lineTo(-1, H - 48);
+  for (let x = 0; x <= W + 32; x += 32) {
+    ctx.lineTo(x, H - 48 + Math.sin(x * 0.065 + globalT * 0.25) * 5);
+  }
+  ctx.lineTo(W + 1, H + 1);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawBottomItems() {
+  bottomItems.forEach(item => {
+    ctx.font          = `${item.sz}px serif`;
+    ctx.textAlign     = 'center';
+    ctx.textBaseline  = 'bottom';
+    ctx.globalAlpha   = 1;
+    ctx.fillText(item.emoji, item.x, H - 46);
+  });
+}
+
+function drawBubbles() {
+  bubbles.forEach(b => {
+    const fade = clamp(b.y / 180, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = b.alpha * fade;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(160, 220, 255, 0.95)';
+    ctx.lineWidth   = 1.3;
+    ctx.stroke();
+    // glint
+    ctx.beginPath();
+    ctx.arc(b.x - b.r * 0.32, b.y - b.r * 0.32, b.r * 0.26, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawFish(f) {
+  ctx.save();
+  ctx.translate(f.x, f.y);
+
+  // depth fade for background fish
+  ctx.globalAlpha = 0.45 + f.depth * 0.55;
+
+  if (f.spinning) {
+    ctx.rotate(f.spinAngle);
+  } else if (f.vx > 0) {
+    ctx.scale(-1, 1);
+  }
+
+  // speed lines when bursting
+  if (f.bursting && !f.spinning) {
+    const lineDir = f.vx < 0 ? 1 : -1; // lines trail behind
+    ctx.save();
+    [0, -f.sz * 0.28, f.sz * 0.28].forEach((ly, i) => {
+      const len = f.sz * (0.55 - i * 0.05);
+      ctx.globalAlpha = (0.35 - i * 0.08) * (0.45 + f.depth * 0.55);
+      ctx.strokeStyle = 'rgba(200,235,255,1)';
+      ctx.lineWidth   = 1.8 - i * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(lineDir * f.sz * 0.3, ly);
+      ctx.lineTo(lineDir * (f.sz * 0.3 + len), ly);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  ctx.font         = `${f.sz}px serif`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(f.emoji, 0, 0);
+  ctx.restore();
+}
+
+function drawJellies() {
+  jellies.forEach(j => {
+    ctx.save();
+    ctx.translate(j.x, j.y);
+    ctx.globalAlpha = 0.82;
+    ctx.font        = `${j.sz}px serif`;
+    ctx.textAlign   = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(JELLY_EMOJI, 0, 0);
+    ctx.restore();
+  });
+}
+
+// ── loop ──────────────────────────────────────────────────────────────────────
+let lastTs = 0;
+function loop(ts) {
+  const dt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+
+  update(dt);
+
+  ctx.clearRect(0, 0, W, H);
+  drawBg();
+  drawCaustics();
+  drawSeaweeds();
+  drawSand();
+  drawBottomItems();
+  drawBubbles();
+  drawJellies();
+  fishes.forEach(drawFish);
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(ts => { lastTs = ts; loop(ts); });
+</script>
+</body>
+</html>
