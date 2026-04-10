@@ -1,3 +1,9 @@
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box; /* Ensures padding doesn't add to width */
+}
+
 /* ═══════════════════════════════════════════
    TOKENS — dark mode default
 ════════════════════════════════════════════ */
