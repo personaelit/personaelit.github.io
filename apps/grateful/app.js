@@ -1252,7 +1252,7 @@ function showEditModal(date, onSave) {
 // ═══════════════════════════════════════════
 
 let moodChartType = 'line';
-let tagChartType  = 'bubble';
+let tagChartType  = 'cloud';
 let moodChartInst = null;
 let tagChartInst  = null;
 
@@ -1315,13 +1315,15 @@ function renderViz() {
         <div class="row-between-wrap">
           <h3 class="text-lg">Tag Frequency</h3>
           <div class="row-xs" role="group" aria-label="Tag chart type">
-            ${toggles('tag', ['bubble', 'bar'], tagChartType)}
+            ${toggles('tag', ['cloud', 'bar'], tagChartType)}
           </div>
         </div>
         ${sortedTags.length
-          ? `<div style="position:relative; height:${tagChartType === 'bar' ? tagBarH : 260}px;">
-               <canvas id="tag-chart" aria-label="Tag frequency chart" role="img"></canvas>
-             </div>`
+          ? tagChartType === 'cloud'
+            ? `<div id="tag-chart-wrap" class="tag-cloud" aria-label="Tag cloud"></div>`
+            : `<div style="position:relative; height:${tagBarH}px;">
+                 <canvas id="tag-chart" aria-label="Tag frequency chart" role="img"></canvas>
+               </div>`
           : `<p class="text-center text-muted py-xl">No tag data yet.</p>`}
       </div>
 
@@ -1425,6 +1427,23 @@ function buildMoodChart(entries, gridColor, textColor) {
 
 /** @param {[string, number][]} sortedTags @param {string} gridColor @param {string} textColor */
 function buildTagChart(sortedTags, gridColor, textColor) {
+  if (tagChartType === 'cloud') {
+    const wrap = document.getElementById('tag-chart-wrap');
+    if (!wrap) return;
+    const maxCount = sortedTags[0][1];
+    const palette = ['#7c9a7e', '#5ab88a', '#70a878', '#4a8a6a', '#9dbf9f', '#3a7a5a', '#a0c8a2', '#c8deca'];
+    wrap.innerHTML = sortedTags.map(([tag, count], i) => {
+      const ratio    = count / maxCount;
+      const size     = (0.8 + ratio * 1.7).toFixed(2); // 0.8rem – 2.5rem
+      const weight   = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
+      const color    = palette[i % palette.length];
+      return `<span class="cloud-tag" style="font-size:${size}rem; color:${color}; font-weight:${weight};"
+        title="${count} mention${count !== 1 ? 's' : ''}">#${escHtml(tag)}</span>`;
+    }).join('');
+    return;
+  }
+
+  // Bar chart
   const ctx = document.getElementById('tag-chart')?.getContext('2d');
   if (!ctx) return;
 
@@ -1433,73 +1452,30 @@ function buildTagChart(sortedTags, gridColor, textColor) {
     ticks: { color: textColor },
   };
 
-  if (tagChartType === 'bar') {
-    tagChartInst = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: sortedTags.map(([t]) => `#${t}`),
-        datasets: [{
-          label: 'Mentions',
-          data:  sortedTags.map(([, c]) => c),
-          backgroundColor: '#7c9a7e99',
-          borderColor:     '#7c9a7e',
-          borderWidth: 1,
-          borderRadius: 4,
-        }],
+  tagChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sortedTags.map(([t]) => `#${t}`),
+      datasets: [{
+        label: 'Mentions',
+        data:  sortedTags.map(([, c]) => c),
+        backgroundColor: '#7c9a7e99',
+        borderColor:     '#7c9a7e',
+        borderWidth: 1,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ...scaleCfg, ticks: { ...scaleCfg.ticks, stepSize: 1 } },
+        y: { ...scaleCfg },
       },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ...scaleCfg, ticks: { ...scaleCfg.ticks, stepSize: 1 } },
-          y: { ...scaleCfg },
-        },
-      },
-    });
-
-  } else {
-    // Bubble — grid layout, radius proportional to count
-    const palette = [
-      '#7c9a7e', '#5ab88a', '#70a878', '#c8deca',
-      '#a0c8a2', '#4a8a6a', '#9dbf9f', '#3a7a5a',
-    ];
-    const maxCount = sortedTags[0][1];
-    const cols     = Math.ceil(Math.sqrt(sortedTags.length));
-
-    tagChartInst = new Chart(ctx, {
-      type: 'bubble',
-      data: {
-        datasets: sortedTags.map(([tag, count], i) => ({
-          label: `#${tag}`,
-          data: [{
-            x: (i % cols) + 0.5,
-            y: Math.floor(i / cols) + 0.5,
-            r: Math.max(8, Math.round((count / maxCount) * 32)),
-          }],
-          backgroundColor: palette[i % palette.length] + 'bb',
-          borderColor:     palette[i % palette.length],
-        })),
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: c => `#${sortedTags[c.datasetIndex][0]}: ${sortedTags[c.datasetIndex][1]}`,
-            },
-          },
-        },
-        scales: {
-          x: { display: false },
-          y: { display: false },
-        },
-      },
-    });
-  }
+    },
+  });
 }
 
 // ═══════════════════════════════════════════

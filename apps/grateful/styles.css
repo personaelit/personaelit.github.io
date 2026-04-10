@@ -514,6 +514,21 @@ input, textarea, select {
 }
 .icon-xl  { font-size: 3rem; }
 .chart-wrap { position: relative; height: 200px; }
+
+/* Tag cloud */
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) 0;
+}
+.cloud-tag {
+  cursor: default;
+  line-height: 1.3;
+  transition: opacity var(--transition);
+}
+.cloud-tag:hover { opacity: 0.65; }
 .modal-scroll { max-height: 85vh; overflow-y: auto; }
 .modal-list   { max-height: 40vh; overflow-y: auto; }
 .btn-theme    { flex: 1; padding: var(--space-sm); }
