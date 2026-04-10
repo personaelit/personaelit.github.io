@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════
 
 const PUSH_SERVER_URL = 'https://grateful-push.james-smits.workers.dev';
-const VAPID_PUBLIC_KEY = 'BJMm8ZeKWTf9wmaOqJoyWFyskk5jHapk1fYI2AnnloqkisQuDytqnhR4h7Q2XzNUPESRQBUneWiJhoyNJ53VjJs';
+const VAPID_PUBLIC_KEY = 'BA0HcwyMxXf4foYG-UGjpMA93TynghGau6qJdFERKF9fn7GsiBrVq1IejIviSVgsZKCqICjvkQ2KWLSTEy6LqYY';
 
 // ═══════════════════════════════════════════
 // SERVICE WORKER
