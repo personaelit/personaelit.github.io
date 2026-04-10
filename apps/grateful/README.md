@@ -183,28 +183,31 @@ When they click done, the streak is incremented and the user sees a success mess
 
 At this point the app installs as a PWA and works offline, but is just scaffolding.
 
-### Phase 2 — Data model
+### Phase 2 — Data model COMPLETE
 
 5. Define the localStorage schema in app.js before writing any UI logic — entries, streak, settings, custom prompts, custom tags. Getting this right early prevents painful refactors later.
 
-### Phase 3 — Core daily flow (the heart of the app)
+### Phase 3 — Core daily flow (the heart of the app) COMPLETE
 
 6. First-run flow — name prompt → optional DOB → fade into first gratitude prompt
 7. ratitude entry flow — prompt chooser, text field (save on keydown), tag chooser, Next/Submit buttons
 8. Mood recording — radio buttons + done
 9. Success screen — streak logic, 7-day graphic, encouraging message, confetti (respecting prefers-reduced-motion)
 
-### Phase 4 — Supporting screens
+### Phase 4 — Supporting screens COMPLETE
 
 10. History screen — paged list, search, tag filter, date filter, edit/delete
 11. Settings screen — name, DOB, import/export (with merge/replace prompt), restore defaults
 12. Visualization screen — Chart.js mood + tag charts with toggles
 
-### Phase 5 — Polish & extras
+### Phase 5 — Polish & extras COMPLETE
 
 13. Push notifications — time chooser in settings, deferred permission request
 14. Birthday modal — DOB check on launch, stats
 15. Completed-day state — countdown to next day
 
+## TODO
+- Validate entry is not string.empty.
+- Confirm when delete is clicked anywhere in the app.
 
 
