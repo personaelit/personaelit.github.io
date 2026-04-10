@@ -623,6 +623,7 @@ function showTagModal(onDone) {
     listEl.querySelectorAll('.tm-del').forEach(btn => {
       btn.addEventListener('click', () => {
         const tags = getTags();
+        if (!confirm(`Delete tag #${tags[parseInt(btn.dataset.i, 10)]}?`)) return;
         tags.splice(parseInt(btn.dataset.i, 10), 1);
         saveTags(tags);
         selectedTags = selectedTags.filter(t => tags.includes(t));
@@ -816,6 +817,7 @@ function renderEntry(step) {
   el.querySelector('#btn-del-p').addEventListener('click', () => {
     const ps = getPrompts();
     if (ps.length <= 1) return;
+    if (!confirm('Delete this prompt?')) return;
     const updated = ps.filter((_, i) => i !== promptIndex);
     savePrompts(updated);
     promptIndex = Math.min(promptIndex, updated.length - 1);
@@ -856,6 +858,10 @@ function renderEntry(step) {
 
   // ── Next / Submit ─────────────────────────────────────────────────────────
   el.querySelector('#btn-entry-action').addEventListener('click', () => {
+    if (!textarea.value.trim()) {
+      textarea.focus();
+      return;
+    }
     const current = getOrCreateEntry(dateKey);
     const item = {
       prompt: getPrompts()[promptIndex] ?? '',
