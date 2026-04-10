@@ -4,7 +4,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   box-sizing: border-box; /* Ensures padding doesn't add to width */
   -webkit-appearance: none;
   appearance: none;
-  border-radius: 0;
+
 }
 
 /* ═══════════════════════════════════════════
