@@ -206,8 +206,5 @@ At this point the app installs as a PWA and works offline, but is just scaffoldi
 14. Birthday modal — DOB check on launch, stats
 15. Completed-day state — countdown to next day
 
-## TODO
-- Validate entry is not string.empty.
-- Confirm when delete is clicked anywhere in the app.
 
 
