@@ -1,4 +1,12 @@
 // ═══════════════════════════════════════════
+// PUSH CONFIGURATION
+// Set these after deploying the worker — see workers/grateful-push/SETUP.md
+// ═══════════════════════════════════════════
+
+const PUSH_SERVER_URL = 'https://grateful-push.james-smits.workers.dev';
+const VAPID_PUBLIC_KEY = 'BJMm8ZeKWTf9wmaOqJoyWFyskk5jHapk1fYI2AnnloqkisQuDytqnhR4h7Q2XzNUPESRQBUneWiJhoyNJ53VjJs';
+
+// ═══════════════════════════════════════════
 // SERVICE WORKER
 // ═══════════════════════════════════════════
 
@@ -61,11 +69,12 @@ const MOOD_EMOJIS = ['😞', '😕', '😐', '🙂', '😄'];
 // ═══════════════════════════════════════════
 
 const KEYS = {
-  SETTINGS: 'grateful_settings',
-  PROMPTS:  'grateful_prompts',
-  TAGS:     'grateful_tags',
-  ENTRIES:  'grateful_entries',
-  STREAK:   'grateful_streak',
+  SETTINGS:  'grateful_settings',
+  PROMPTS:   'grateful_prompts',
+  TAGS:      'grateful_tags',
+  ENTRIES:   'grateful_entries',
+  STREAK:    'grateful_streak',
+  CLIENT_ID: 'grateful_client_id',
 };
 
 // ═══════════════════════════════════════════
@@ -85,6 +94,18 @@ function load(key, fallback) {
 /** @param {string} key @param {*} value */
 function save(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+// Client identity — stable anonymous ID scoped to this device/browser
+
+/** @returns {string} UUID persisted in localStorage */
+function getOrCreateClientId() {
+  let id = localStorage.getItem(KEYS.CLIENT_ID);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(KEYS.CLIENT_ID, id);
+  }
+  return id;
 }
 
 // Settings
@@ -455,7 +476,6 @@ function getBirthdayStats() {
 function bootstrap() {
   applyTheme(getSettings().colorScheme ?? 'system');
   checkStreakDecay();
-  checkReminder();
   initNav();
 
   const settings = getSettings();
@@ -1499,27 +1519,59 @@ function storageUsageKb() {
   return (bytes / 1024).toFixed(1);
 }
 
-/**
- * On launch: if notifications are enabled, it's past reminder time,
- * and today's entry isn't complete, fire a notification (once per day).
- */
-function checkReminder() {
-  const settings = getSettings();
-  const { reminderTime, notificationsEnabled, lastNotifiedDate } = settings;
-  if (!notificationsEnabled || !reminderTime) return;
-  if (Notification.permission !== 'granted') return;
-  if (lastNotifiedDate === today()) return;
-  if (getEntry(today())?.completed) return;
+// ── Push subscription helpers ─────────────────────────────────────────────────
 
-  const [h, m] = reminderTime.split(':').map(Number);
-  const now = new Date();
-  if (now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m)) {
-    new Notification('Grateful 🌿', {
-      body: "Time to record what you're grateful for today.",
-      icon: '/apps/grateful/icons/icon-192.png',
-    });
-    saveSettings({ lastNotifiedDate: today() });
-  }
+/** Converts a VAPID public key (base64url) to a Uint8Array for PushManager */
+function vapidKeyToUint8Array(base64url) {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+}
+
+/**
+ * Subscribes this device to push via the SW PushManager and registers it
+ * with the push server. Saves reminderTime locally on success.
+ * @param {string} reminderTime — HH:MM in local time
+ * @returns {Promise<boolean>} true on success
+ */
+async function subscribeToPush(reminderTime) {
+  const reg = await navigator.serviceWorker.ready;
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: vapidKeyToUint8Array(VAPID_PUBLIC_KEY),
+  });
+
+  const res = await fetch(`${PUSH_SERVER_URL}/subscribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      clientId: getOrCreateClientId(),
+      subscription: subscription.toJSON(),
+      reminderTime,
+      tzOffset: new Date().getTimezoneOffset(),
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  saveSettings({ reminderTime, notificationsEnabled: true });
+  return true;
+}
+
+/**
+ * Unsubscribes from push and removes the record from the server.
+ */
+async function unsubscribeFromPush() {
+  const reg = await navigator.serviceWorker.ready;
+  const existing = await reg.pushManager.getSubscription();
+  if (existing) await existing.unsubscribe();
+
+  await fetch(`${PUSH_SERVER_URL}/subscribe`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clientId: getOrCreateClientId() }),
+  });
+
+  saveSettings({ reminderTime: null, notificationsEnabled: false });
 }
 
 function renderSettings() {
@@ -1581,7 +1633,8 @@ function renderSettings() {
             ${settings.notificationsEnabled ? 'Update Reminder' : 'Set Reminder'}
           </button>
           ${settings.notificationsEnabled && settings.reminderTime ? `
-            <p class="text-sm text-muted">✓ Reminder set for ${escHtml(settings.reminderTime)}</p>` : ''}
+            <p class="text-sm text-muted">✓ Reminder set for ${escHtml(settings.reminderTime)}</p>
+            <button id="s-disable-reminder" class="btn btn-ghost">Disable Reminder</button>` : ''}
         ` : `
           <p class="text-muted text-sm">Notifications are not supported in this browser.</p>`}
       </div>
@@ -1635,7 +1688,34 @@ function renderSettings() {
     }
     if (Notification.permission !== 'granted') { renderSettings(); return; }
 
-    saveSettings({ reminderTime: time, notificationsEnabled: true });
+    const btn = el.querySelector('#s-set-reminder');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+      await subscribeToPush(time);
+    } catch (e) {
+      console.error('Push subscription failed:', e);
+      alert('Could not set reminder. Please try again.');
+      btn.disabled = false;
+      renderSettings();
+      return;
+    }
+
+    renderSettings();
+  });
+
+  el.querySelector('#s-disable-reminder')?.addEventListener('click', async () => {
+    const btn = el.querySelector('#s-disable-reminder');
+    btn.disabled = true;
+    btn.textContent = 'Disabling…';
+
+    try {
+      await unsubscribeFromPush();
+    } catch (e) {
+      console.error('Push unsubscribe failed:', e);
+    }
+
     renderSettings();
   });
 
