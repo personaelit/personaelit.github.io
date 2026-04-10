@@ -65,6 +65,12 @@
   </section>
 
   <!-- ═══════════════════════════════════════════
+       ABOUT SCREEN
+  ════════════════════════════════════════════ -->
+  <section id="screen-about" class="screen" aria-label="About">
+  </section>
+
+  <!-- ═══════════════════════════════════════════
        BOTTOM NAV
   ════════════════════════════════════════════ -->
   <nav id="nav-bar" aria-label="Main navigation">
@@ -92,12 +98,18 @@
       </svg>
       <span>Settings</span>
     </button>
+    <button class="nav-btn" data-screen="about" aria-label="About">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+      </svg>
+      <span>About</span>
+    </button>
   </nav>
 
   <!-- CDN dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <script type="module" src="app.js?version=1.0.2"></script>
+  <script type="module" src="app.js?version=1.0.3"></script>
 </body>
 </html>

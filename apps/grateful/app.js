@@ -339,6 +339,7 @@ function initNav() {
     if (screen === 'history')  { histPage = 0; renderHistory(); }
     if (screen === 'viz')      renderViz();
     if (screen === 'settings') renderSettings();
+    if (screen === 'about')    renderAbout();
   });
 }
 
@@ -1662,6 +1663,58 @@ function renderSettings() {
   el.querySelector('#s-restore-tags').addEventListener('click', () => {
     if (confirm('Restore all tags to defaults? Custom tags will be lost.'))
       restoreDefaultTags();
+  });
+}
+
+// ═══════════════════════════════════════════
+// ABOUT SCREEN
+// ═══════════════════════════════════════════
+
+function renderAbout() {
+  const el = document.getElementById('screen-about');
+  el.innerHTML = `
+    <div class="screen-body">
+      <h2 class="text-xl">About</h2>
+
+      <!-- Privacy -->
+      <div class="card stack gap-md">
+        <p class="section-label">Privacy</p>
+        <p class="text-sm">Grateful is a fully private journal. <strong>No data ever leaves your device.</strong> There are no accounts, no servers, and no analytics. Everything you write stays with you.</p>
+      </div>
+
+      <!-- Local Storage -->
+      <div class="card stack gap-md">
+        <p class="section-label">Your data &amp; localStorage</p>
+        <p class="text-sm">All journal entries, moods, settings, and streaks are stored in your browser's <strong>localStorage</strong> — a small, sandboxed database built into your browser. This data is tied to this browser on this device.</p>
+        <p class="text-sm">localStorage is separate from your browsing history and cookies, but it <em>can</em> be cleared by certain browser actions.</p>
+      </div>
+
+      <!-- Warning -->
+      <div class="card stack gap-md" style="border-color: var(--danger);">
+        <p class="section-label text-danger">Warning — data loss risk</p>
+        <p class="text-sm"><strong>Clearing your browser cache, site data, or localStorage will permanently delete your journal.</strong> This cannot be undone.</p>
+        <p class="text-sm">Actions that can erase your data:</p>
+        <ul class="text-sm stack gap-sm" style="padding-left: var(--space-lg); list-style: disc;">
+          <li>Clearing browser history or site data</li>
+          <li>"Clear all cookies and site data" in browser settings</li>
+          <li>Using private / incognito mode (data is lost when the window closes)</li>
+          <li>Uninstalling or resetting the browser</li>
+        </ul>
+        <p class="text-sm font-semibold" style="color: var(--danger);">Export your journal regularly to keep a safe backup.</p>
+      </div>
+
+      <!-- Export reminder -->
+      <div class="card stack gap-md">
+        <p class="section-label">Export frequently</p>
+        <p class="text-sm">Use the <strong>Export</strong> option in Settings to save a copy of your journal as a JSON file. Store it somewhere safe — your downloads folder, a cloud drive, or an external backup.</p>
+        <button class="btn btn-ghost btn-sm" id="about-go-settings">Go to Settings &rarr;</button>
+      </div>
+    </div>
+  `;
+
+  el.querySelector('#about-go-settings').addEventListener('click', () => {
+    showScreen('settings');
+    renderSettings();
   });
 }
 
