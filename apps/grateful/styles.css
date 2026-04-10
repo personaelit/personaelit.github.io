@@ -217,6 +217,7 @@ input, textarea, select {
   font-weight: 600;
   transition: background var(--transition), opacity var(--transition);
   width: 100%;
+  margin: var(--space-sm) 0;
 }
 
 .btn-primary {
@@ -289,7 +290,7 @@ input, textarea, select {
 }
 
 .tag.selected {
-  background: var(--accent-dim);
+  /* background: var(--accent-dim); */
   border-color: var(--accent);
   color: var(--accent-text);
 }
