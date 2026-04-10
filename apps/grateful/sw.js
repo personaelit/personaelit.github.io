@@ -77,7 +77,8 @@ async function cacheFirst(request) {
 
 // ── Push notifications ────────────────────────────────────────────────────────
 self.addEventListener('push', event => {
-  const data = event.data?.json() ?? {};
+  let data = {};
+  try { data = event.data?.json() ?? {}; } catch { /* plain-text or empty push */ }
   const title = data.title ?? 'Grateful';
   const options = {
     body: data.body ?? 'Time to record what you\'re grateful for today.',
