@@ -984,7 +984,10 @@ function renderDone() {
     const m = String(Math.floor((diff % 3_600_000) / 60_000)).padStart(2, '0');
     const s = String(Math.floor((diff % 60_000) / 1_000)).padStart(2, '0');
     cdEl.textContent = `${h}:${m}:${s}`;
-    if (diff < 1000) { clearInterval(timer); bootstrap(); }
+      if (diff < 1000) {
+        clearInterval(timer);
+        window.location.reload();
+      }
   };
 
   tick();
