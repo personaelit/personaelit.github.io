@@ -1423,35 +1423,6 @@ function buildMoodChart(entries, gridColor, textColor) {
   }
 }
 
-// Inline Chart.js plugin: draws tag labels on bubble centres
-const tagBubbleLabelPlugin = {
-  id: 'tagBubbleLabel',
-  afterDatasetsDraw(chart) {
-    const { ctx } = chart;
-    chart.data.datasets.forEach((dataset, i) => {
-      const meta = chart.getDatasetMeta(i);
-      if (!meta.visible) return;
-      meta.data.forEach(point => {
-        const r = Math.max(1, point.options?.radius ?? 10);
-        if (r < 2) return; // too small to label
-        const fontSize = Math.max(9, Math.min(13, Math.round(r * 0.38)));
-        const label = (dataset.label ?? '').replace(/^#/, '');
-        ctx.save();
-        // clip to bubble so text doesn't overflow
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, r - 1, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.font = `bold ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(label, point.x, point.y);
-        ctx.restore();
-      });
-    });
-  },
-};
-
 /** @param {[string, number][]} sortedTags @param {string} gridColor @param {string} textColor */
 function buildTagChart(sortedTags, gridColor, textColor) {
   const ctx = document.getElementById('tag-chart')?.getContext('2d');
@@ -1505,13 +1476,12 @@ function buildTagChart(sortedTags, gridColor, textColor) {
           data: [{
             x: (i % cols) + 0.5,
             y: Math.floor(i / cols) + 0.5,
-            r: Math.max(12, Math.round((count / maxCount) * 36)),
+            r: Math.max(8, Math.round((count / maxCount) * 32)),
           }],
           backgroundColor: palette[i % palette.length] + 'bb',
           borderColor:     palette[i % palette.length],
         })),
       },
-      plugins: [tagBubbleLabelPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
