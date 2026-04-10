@@ -1,6 +1,6 @@
 {
   "name": "Grateful",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "short_name": "Grateful",
   "description": "A daily gratitude journal with mood tracking and visualizations.",
   "start_url": "/apps/grateful/",
