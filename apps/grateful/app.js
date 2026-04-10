@@ -1432,7 +1432,8 @@ const tagBubbleLabelPlugin = {
       const meta = chart.getDatasetMeta(i);
       if (!meta.visible) return;
       meta.data.forEach(point => {
-        const r = point.options.radius ?? 10;
+        const r = Math.max(1, point.options?.radius ?? 10);
+        if (r < 2) return; // too small to label
         const fontSize = Math.max(9, Math.min(13, Math.round(r * 0.38)));
         const label = (dataset.label ?? '').replace(/^#/, '');
         ctx.save();
