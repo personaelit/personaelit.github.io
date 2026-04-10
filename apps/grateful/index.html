@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#7C9A7E">
+  <meta name="description" content="A daily gratitude journal with mood tracking and visualizations.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Grateful">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>Grateful</title>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       DAILY SCREEN — first-run, entry flow, mood, success, done
+  ════════════════════════════════════════════ -->
+  <main id="screen-daily" class="screen active" aria-label="Daily journal">
+
+    <!-- First run: name -->
+    <div id="view-firstrun-name" class="view" aria-label="Welcome">
+    </div>
+
+    <!-- First run: date of birth -->
+    <div id="view-firstrun-dob" class="view" aria-label="Date of birth">
+    </div>
+
+    <!-- Gratitude entry (reused for prompts 1, 2, 3) -->
+    <div id="view-entry" class="view" aria-label="Gratitude entry">
+    </div>
+
+    <!-- Mood recording -->
+    <div id="view-mood" class="view" aria-label="Mood check-in">
+    </div>
+
+    <!-- Success / streak -->
+    <div id="view-success" class="view" aria-label="Success">
+    </div>
+
+    <!-- Completed day: countdown to tomorrow -->
+    <div id="view-done" class="view" aria-label="All done for today">
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       HISTORY SCREEN
+  ════════════════════════════════════════════ -->
+  <section id="screen-history" class="screen" aria-label="History">
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       VISUALIZATIONS SCREEN
+  ════════════════════════════════════════════ -->
+  <section id="screen-viz" class="screen" aria-label="Visualizations">
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       SETTINGS SCREEN
+  ════════════════════════════════════════════ -->
+  <section id="screen-settings" class="screen" aria-label="Settings">
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       BOTTOM NAV
+  ════════════════════════════════════════════ -->
+  <nav id="nav-bar" aria-label="Main navigation">
+    <button class="nav-btn active" data-screen="daily" aria-label="Journal" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4zm0 4h10v2H4z"/>
+      </svg>
+      <span>Journal</span>
+    </button>
+    <button class="nav-btn" data-screen="history" aria-label="History">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l4-4-4-4v2z"/>
+      </svg>
+      <span>History</span>
+    </button>
+    <button class="nav-btn" data-screen="viz" aria-label="Visualizations">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 20h2v-8H4zm4 0h2V8H8zm4 0h2v-5h-2zm4 0h2V4h-2z"/>
+      </svg>
+      <span>Insights</span>
+    </button>
+    <button class="nav-btn" data-screen="settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.68.07-1.08s-.03-.74-.07-1.08l2.32-1.82c.21-.16.27-.46.13-.7l-2.2-3.8c-.14-.24-.42-.32-.67-.24l-2.74 1.1c-.57-.44-1.18-.8-1.86-1.07L14 2.42c-.04-.27-.27-.42-.54-.42h-4.4c-.27 0-.5.15-.54.42L8.17 5.3c-.68.27-1.29.63-1.86 1.07L3.57 5.27c-.25-.08-.53 0-.67.24l-2.2 3.8c-.14.24-.08.54.13.7l2.32 1.82C3.03 12.26 3 12.6 3 13s.03.74.07 1.08L.75 15.9c-.21.16-.27.46-.13.7l2.2 3.8c.14.24.42.32.67.24l2.74-1.1c.57.44 1.18.8 1.86 1.07l.36 2.88c.04.27.27.42.54.42h4.4c.27 0 .5-.15.54-.42l.36-2.88c.68-.27 1.29-.63 1.86-1.07l2.74 1.1c.25.08.53 0 .67-.24l2.2-3.8c.14-.24.08-.54-.13-.7l-2.32-1.82z"/>
+      </svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <!-- CDN dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
