@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="#1a1f1a"/>
+
+  <!-- Leaf body: teardrop pointing upward, gently asymmetric -->
+  <path
+    d="M256 88
+       C 310 88, 385 138, 385 228
+       C 385 318, 326 415, 256 424
+       C 186 415, 127 318, 127 228
+       C 127 138, 202 88, 256 88 Z"
+    fill="#7C9A7E"
+  />
+
+  <!-- Midrib: subtle dark line down the center -->
+  <path
+    d="M256 104 Q 260 265 256 412"
+    stroke="#1a2e1c" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.45"
+  />
+
+  <!-- Left veins -->
+  <path d="M255 192 Q 216 182 192 168" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M255 258 Q 204 242 170 222" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M255 320 Q 210 308 182 290" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+  <!-- Right veins (mirrored) -->
+  <path d="M257 192 Q 296 182 320 168" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M257 258 Q 308 242 342 222" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M257 320 Q 302 308 330 290" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg>

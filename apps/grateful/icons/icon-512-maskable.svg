@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full bleed background — OS applies its own mask shape -->
+  <rect width="512" height="512" fill="#1a1f1a"/>
+
+  <!--
+    Maskable safe zone: content must be within the inner 80% circle
+    = radius 204px centered at (256,256) → approx (52,52)–(460,460)
+    Leaf is scaled down slightly to stay well within safe zone.
+  -->
+
+  <!-- Leaf body -->
+  <path
+    d="M256 116
+       C 302 116, 368 158, 368 236
+       C 368 314, 315 396, 256 406
+       C 197 396, 144 314, 144 236
+       C 144 158, 210 116, 256 116 Z"
+    fill="#7C9A7E"
+  />
+
+  <!-- Midrib -->
+  <path
+    d="M256 130 Q 260 268 256 394"
+    stroke="#1a2e1c" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.45"
+  />
+
+  <!-- Left veins -->
+  <path d="M255 210 Q 220 201 200 190" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M255 264 Q 212 250 184 234" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M255 318 Q 218 306 196 292" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+  <!-- Right veins (mirrored) -->
+  <path d="M257 210 Q 292 201 312 190" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M257 264 Q 300 250 328 234" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M257 318 Q 294 306 316 292" stroke="#1a2e1c" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg>

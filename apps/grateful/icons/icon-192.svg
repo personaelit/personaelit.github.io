@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background -->
+  <rect width="192" height="192" rx="38" fill="#1a1f1a"/>
+
+  <!-- Leaf body -->
+  <path
+    d="M96 32
+       C 118 32, 147 52, 147 87
+       C 147 122, 123 157, 96 162
+       C 69 157, 45 122, 45 87
+       C 45 52, 74 32, 96 32 Z"
+    fill="#7C9A7E"
+  />
+
+  <!-- Midrib -->
+  <path
+    d="M96 38 Q 98 100 96 156"
+    stroke="#1a2e1c" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.45"
+  />
+
+  <!-- Left veins -->
+  <path d="M96 76 Q 80 72 72 67" stroke="#1a2e1c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M96 100 Q 77 94 65 86" stroke="#1a2e1c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M96 122 Q 79 117 70 110" stroke="#1a2e1c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+  <!-- Right veins -->
+  <path d="M97 76 Q 113 72 121 67" stroke="#1a2e1c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M97 100 Q 116 94 128 86" stroke="#1a2e1c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M97 122 Q 114 117 123 110" stroke="#1a2e1c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg>
