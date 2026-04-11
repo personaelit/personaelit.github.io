@@ -600,6 +600,84 @@ input, textarea, select {
 .hidden       { display: none; }
 
 /* ═══════════════════════════════════════════
+   DESKTOP LAYOUT (≥ 52 rem / ~832 px)
+   Bottom nav → left sidebar
+════════════════════════════════════════════ */
+.nav-brand { display: none; }
+
+@media (min-width: 52rem) {
+  :root { --sidebar-width: 13rem; }
+
+  /* App name at top of sidebar */
+  .nav-brand {
+    display: block;
+    padding: var(--space-xl) var(--space-lg) var(--space-md);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+  }
+
+  /* Nav → left sidebar */
+  #nav-bar {
+    top: 0;
+    left: 0;
+    right: auto;
+    bottom: 0;
+    width: var(--sidebar-width);
+    height: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0 var(--space-sm) var(--space-xl);
+    gap: var(--space-xs);
+    border-top: none;
+    border-right: 1px solid var(--border);
+  }
+
+  /* Push Settings & About to the bottom of sidebar */
+  .nav-btn[data-screen="settings"] {
+    margin-top: auto;
+  }
+
+  /* Nav buttons → horizontal rows */
+  .nav-btn {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    gap: var(--space-md);
+  }
+
+  .nav-btn span { font-size: var(--text-sm); }
+
+  /* Screens fill the space to the right of the sidebar */
+  .screen {
+    top: 0;
+    bottom: 0;
+    left: var(--sidebar-width);
+    right: 0;
+  }
+
+  /* Constrain content for readability within wide screens */
+  .view {
+    max-width: 40rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .screen-body,
+  .screen-filters,
+  .screen-list {
+    max-width: 52rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════
    MANUAL THEME OVERRIDES (override system pref)
 ════════════════════════════════════════════ */
 [data-theme="dark"] {
