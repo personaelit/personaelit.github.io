@@ -1339,6 +1339,11 @@ function renderViz() {
     <div class="screen-body">
 
       <div class="card stack gap-md">
+        <h3 class="text-lg">Year in Review</h3>
+        <div id="heatmap-wrap"></div>
+      </div>
+
+      <div class="card stack gap-md">
         <div class="row-between-wrap">
           <h3 class="text-lg">Mood Trend</h3>
           <div class="row-xs" role="group" aria-label="Mood chart type">
@@ -1386,6 +1391,7 @@ function renderViz() {
 
   if (entries.length)    buildMoodChart(entries, gridColor, textColor);
   if (sortedTags.length) buildTagChart(sortedTags, gridColor, textColor);
+  buildHeatMap(getAllEntries());
 }
 
 /** @param {object[]} entries @param {string} gridColor @param {string} textColor */
@@ -1517,6 +1523,95 @@ function buildTagChart(sortedTags, gridColor, textColor) {
       },
     },
   });
+}
+
+/** Builds the GitHub-style calendar heat map for the past 365 days. */
+function buildHeatMap(allEntries) {
+  const wrap = document.getElementById('heatmap-wrap');
+  if (!wrap) return;
+
+  const CELL = 11; // cell size in px (gap is 3px, set in CSS)
+
+  // Date range: 365 days ending today (inclusive)
+  const todayStr = today();
+  const todayObj = new Date(todayStr + 'T00:00:00');
+  const startObj = new Date(todayObj);
+  startObj.setDate(startObj.getDate() - 364);
+
+  // Align grid to Sunday of the start week
+  const gridStartObj = new Date(startObj);
+  gridStartObj.setDate(gridStartObj.getDate() - gridStartObj.getDay());
+
+  // Total week-columns needed to reach today
+  const msPerDay   = 86400000;
+  const daysSpanned = Math.floor((todayObj - gridStartObj) / msPerDay);
+  const numWeeks   = Math.ceil((daysSpanned + 1) / 7);
+
+  // Month labels: first week-column where each month appears
+  const monthLabels = [];
+  let prevMonth = null;
+  for (let w = 0; w < numWeeks; w++) {
+    const wStart = new Date(gridStartObj);
+    wStart.setDate(wStart.getDate() + w * 7);
+    if (wStart > todayObj) break;
+    const mo = wStart.toLocaleDateString('en-US', { month: 'short' });
+    if (mo !== prevMonth) {
+      monthLabels.push({ week: w, label: mo });
+      prevMonth = mo;
+    }
+  }
+
+  // Build cells in column-major order (week × day-of-week)
+  const cells = [];
+  for (let w = 0; w < numWeeks; w++) {
+    for (let dow = 0; dow < 7; dow++) {
+      const cellObj = new Date(gridStartObj);
+      cellObj.setDate(cellObj.getDate() + w * 7 + dow);
+      const dateStr = formatDateLocal(cellObj);
+
+      if (cellObj < startObj || cellObj > todayObj) {
+        // Outside 365-day window — invisible placeholder
+        cells.push(`<div class="hm-cell hm-oob" aria-hidden="true"></div>`);
+        continue;
+      }
+
+      const entry = allEntries[dateStr];
+      if (!entry?.completed) {
+        cells.push(`<div class="hm-cell hm-none" title="${dateStr}"></div>`);
+      } else {
+        const m   = entry.mood ?? 3;
+        const tip = `${dateStr} · ${MOOD_EMOJIS[m - 1]} mood ${m}/5`;
+        cells.push(`<div class="hm-cell" style="background:var(--mood-${m});" title="${tip}" aria-label="${tip}"></div>`);
+      }
+    }
+  }
+
+  const colTemplate = `repeat(${numWeeks},${CELL}px)`;
+  const monthSpans  = monthLabels.map(({ week, label }) =>
+    `<span class="hm-month" style="grid-column:${week + 1}">${label}</span>`
+  ).join('');
+
+  wrap.innerHTML = `
+    <div class="hm-outer">
+      <div class="hm-body">
+        <div class="hm-doy" aria-hidden="true">
+          <span>S</span><span></span><span>T</span><span></span><span>T</span><span></span><span>S</span>
+        </div>
+        <div class="hm-scroll">
+          <div class="hm-months" style="grid-template-columns:${colTemplate}">${monthSpans}</div>
+          <div class="hm-grid" style="grid-template-columns:${colTemplate}">${cells.join('')}</div>
+        </div>
+      </div>
+      <div class="hm-legend" aria-label="Color legend">
+        <span class="hm-legend-label">No entry</span>
+        <div class="hm-cell hm-none"></div>
+        <span class="hm-legend-sep">→</span>
+        ${[1,2,3,4,5].map(m =>
+          `<div class="hm-cell" style="background:var(--mood-${m});" title="Mood ${m} ${MOOD_EMOJIS[m-1]}"></div>`
+        ).join('')}
+        <span class="hm-legend-label">${MOOD_EMOJIS[4]}</span>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════
