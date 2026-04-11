@@ -177,11 +177,6 @@ function saveEntry(date, patch) {
   save(KEYS.ENTRIES, entries);
 }
 
-/** @param {string} date @param {object} patch */
-function updateEntry(date, patch) {
-  saveEntry(date, patch);
-}
-
 /** @param {string} date */
 function deleteEntry(date) {
   const entries = getAllEntries();
@@ -209,9 +204,8 @@ function saveStreak(patch) {
 // DATE UTILITIES
 // ═══════════════════════════════════════════
 
-/** Returns today as YYYY-MM-DD in local time. */
-function today() {
-  const d = new Date();
+/** @param {Date} d @returns {string} YYYY-MM-DD in local time */
+function formatDateLocal(d) {
   return [
     d.getFullYear(),
     String(d.getMonth() + 1).padStart(2, '0'),
@@ -219,15 +213,16 @@ function today() {
   ].join('-');
 }
 
+/** Returns today as YYYY-MM-DD in local time. */
+function today() {
+  return formatDateLocal(new Date());
+}
+
 /** Returns YYYY-MM-DD for N days ago (negative = future). */
 function dateOffset(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-');
+  return formatDateLocal(d);
 }
 
 /** Returns the day-of-week abbreviation for a YYYY-MM-DD string. */
@@ -473,10 +468,12 @@ function getBirthdayStats() {
  * Determines which screen/view to show on launch.
  * Render functions for each view are stubs — filled in subsequent steps.
  */
+let navInitialised = false;
+
 function bootstrap() {
   applyTheme(getSettings().colorScheme ?? 'system');
   checkStreakDecay();
-  initNav();
+  if (!navInitialised) { initNav(); navInitialised = true; }
 
   const settings = getSettings();
 
@@ -1091,7 +1088,8 @@ function renderBirthdayModal() {
 let histPage      = 0;
 let histSearch    = '';
 let histTagFilter = null;
-let histDateFilter = '';
+let histDateFrom  = '';
+let histDateTo    = '';
 
 const HIST_PAGE_SIZE = 7;
 
@@ -1108,7 +1106,8 @@ function filteredEntries() {
     .filter(e => e.completed)
     .sort((a, b) => b.date.localeCompare(a.date))
     .filter(e => {
-      if (histDateFilter && e.date !== histDateFilter) return false;
+      if (histDateFrom && e.date < histDateFrom) return false;
+      if (histDateTo   && e.date > histDateTo)   return false;
       if (histSearch) {
         const q = histSearch.toLowerCase();
         if (!(e.grateful ?? []).some(g => g.text?.toLowerCase().includes(q))) return false;
@@ -1131,8 +1130,14 @@ function renderHistory() {
     <div class="screen-filters">
       <input id="hist-search" class="input" type="search" placeholder="Search entries…"
         value="${escHtml(histSearch)}" aria-label="Search entries">
-      <input id="hist-date" class="input" type="date" value="${escHtml(histDateFilter)}"
-        aria-label="Filter by date">
+      <div class="row">
+        <input id="hist-date-from" class="input flex-1" type="date"
+          value="${escHtml(histDateFrom)}" aria-label="From date">
+        <input id="hist-date-to" class="input flex-1" type="date"
+          value="${escHtml(histDateTo)}" aria-label="To date">
+        ${(histDateFrom || histDateTo) ? `
+          <button id="hist-date-clear" class="btn btn-ghost btn-xs" aria-label="Clear date range">✕</button>` : ''}
+      </div>
       <div id="hist-tag-filter" class="tag-list" role="group" aria-label="Filter by tag">
         ${getTags().map(t => `
           <button class="tag${histTagFilter === t ? ' selected' : ''}" data-tag="${escHtml(t)}"
@@ -1159,8 +1164,14 @@ function renderHistory() {
   el.querySelector('#hist-search').addEventListener('input', e => {
     histSearch = e.target.value; histPage = 0; renderHistory();
   });
-  el.querySelector('#hist-date').addEventListener('change', e => {
-    histDateFilter = e.target.value; histPage = 0; renderHistory();
+  el.querySelector('#hist-date-from').addEventListener('change', e => {
+    histDateFrom = e.target.value; histPage = 0; renderHistory();
+  });
+  el.querySelector('#hist-date-to').addEventListener('change', e => {
+    histDateTo = e.target.value; histPage = 0; renderHistory();
+  });
+  el.querySelector('#hist-date-clear')?.addEventListener('click', () => {
+    histDateFrom = ''; histDateTo = ''; histPage = 0; renderHistory();
   });
   el.querySelectorAll('#hist-tag-filter .tag').forEach(btn => {
     btn.addEventListener('click', () => {
