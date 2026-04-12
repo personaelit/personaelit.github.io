@@ -3,7 +3,7 @@
 // Set these after deploying the worker — see workers/grateful-push/SETUP.md
 // ═══════════════════════════════════════════
 
-const APP_VERSION = 'v8.0.0';
+const APP_VERSION = 'v8.0.1';
 
 const PUSH_SERVER_URL = 'https://grateful-push.james-smits.workers.dev';
 const VAPID_PUBLIC_KEY = 'BA0HcwyMxXf4foYG-UGjpMA93TynghGau6qJdFERKF9fn7GsiBrVq1IejIviSVgsZKCqICjvkQ2KWLSTEy6LqYY';
@@ -2223,13 +2223,9 @@ function renderAbout() {
   const el = document.getElementById('screen-about');
   el.innerHTML = `
     <div class="screen-body">
-      <h2 class="text-xl">About</h2>
-
-      <!-- Version -->
-      <div class="card stack gap-md">
-        <p class="section-label">Version</p>
-        <p class="text-sm">${APP_VERSION}</p>
-      </div>
+      <h2 class="text-xl">About Grateful</h2>
+      <p>Grateful is a simple journal app to help you record what you're thankful for each day.</p>
+      <p>Version ${APP_VERSION}</p>
 
       <!-- Privacy -->
       <div class="card stack gap-md">
