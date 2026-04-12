@@ -320,13 +320,16 @@ function encouragingMessage() {
 // THEME
 // ═══════════════════════════════════════════
 
-/** Applies the user's colour-scheme preference to <html data-theme>. */
+/** Applies the user's colour-scheme preference to <html data-theme>.
+ *  Always sets an explicit attribute so palette rules can rely on
+ *  [data-theme="dark"][data-palette] instead of bare [data-palette],
+ *  which fixes an iOS Safari specificity bug with @media prefers-color-scheme.
+ */
 function applyTheme(scheme) {
-  if (scheme === 'system') {
-    document.documentElement.removeAttribute('data-theme');
-  } else {
-    document.documentElement.setAttribute('data-theme', scheme);
-  }
+  const resolved = scheme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : scheme;
+  document.documentElement.setAttribute('data-theme', resolved);
 }
 
 /** Applies the colour palette to <html data-palette>. */
@@ -495,6 +498,13 @@ function bootstrap() {
   const settings = getSettings();
   applyTheme(settings.colorScheme ?? 'system');
   applyPalette(settings.colorPalette ?? 'sage');
+
+  // Keep data-theme in sync when OS preference changes and user is on "system"
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if ((getSettings().colorScheme ?? 'system') === 'system') {
+      document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    }
+  });
   checkStreakDecay();
   if (!navInitialised) { initNav(); navInitialised = true; }
 
