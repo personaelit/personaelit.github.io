@@ -64,6 +64,17 @@ const ENCOURAGING_MESSAGES = [
 
 const MOOD_EMOJIS = ['😞', '😕', '😐', '🙂', '😄'];
 
+const PALETTES = [
+  { id: 'sage',    label: 'Sage',    swatch: '#7c9a7e' },
+  { id: 'pink',    label: 'Pink',    swatch: '#d4789a' },
+  { id: 'blue',    label: 'Blue',    swatch: '#6898d8' },
+  { id: 'red',     label: 'Red',     swatch: '#d87878' },
+  { id: 'emerald', label: 'Emerald', swatch: '#4ac898' },
+  { id: 'green',   label: 'Green',   swatch: '#90c848' },
+  { id: 'purple',  label: 'Purple',  swatch: '#a888d8' },
+  { id: 'orange',  label: 'Orange',  swatch: '#d8a048' },
+];
+
 // ═══════════════════════════════════════════
 // STORAGE KEYS
 // ═══════════════════════════════════════════
@@ -110,7 +121,7 @@ function getOrCreateClientId() {
 
 // Settings
 
-/** @returns {{ name: string, dob: string|null, reminderTime: string|null, notificationsEnabled: boolean, colorScheme: string }} */
+/** @returns {{ name: string, dob: string|null, reminderTime: string|null, notificationsEnabled: boolean, colorScheme: string, colorPalette: string }} */
 function getSettings() {
   return load(KEYS.SETTINGS, {
     name: '',
@@ -118,6 +129,7 @@ function getSettings() {
     reminderTime: null,
     notificationsEnabled: false,
     colorScheme: 'system',
+    colorPalette: 'sage',
   });
 }
 
@@ -317,6 +329,15 @@ function applyTheme(scheme) {
   }
 }
 
+/** Applies the colour palette to <html data-palette>. */
+function applyPalette(palette) {
+  if (!palette || palette === 'sage') {
+    document.documentElement.removeAttribute('data-palette');
+  } else {
+    document.documentElement.setAttribute('data-palette', palette);
+  }
+}
+
 /** Returns 'dark' or 'light' accounting for any manual override. */
 function getEffectiveTheme() {
   const { colorScheme } = getSettings();
@@ -471,11 +492,11 @@ function getBirthdayStats() {
 let navInitialised = false;
 
 function bootstrap() {
-  applyTheme(getSettings().colorScheme ?? 'system');
+  const settings = getSettings();
+  applyTheme(settings.colorScheme ?? 'system');
+  applyPalette(settings.colorPalette ?? 'sage');
   checkStreakDecay();
   if (!navInitialised) { initNav(); navInitialised = true; }
-
-  const settings = getSettings();
 
   // First run — no name saved yet
   if (!settings.name) {
@@ -790,13 +811,63 @@ function renderFirstRunDob() {
 
   const proceed = dob => {
     saveSettings({ dob: dob || null });
-    showView('view-entry');
-    renderEntry(0);
+    showView('view-firstrun-theme');
+    renderFirstRunTheme();
   };
 
   el.querySelector('#fd-continue').addEventListener('click', () =>
     proceed(el.querySelector('#fd-dob').value));
   el.querySelector('#fd-skip').addEventListener('click', () => proceed(null));
+}
+
+// ═══════════════════════════════════════════
+// RENDER: FIRST RUN — THEME
+// ═══════════════════════════════════════════
+
+function renderFirstRunTheme() {
+  const { name } = getSettings();
+  const el = document.getElementById('view-firstrun-theme');
+
+  el.innerHTML = `
+    <div class="stack gap-lg view-body">
+      <h2 class="text-center text-xl">Make it yours,<br><span id="ft-name"></span>.</h2>
+      <p class="text-center text-muted">Pick a colour theme. You can change it any time in Settings.</p>
+      <div class="palette-grid" role="group" aria-label="Colour theme">
+        ${PALETTES.map(p => `
+          <button class="palette-option${p.id === 'sage' ? ' active' : ''}"
+            data-palette="${p.id}"
+            aria-pressed="${p.id === 'sage'}">
+            <span class="palette-dot" style="background:${p.swatch};"></span>
+            <span>${p.label}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    <div class="stack gap-md mt-auto">
+      <button id="ft-continue" class="btn btn-primary">Let's go</button>
+    </div>`;
+
+  el.querySelector('#ft-name').textContent = name;
+
+  // Live preview on tap
+  el.querySelectorAll('.palette-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      el.querySelectorAll('.palette-option').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      applyPalette(btn.dataset.palette);
+    });
+  });
+
+  el.querySelector('#ft-continue').addEventListener('click', () => {
+    const active = el.querySelector('.palette-option.active');
+    saveSettings({ colorPalette: active?.dataset.palette ?? 'sage' });
+    showView('view-entry');
+    renderEntry(0);
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -1740,7 +1811,8 @@ function renderSettings() {
   const notifOk  = 'Notification' in window;
   const notifPerm = notifOk ? Notification.permission : 'unsupported';
 
-  const scheme = settings.colorScheme ?? 'system';
+  const scheme  = settings.colorScheme  ?? 'system';
+  const palette = settings.colorPalette ?? 'sage';
   const themeBtn = s => `
     <button class="btn theme-opt btn-theme ${scheme === s ? 'btn-primary' : 'btn-ghost'}"
       data-scheme="${s}">
@@ -1756,6 +1828,16 @@ function renderSettings() {
         <p class="section-label">Appearance</p>
         <div class="row" role="group" aria-label="Colour scheme">
           ${themeBtn('system')}${themeBtn('light')}${themeBtn('dark')}
+        </div>
+        <p class="section-label">Colour</p>
+        <div class="palette-row" role="group" aria-label="Colour theme">
+          ${PALETTES.map(p => `
+            <button class="palette-swatch${palette === p.id ? ' active' : ''}"
+              data-palette="${p.id}"
+              style="background:${p.swatch};"
+              title="${p.label}"
+              aria-label="${p.label}${palette === p.id ? ' (active)' : ''}"></button>
+          `).join('')}
         </div>
       </div>
 
@@ -1834,6 +1916,15 @@ function renderSettings() {
       saveSettings({ colorScheme: s });
       applyTheme(s);
       renderSettings(); // refresh button states
+    });
+  });
+
+  el.querySelectorAll('.palette-swatch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = btn.dataset.palette;
+      saveSettings({ colorPalette: p });
+      applyPalette(p);
+      renderSettings();
     });
   });
 
