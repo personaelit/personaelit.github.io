@@ -254,6 +254,25 @@ function saveStreak(patch) {
   save(KEYS.STREAK, { ...getStreak(), ...patch });
 }
 
+/**
+ * Returns a streak object that honours the user by keeping the best values
+ * from both sides — highest current, highest longest, most recent lastCompletedDate.
+ * @param {object} a
+ * @param {object} b
+ * @returns {object}
+ */
+function honorHigherStreak(a, b) {
+  const lastDate = [a.lastCompletedDate, b.lastCompletedDate]
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? null;
+  return {
+    current:           Math.max(a.current  ?? 0, b.current  ?? 0),
+    longest:           Math.max(a.longest  ?? 0, b.longest  ?? 0),
+    lastCompletedDate: lastDate,
+  };
+}
+
 // Badges
 
 /** @returns {Object.<number, {earnedOn: string, count: number}>} map of milestone days → record */
@@ -502,7 +521,7 @@ function importData(file, mode) {
         if (data.prompts)  save(KEYS.PROMPTS,  data.prompts);
         if (data.tags)     save(KEYS.TAGS,      data.tags);
         if (data.entries)  save(KEYS.ENTRIES,   data.entries);
-        if (data.streak)   save(KEYS.STREAK,    data.streak);
+        if (data.streak)   save(KEYS.STREAK,    honorHigherStreak(getStreak(), data.streak));
         if (data.badges)   save(KEYS.BADGES,    data.badges);
       } else {
         // Merge: incoming entries fill gaps, existing entries win conflicts
@@ -514,6 +533,7 @@ function importData(file, mode) {
         if (data.tags)    save(KEYS.TAGS,    [...new Set([...getTags(),    ...data.tags])]);
         // Merge badges: keep any already earned, add incoming ones not yet earned
         if (data.badges)  save(KEYS.BADGES, { ...data.badges, ...getBadges() });
+        if (data.streak)  save(KEYS.STREAK, honorHigherStreak(getStreak(), data.streak));
       }
       bootstrap(); // re-evaluate state after import
     } catch {
@@ -739,6 +759,39 @@ function badgeChipHtml(milestone) {
     style="background:linear-gradient(135deg,${c1},${c2});"
     title="${milestone.name} badge — ${milestone.days} day streak"
     aria-label="${milestone.name} badge">${miniIcon} ${milestone.days}</span>`;
+}
+
+// ═══════════════════════════════════════════
+// IMPORT MODAL
+// ═══════════════════════════════════════════
+
+/** @param {File} file @param {Function} onConfirm — called with 'merge' or 'replace' */
+function showImportModal(file, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="im-title">
+      <h3 id="im-title">Import Data</h3>
+      <p>How would you like to import <strong>${file.name}</strong>?</p>
+      <div class="stack gap-md">
+        <button id="im-merge" class="btn btn-primary">Merge (existing entries win conflicts)</button>
+        <button id="im-replace" class="btn btn-danger">Replace all data</button>
+        <button id="im-cancel" class="btn btn-ghost">Cancel</button>
+      </div>
+    </div>`;
+
+  overlay.querySelector('#im-merge').addEventListener('click', () => {
+    overlay.remove();
+    onConfirm('merge');
+  });
+  overlay.querySelector('#im-replace').addEventListener('click', () => {
+    overlay.remove();
+    onConfirm('replace');
+  });
+  overlay.querySelector('#im-cancel').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  overlay.querySelector('#im-merge').focus();
 }
 
 // ═══════════════════════════════════════════
@@ -2363,11 +2416,10 @@ function renderSettings() {
   fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
     if (!file) return;
-    const merge = confirm(
-      'How would you like to import?\n\nOK — Merge (existing entries win conflicts)\nCancel — Replace all data'
-    );
-    importData(file, merge ? 'merge' : 'replace');
-    fileInput.value = '';
+    showImportModal(file, mode => {
+      importData(file, mode);
+      fileInput.value = '';
+    });
   });
 
   // ── Prompts & Tags ────────────────────────────────────────────────────────
