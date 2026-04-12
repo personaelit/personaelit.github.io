@@ -1897,9 +1897,21 @@ function buildTagChart(sortedTags, gridColor, textColor) {
       const size     = (0.8 + ratio * 1.7).toFixed(2); // 0.8rem – 2.5rem
       const weight   = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
       const color    = palette[i % palette.length];
-      return `<span class="cloud-tag" style="font-size:${size}rem; color:${color}; font-weight:${weight};"
+      return `<span class="cloud-tag" data-tag="${escHtml(tag)}" role="button" tabindex="0"
+        style="font-size:${size}rem; color:${color}; font-weight:${weight}; cursor:pointer;"
         title="${count} mention${count !== 1 ? 's' : ''}">#${escHtml(tag)}</span>`;
     }).join('');
+    wrap.querySelectorAll('.cloud-tag').forEach(span => {
+      span.addEventListener('click', () => {
+        histTagFilter = span.dataset.tag;
+        histPage = 0;
+        showScreen('history');
+        renderHistory();
+      });
+      span.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); span.click(); }
+      });
+    });
     return;
   }
 
