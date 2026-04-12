@@ -458,6 +458,7 @@ function initNav() {
     showScreen(screen);
     if (screen === 'history')  { histPage = 0; renderHistory(); }
     if (screen === 'viz')      renderViz();
+    if (screen === 'trophy')   renderTrophyCase();
     if (screen === 'settings') renderSettings();
     if (screen === 'about')    renderAbout();
   });
@@ -2020,6 +2021,70 @@ async function unsubscribeFromPush() {
   });
 
   saveSettings({ reminderTime: null, notificationsEnabled: false });
+}
+
+// ═══════════════════════════════════════════
+// RENDER: TROPHY CASE
+// ═══════════════════════════════════════════
+
+function renderTrophyCase() {
+  const el      = document.getElementById('screen-trophy');
+  const badges  = getBadges();
+  const streak  = getStreak();
+
+  const earnedCount = Object.keys(badges).length;
+  const totalCount  = MILESTONES.length;
+
+  const badgeCards = MILESTONES.map(m => {
+    const record  = badges[m.days];
+    const earned  = !!record;
+    const count   = earned ? (record.count ?? 1) : 0;
+    const date    = earned ? record.earnedOn : null;
+    const uid     = `tc-${m.days}`;
+
+    return `
+      <div class="trophy-card${earned ? ' trophy-earned' : ' trophy-locked'}"
+           aria-label="${m.name} badge${earned ? `, earned ${count} time${count !== 1 ? 's' : ''}` : ', locked'}">
+        <div class="trophy-badge-wrap${earned ? '' : ' trophy-badge-dim'}">
+          ${badgeSvg(m, 96, uid)}
+        </div>
+        <div class="trophy-info">
+          <p class="trophy-name">${escHtml(m.name)}</p>
+          <p class="trophy-req">${m.days}-day streak</p>
+          ${earned ? `
+            <p class="trophy-count">Earned <strong>${count}×</strong></p>
+            <p class="trophy-date text-muted">${escHtml(date ?? '')}</p>
+          ` : `
+            <p class="trophy-locked-label">Not yet earned</p>
+          `}
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="screen-body">
+      <h2 class="text-xl">Trophy Case</h2>
+
+      <div class="card trophy-summary">
+        <div class="trophy-stat">
+          <span class="trophy-stat-val">${earnedCount}</span>
+          <span class="trophy-stat-lbl">of ${totalCount} earned</span>
+        </div>
+        <div class="trophy-stat">
+          <span class="trophy-stat-val">${streak.current}</span>
+          <span class="trophy-stat-lbl">current streak</span>
+        </div>
+        <div class="trophy-stat">
+          <span class="trophy-stat-val">${streak.longest}</span>
+          <span class="trophy-stat-lbl">longest streak</span>
+        </div>
+      </div>
+
+      <div class="trophy-grid">
+        ${badgeCards}
+      </div>
+    </div>
+  `;
 }
 
 function renderSettings() {
