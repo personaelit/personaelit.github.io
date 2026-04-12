@@ -1,10 +1,10 @@
 input[type="date"], input[type="time"], input[type="datetime-local"] {
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't add to width */
+  box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
-
+  color: inherit; /* appearance: none strips native text color on iOS Safari */
 }
 
 /* ═══════════════════════════════════════════
