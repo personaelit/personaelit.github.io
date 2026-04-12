@@ -948,7 +948,9 @@ function renderFirstRunDob() {
       </p>
       <div class="stack gap-md mt-xl">
         <label class="section-label" for="fd-dob">Date of birth <span class="text-muted">(optional)</span></label>
-        <input id="fd-dob" class="input" type="date">
+        <div class="date-wrap empty" data-placeholder="mm/dd/yyyy">
+          <input id="fd-dob" class="input" type="date">
+        </div>
       </div>
     </div>
     <div class="stack gap-md mt-auto">
@@ -963,6 +965,9 @@ function renderFirstRunDob() {
     showView('view-firstrun-theme');
     renderFirstRunTheme();
   };
+
+  el.querySelector('#fd-dob').addEventListener('change', e =>
+    e.target.closest('.date-wrap')?.classList.toggle('empty', !e.target.value));
 
   el.querySelector('#fd-continue').addEventListener('click', () =>
     proceed(el.querySelector('#fd-dob').value));
@@ -1444,10 +1449,14 @@ function renderHistory() {
       <input id="hist-search" class="input" type="search" placeholder="Search entries…"
         value="${escHtml(histSearch)}" aria-label="Search entries">
       <div class="row">
-        <input id="hist-date-from" class="input flex-1" type="date"
-          value="${escHtml(histDateFrom)}" aria-label="From date">
-        <input id="hist-date-to" class="input flex-1" type="date"
-          value="${escHtml(histDateTo)}" aria-label="To date">
+        <div class="date-wrap flex-1 ${histDateFrom ? '' : 'empty'}" data-placeholder="From">
+          <input id="hist-date-from" class="input" type="date"
+            value="${escHtml(histDateFrom)}" aria-label="From date">
+        </div>
+        <div class="date-wrap flex-1 ${histDateTo ? '' : 'empty'}" data-placeholder="To">
+          <input id="hist-date-to" class="input" type="date"
+            value="${escHtml(histDateTo)}" aria-label="To date">
+        </div>
         ${(histDateFrom || histDateTo) ? `
           <button id="hist-date-clear" class="btn btn-ghost btn-xs" aria-label="Clear date range">✕</button>` : ''}
       </div>
@@ -1478,9 +1487,11 @@ function renderHistory() {
     histSearch = e.target.value; histPage = 0; renderHistory();
   });
   el.querySelector('#hist-date-from').addEventListener('change', e => {
+    e.target.closest('.date-wrap')?.classList.toggle('empty', !e.target.value);
     histDateFrom = e.target.value; histPage = 0; renderHistory();
   });
   el.querySelector('#hist-date-to').addEventListener('change', e => {
+    e.target.closest('.date-wrap')?.classList.toggle('empty', !e.target.value);
     histDateTo = e.target.value; histPage = 0; renderHistory();
   });
   el.querySelector('#hist-date-clear')?.addEventListener('click', () => {
@@ -2059,7 +2070,9 @@ function renderSettings() {
           <label class="section-label" for="s-dob">
             Date of Birth <span class="text-muted">(optional)</span>
           </label>
-          <input id="s-dob" class="input" type="date" value="${escHtml(settings.dob ?? '')}">
+          <div class="date-wrap ${settings.dob ? '' : 'empty'}" data-placeholder="mm/dd/yyyy">
+            <input id="s-dob" class="input" type="date" value="${escHtml(settings.dob ?? '')}">
+          </div>
         </div>
       </div>
 
@@ -2069,8 +2082,10 @@ function renderSettings() {
         ${notifOk ? `
           <div class="stack gap-sm">
             <label class="section-label" for="s-time">Reminder time</label>
-            <input id="s-time" class="input" type="time"
-              value="${escHtml(settings.reminderTime ?? '')}">
+            <div class="date-wrap ${settings.reminderTime ? '' : 'empty'}" data-placeholder="--:--">
+              <input id="s-time" class="input" type="time"
+                value="${escHtml(settings.reminderTime ?? '')}">
+            </div>
           </div>
           ${notifPerm === 'denied' ? `
             <p class="text-sm text-danger">
@@ -2138,10 +2153,15 @@ function renderSettings() {
   el.querySelector('#s-name').addEventListener('input', e =>
     saveSettings({ name: e.target.value.trim() }));
 
-  el.querySelector('#s-dob').addEventListener('change', e =>
-    saveSettings({ dob: e.target.value || null }));
+  el.querySelector('#s-dob').addEventListener('change', e => {
+    e.target.closest('.date-wrap')?.classList.toggle('empty', !e.target.value);
+    saveSettings({ dob: e.target.value || null });
+  });
 
   // ── Reminder ──────────────────────────────────────────────────────────────
+  el.querySelector('#s-time')?.addEventListener('change', e =>
+    e.target.closest('.date-wrap')?.classList.toggle('empty', !e.target.value));
+
   el.querySelector('#s-set-reminder')?.addEventListener('click', async () => {
     const time = el.querySelector('#s-time')?.value;
     if (!time) { alert('Please choose a reminder time first.'); return; }

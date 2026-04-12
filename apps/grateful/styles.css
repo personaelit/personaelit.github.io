@@ -11,6 +11,23 @@ input[type="datetime-local"] {
   color: inherit;
 }
 
+/* iOS date/time placeholder overlay — shown when input has no value */
+.date-wrap {
+  position: relative;
+}
+
+.date-wrap.empty::after {
+  content: attr(data-placeholder);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding-inline-start: var(--space-lg);
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  pointer-events: none;
+}
+
 
 /* ═══════════════════════════════════════════
    TOKENS — dark mode default
