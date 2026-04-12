@@ -677,6 +677,56 @@ function showTagModal(onDone) {
   document.body.appendChild(overlay);
 }
 
+/** Lists all prompts with add / edit / delete controls. */
+function showPromptListModal(onDone = () => {}) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pl-title">
+      <h3 id="pl-title">Manage Prompts</h3>
+      <div id="pl-list" class="stack gap-sm modal-list"></div>
+      <button id="pl-add" class="btn btn-primary">Add Prompt</button>
+      <button id="pl-close" class="btn btn-ghost">Done</button>
+    </div>`;
+
+  const listEl = overlay.querySelector('#pl-list');
+
+  const refresh = () => {
+    listEl.innerHTML = getPrompts().map((p, i) => `
+      <div class="row gap-sm">
+        <span class="flex-1 text-sm">${escHtml(p)}</span>
+        <button class="btn btn-ghost btn-xs pl-edit" data-i="${i}">Edit</button>
+        <button class="btn btn-ghost btn-xs btn-danger pl-del" data-i="${i}">✕</button>
+      </div>`).join('');
+
+    listEl.querySelectorAll('.pl-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ps = getPrompts();
+        if (ps.length <= 1) { alert('You must keep at least one prompt.'); return; }
+        if (!confirm('Delete this prompt?')) return;
+        ps.splice(parseInt(btn.dataset.i, 10), 1);
+        savePrompts(ps);
+        refresh(); onDone();
+      });
+    });
+
+    listEl.querySelectorAll('.pl-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.i, 10);
+        showPromptModal('edit', getPrompts(), i, () => { refresh(); onDone(); });
+      });
+    });
+  };
+
+  refresh();
+
+  overlay.querySelector('#pl-add').addEventListener('click', () =>
+    showPromptModal('add', getPrompts(), getPrompts().length - 1, () => { refresh(); onDone(); }));
+  overlay.querySelector('#pl-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 // ═══════════════════════════════════════════
 // RENDER: FIRST RUN — NAME
 // ═══════════════════════════════════════════
@@ -1761,6 +1811,13 @@ function renderSettings() {
         <p class="text-muted text-xs">Storage used: ${storageUsageKb()} KB</p>
       </div>
 
+      <!-- Prompts & Tags -->
+      <div class="card stack gap-md">
+        <p class="section-label">Prompts &amp; Tags</p>
+        <button id="s-manage-prompts" class="btn btn-ghost">Manage Prompts</button>
+        <button id="s-manage-tags"    class="btn btn-ghost">Manage Tags</button>
+      </div>
+
       <!-- Restore defaults -->
       <div class="card stack gap-md">
         <p class="section-label">Restore Defaults</p>
@@ -1844,6 +1901,13 @@ function renderSettings() {
     importData(file, merge ? 'merge' : 'replace');
     fileInput.value = '';
   });
+
+  // ── Prompts & Tags ────────────────────────────────────────────────────────
+  el.querySelector('#s-manage-prompts').addEventListener('click', () =>
+    showPromptListModal());
+
+  el.querySelector('#s-manage-tags').addEventListener('click', () =>
+    showTagModal(() => {}));
 
   // ── Restore defaults ──────────────────────────────────────────────────────
   el.querySelector('#s-restore-prompts').addEventListener('click', () => {
