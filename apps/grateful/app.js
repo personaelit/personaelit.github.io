@@ -15,7 +15,7 @@ const VAPID_PUBLIC_KEY = 'BA0HcwyMxXf4foYG-UGjpMA93TynghGau6qJdFERKF9fn7GsiBrVq1
 // ═══════════════════════════════════════════
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/apps/grateful/sw.js')
+  navigator.serviceWorker.register('/apps/grateful/sw.js', { type: 'module' })
     .catch(err => console.warn('SW registration failed:', err));
 }
 

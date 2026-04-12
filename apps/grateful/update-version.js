@@ -10,21 +10,17 @@ const versionFile = path.join(__dirname, 'version.js');
 const manifestFile = path.join(__dirname, 'manifest.json');
 const indexFile = path.join(__dirname, 'index.html');
 
-const versionContent = fs.readFileSync(versionFile, 'utf8');
-const versionMatch = versionContent.match(/export const VERSION = '([^']+)'/);
-if (!versionMatch) {
-  console.error('Could not find VERSION in version.js');
+const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+const version = manifest.version;
+if (!version) {
+  console.error('Could not find version in manifest.json');
   process.exit(1);
 }
 
-const version = versionMatch[1];
-
-let manifest = fs.readFileSync(manifestFile, 'utf8');
-manifest = manifest.replace(/"version": "[^"]+"/, `"version": "${version}"`);
-fs.writeFileSync(manifestFile, manifest);
+fs.writeFileSync(versionFile, `export const VERSION = '${version}';\n`);
 
 let index = fs.readFileSync(indexFile, 'utf8');
 index = index.replace(/app\.js\?version=[^"]+/, `app.js?version=${version}`);
 fs.writeFileSync(indexFile, index);
 
-console.log(`Updated manifest.json and index.html to version ${version}`);
+console.log(`Updated version.js and index.html to version ${version}`);
