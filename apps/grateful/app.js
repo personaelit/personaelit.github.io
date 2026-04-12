@@ -3,7 +3,9 @@
 // Set these after deploying the worker — see workers/grateful-push/SETUP.md
 // ═══════════════════════════════════════════
 
-const APP_VERSION = 'v8.1.2';
+import { VERSION } from './version.js';
+
+const APP_VERSION = `v${VERSION}`;
 
 const PUSH_SERVER_URL = 'https://grateful-push.james-smits.workers.dev';
 const VAPID_PUBLIC_KEY = 'BA0HcwyMxXf4foYG-UGjpMA93TynghGau6qJdFERKF9fn7GsiBrVq1IejIviSVgsZKCqICjvkQ2KWLSTEy6LqYY';

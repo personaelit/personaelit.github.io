@@ -1,4 +1,6 @@
-const CACHE_VERSION = 'v8.1.2';
+import { VERSION } from './version.js';
+
+const CACHE_VERSION = `v${VERSION}`;
 const CACHE_NAME = `grateful-${CACHE_VERSION}`;
 
 // App shell — everything needed to run offline
