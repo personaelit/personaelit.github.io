@@ -1505,6 +1505,7 @@ function filteredEntries() {
 
 function renderHistory() {
   const el         = document.getElementById('screen-history');
+  const searchWasFocused = document.activeElement?.id === 'hist-search';
   const filtered   = filteredEntries();
   const totalPages = Math.max(1, Math.ceil(filtered.length / HIST_PAGE_SIZE));
   histPage = Math.min(histPage, totalPages - 1);
@@ -1549,6 +1550,12 @@ function renderHistory() {
     </div>` : ''}`;
 
   // Filters
+  if (searchWasFocused) {
+    const input = el.querySelector('#hist-search');
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+
   el.querySelector('#hist-search').addEventListener('input', e => {
     histSearch = e.target.value; histPage = 0; renderHistory();
   });
