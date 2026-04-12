@@ -1733,6 +1733,46 @@ function renderViz() {
   buildHeatMap(getAllEntries());
 }
 
+/**
+ * Iterative circle-packing: returns circles with x,y positions clustered near center.
+ * @param {{ r: number }[]} circles
+ */
+function packCircles(circles) {
+  const n = circles.length;
+  if (n === 0) return [];
+  if (n === 1) return [{ ...circles[0], x: 0, y: 0 }];
+
+  const positions = circles.map((c, i) => {
+    const angle = (i / n) * Math.PI * 2;
+    return { x: Math.cos(angle) * c.r * 2.5, y: Math.sin(angle) * c.r * 2.5 };
+  });
+
+  for (let iter = 0; iter < 400; iter++) {
+    for (let i = 0; i < n; i++) {
+      positions[i].x *= 0.93;
+      positions[i].y *= 0.93;
+    }
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const dx   = positions[j].x - positions[i].x;
+        const dy   = positions[j].y - positions[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+        const min  = circles[i].r + circles[j].r + 2;
+        if (dist < min) {
+          const push = (min - dist) / 2;
+          const nx = dx / dist, ny = dy / dist;
+          positions[i].x -= nx * push;
+          positions[i].y -= ny * push;
+          positions[j].x += nx * push;
+          positions[j].y += ny * push;
+        }
+      }
+    }
+  }
+
+  return circles.map((c, i) => ({ ...c, x: positions[i].x, y: positions[i].y }));
+}
+
 /** @param {object[]} entries @param {string} gridColor @param {string} textColor */
 function buildMoodChart(entries, gridColor, textColor) {
   const ctx = document.getElementById('mood-chart')?.getContext('2d');
@@ -1778,35 +1818,69 @@ function buildMoodChart(entries, gridColor, textColor) {
     });
 
   } else {
-    moodChartInst = new Chart(ctx, {
-      type: 'bubble',
-      data: {
-        datasets: [{
-          label: 'Mood',
-          data: entries.map((e, i) => ({ x: i, y: e.mood, r: 10 })),
-          backgroundColor: entries.map(e => MOOD_COLORS[e.mood - 1] + 'cc'),
-          borderColor:     entries.map(e => MOOD_COLORS[e.mood - 1]),
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: c => `${labels[c.dataIndex]}: ${MOOD_EMOJIS[entries[c.dataIndex].mood - 1]} (${entries[c.dataIndex].mood})`,
-            },
-          },
-        },
-        scales: {
-          y: {
-            ...scaleCfg, min: 0.5, max: 5.5,
-            ticks: { ...scaleCfg.ticks, stepSize: 1, callback: v => MOOD_EMOJIS[v - 1] ?? '' },
-          },
-          x: { display: false },
-        },
-      },
+    // Count occurrences of each mood level (1–5)
+    const moodCounts = [0, 0, 0, 0, 0];
+    entries.forEach(e => { if (e.mood >= 1 && e.mood <= 5) moodCounts[e.mood - 1]++; });
+
+    const maxCount = Math.max(...moodCounts, 1);
+    const minR = 20, maxR = 56;
+
+    const circles = moodCounts
+      .map((count, i) => count > 0
+        ? { mood: i + 1, count, r: minR + (count / maxCount) * (maxR - minR), color: MOOD_COLORS[i] }
+        : null)
+      .filter(Boolean);
+
+    const packed = packCircles(circles);
+
+    const canvas = document.getElementById('mood-chart');
+    const wrap   = canvas.parentElement;
+    const W      = wrap.clientWidth || 320;
+    const H      = 220;
+    canvas.width  = W;
+    canvas.height = H;
+
+    const c2d = canvas.getContext('2d');
+    c2d.clearRect(0, 0, W, H);
+
+    // Scale packed positions to fit canvas
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    packed.forEach(c => {
+      x0 = Math.min(x0, c.x - c.r); x1 = Math.max(x1, c.x + c.r);
+      y0 = Math.min(y0, c.y - c.r); y1 = Math.max(y1, c.y + c.r);
+    });
+
+    const pad   = 12;
+    const scale = Math.min((W - pad * 2) / (x1 - x0 || 1), (H - pad * 2) / (y1 - y0 || 1));
+    const ox    = W / 2 - ((x0 + x1) / 2) * scale;
+    const oy    = H / 2 - ((y0 + y1) / 2) * scale;
+    const ff    = getComputedStyle(document.body).fontFamily;
+
+    packed.forEach(c => {
+      const cx = c.x * scale + ox;
+      const cy = c.y * scale + oy;
+      const r  = c.r * scale;
+
+      c2d.beginPath();
+      c2d.arc(cx, cy, r, 0, Math.PI * 2);
+      c2d.fillStyle = c.color + 'cc';
+      c2d.fill();
+      c2d.strokeStyle = c.color;
+      c2d.lineWidth = 2;
+      c2d.stroke();
+
+      c2d.textAlign = 'center';
+      c2d.textBaseline = 'middle';
+
+      const emojiSize = Math.max(12, r * 0.55);
+      c2d.font = `${emojiSize}px serif`;
+      c2d.fillStyle = '#ffffff';
+      c2d.fillText(MOOD_EMOJIS[c.mood - 1], cx, cy - r * 0.18);
+
+      const labelSize = Math.max(9, r * 0.32);
+      c2d.font = `bold ${labelSize}px ${ff}`;
+      c2d.fillStyle = '#ffffff';
+      c2d.fillText(`×${c.count}`, cx, cy + r * 0.38);
     });
   }
 }
