@@ -106,8 +106,20 @@ const MILESTONES = [
   },
   {
     days: 100, name: 'Thriving', gradient: ['#e8c840', '#986808'],
-    // 5-pointed star (cx=60 cy=47 R=18 r=7.5)
-    icon: `<polygon points="60,29 64,41 77,41 67,49 70,62 60,55 50,62 53,49 43,41 56,41" fill="white" opacity="0.95"/>`,
+    // Same stem + two leaf pairs as Growing, flower crown replaces the bud
+    icon: `
+      <line x1="60" y1="64" x2="60" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M60 58 Q50 48 40 50 Q41 60 60 58Z" fill="white"/>
+      <path d="M60 58 Q70 48 80 50 Q79 60 60 58Z" fill="white"/>
+      <path d="M60 46 Q52 36 44 38 Q45 48 60 46Z" fill="white" opacity="0.85"/>
+      <path d="M60 46 Q68 36 76 38 Q75 48 60 46Z" fill="white" opacity="0.85"/>
+      <path d="M60 34 C53 33,52 22,60 21 C68 22,67 33,60 34Z" fill="white" opacity="0.82" transform="rotate(0   60 34)"/>
+      <path d="M60 34 C53 33,52 22,60 21 C68 22,67 33,60 34Z" fill="white" opacity="0.82" transform="rotate(60  60 34)"/>
+      <path d="M60 34 C53 33,52 22,60 21 C68 22,67 33,60 34Z" fill="white" opacity="0.82" transform="rotate(120 60 34)"/>
+      <path d="M60 34 C53 33,52 22,60 21 C68 22,67 33,60 34Z" fill="white" opacity="0.82" transform="rotate(180 60 34)"/>
+      <path d="M60 34 C53 33,52 22,60 21 C68 22,67 33,60 34Z" fill="white" opacity="0.82" transform="rotate(240 60 34)"/>
+      <path d="M60 34 C53 33,52 22,60 21 C68 22,67 33,60 34Z" fill="white" opacity="0.82" transform="rotate(300 60 34)"/>
+      <circle cx="60" cy="34" r="3" fill="white" opacity="0.95"/>`,
   },
   {
     days: 365, name: 'Rooted', gradient: ['#50c890', '#c8a030'],
