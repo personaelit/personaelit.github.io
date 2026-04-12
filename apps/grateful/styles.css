@@ -904,6 +904,70 @@ input, textarea, select {
   --text-muted: #8a7050;
 }
 
+/* ── Manual dark overrides (iOS Safari prefers-color-scheme specificity fix) ── */
+:root[data-theme="dark"][data-palette="pink"] {
+  --accent: #d4789a; --accent-dim: #f0b8d0; --accent-text: #fce8f0; --success: #d4789a;
+  --bg:        #1f1a1c;
+  --surface:   #2b2428;
+  --surface-2: #383034;
+  --border:    #4a3c42;
+  --text-muted: #a08890;
+}
+
+:root[data-theme="dark"][data-palette="blue"] {
+  --accent: #6898d8; --accent-dim: #a8c8f0; --accent-text: #d0e8fc; --success: #6898d8;
+  --bg:        #1a1c1f;
+  --surface:   #242830;
+  --surface-2: #303640;
+  --border:    #3c4452;
+  --text-muted: #8090a8;
+}
+
+:root[data-theme="dark"][data-palette="red"] {
+  --accent: #d87878; --accent-dim: #f0b0b0; --accent-text: #fcd8d8; --success: #d87878;
+  --bg:        #1f1a1a;
+  --surface:   #2b2424;
+  --surface-2: #383030;
+  --border:    #4a3c3c;
+  --text-muted: #a08888;
+}
+
+:root[data-theme="dark"][data-palette="emerald"] {
+  --accent: #4ac898; --accent-dim: #88e8c0; --accent-text: #c0f4e0; --success: #4ac898;
+  --bg:        #1a1f1d;
+  --surface:   #24302c;
+  --surface-2: #2e3c38;
+  --border:    #3a4e48;
+  --text-muted: #80a898;
+}
+
+:root[data-theme="dark"][data-palette="green"] {
+  --accent: #90c848; --accent-dim: #b8e878; --accent-text: #d8f4b0; --success: #90c848;
+  --bg:        #1c1f1a;
+  --surface:   #282e22;
+  --surface-2: #343c2c;
+  --border:    #424e38;
+  --text-muted: #90a880;
+}
+
+:root[data-theme="dark"][data-palette="purple"] {
+  --accent: #a888d8; --accent-dim: #d0b8f0; --accent-text: #ecd8fc; --success: #a888d8;
+  --bg:        #1c1a1f;
+  --surface:   #28242e;
+  --surface-2: #34303c;
+  --border:    #443c50;
+  --text-muted: #9888a8;
+}
+
+:root[data-theme="dark"][data-palette="orange"] {
+  --accent: #d8a048; --accent-dim: #f0cc88; --accent-text: #fce8c0; --success: #d8a048;
+  --bg:        #1f1d1a;
+  --surface:   #2c2822;
+  --surface-2: #38342c;
+  --border:    #4a4238;
+  --text-muted: #a89878;
+}
+
 /* Milestone badges */
 .badge-celebration {
   display: flex;
