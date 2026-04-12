@@ -1612,6 +1612,10 @@ function buildHeatMap(allEntries) {
         <span class="hm-legend-label">${MOOD_EMOJIS[4]}</span>
       </div>
     </div>`;
+
+  // Scroll to today (right edge)
+  const scrollEl = wrap.querySelector('.hm-scroll');
+  if (scrollEl) scrollEl.scrollLeft = scrollEl.scrollWidth;
 }
 
 // ═══════════════════════════════════════════
