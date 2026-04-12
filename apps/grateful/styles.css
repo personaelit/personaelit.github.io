@@ -7,6 +7,17 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   color: inherit;
 }
 
+@supports (-webkit-touch-callout: none) {
+  input[type="date"].input,
+  input[type="time"].input,
+  input[type="datetime-local"].input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    align-self: stretch;
+  }
+}
+
 /* ═══════════════════════════════════════════
    TOKENS — dark mode default
 ════════════════════════════════════════════ */
