@@ -3,6 +3,8 @@
 // Set these after deploying the worker — see workers/grateful-push/SETUP.md
 // ═══════════════════════════════════════════
 
+const APP_VERSION = 'v8.0.0';
+
 const PUSH_SERVER_URL = 'https://grateful-push.james-smits.workers.dev';
 const VAPID_PUBLIC_KEY = 'BA0HcwyMxXf4foYG-UGjpMA93TynghGau6qJdFERKF9fn7GsiBrVq1IejIviSVgsZKCqICjvkQ2KWLSTEy6LqYY';
 
@@ -79,12 +81,50 @@ const PALETTES = [
 // STORAGE KEYS
 // ═══════════════════════════════════════════
 
+const MILESTONES = [
+  {
+    days: 7, name: 'Seedling', gradient: ['#d4a06a', '#7a4010'],
+    // Sprout: stem + two curved leaves + bud
+    icon: `
+      <line x1="60" y1="64" x2="60" y2="44" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M60 55 Q51 44 42 46 Q43 57 60 55Z" fill="white"/>
+      <path d="M60 55 Q69 44 78 46 Q77 57 60 55Z" fill="white"/>
+      <circle cx="60" cy="42" r="3.5" fill="white"/>`,
+  },
+  {
+    days: 30, name: 'Growing', gradient: ['#a8c0d0', '#384858'],
+    // Fuller plant: stem + two pairs of leaves + bud
+    icon: `
+      <line x1="60" y1="64" x2="60" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M60 58 Q50 48 40 50 Q41 60 60 58Z" fill="white"/>
+      <path d="M60 58 Q70 48 80 50 Q79 60 60 58Z" fill="white"/>
+      <path d="M60 46 Q52 36 44 38 Q45 48 60 46Z" fill="white" opacity="0.85"/>
+      <path d="M60 46 Q68 36 76 38 Q75 48 60 46Z" fill="white" opacity="0.85"/>
+      <circle cx="60" cy="32" r="3.5" fill="white" opacity="0.9"/>`,
+  },
+  {
+    days: 100, name: 'Thriving', gradient: ['#e8c840', '#986808'],
+    // 5-pointed star (cx=60 cy=47 R=18 r=7.5)
+    icon: `<polygon points="60,29 64,41 77,41 67,49 70,62 60,55 50,62 53,49 43,41 56,41" fill="white" opacity="0.95"/>`,
+  },
+  {
+    days: 365, name: 'Rooted', gradient: ['#50c890', '#c8a030'],
+    // Layered tree: trunk + three canopy tiers
+    icon: `
+      <rect x="57" y="57" width="6" height="8" rx="1.5" fill="white" opacity="0.9"/>
+      <path d="M60,40 L73,58 L47,58Z" fill="white"/>
+      <path d="M60,31 L70,50 L50,50Z" fill="white" opacity="0.88"/>
+      <path d="M60,23 L67,38 L53,38Z" fill="white" opacity="0.78"/>`,
+  },
+];
+
 const KEYS = {
   SETTINGS:  'grateful_settings',
   PROMPTS:   'grateful_prompts',
   TAGS:      'grateful_tags',
   ENTRIES:   'grateful_entries',
   STREAK:    'grateful_streak',
+  BADGES:    'grateful_badges',
   CLIENT_ID: 'grateful_client_id',
 };
 
@@ -210,6 +250,44 @@ function getStreak() {
 /** @param {object} patch */
 function saveStreak(patch) {
   save(KEYS.STREAK, { ...getStreak(), ...patch });
+}
+
+// Badges
+
+/** @returns {Object.<number, {earnedOn: string, count: number}>} map of milestone days → record */
+function getBadges() {
+  return load(KEYS.BADGES, {});
+}
+
+/**
+ * Increments the earn count for a milestone badge, recording the date on first earn.
+ * @param {number} days
+ */
+function awardBadge(days) {
+  const badges = getBadges();
+  const existing = badges[days];
+  // Migrate legacy format (plain date string → record)
+  if (typeof existing === 'string') {
+    badges[days] = { earnedOn: existing, count: 1 };
+  } else if (existing) {
+    badges[days] = { ...existing, count: existing.count + 1 };
+  } else {
+    badges[days] = { earnedOn: today(), count: 1 };
+  }
+  save(KEYS.BADGES, badges);
+}
+
+/**
+ * Checks the current streak count against milestones and awards any newly reached ones.
+ * @param {number} streakCount
+ * @returns {object[]} array of newly awarded milestone objects
+ */
+function checkMilestoneBadges(streakCount) {
+  return MILESTONES.filter(m => {
+    if (m.days !== streakCount) return false;
+    awardBadge(m.days); // records earn date only on first time
+    return true;        // always celebrate hitting the number
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -395,6 +473,7 @@ function exportData() {
     tags:     getTags(),
     entries:  getAllEntries(),
     streak:   getStreak(),
+    badges:   getBadges(),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -421,6 +500,7 @@ function importData(file, mode) {
         if (data.tags)     save(KEYS.TAGS,      data.tags);
         if (data.entries)  save(KEYS.ENTRIES,   data.entries);
         if (data.streak)   save(KEYS.STREAK,    data.streak);
+        if (data.badges)   save(KEYS.BADGES,    data.badges);
       } else {
         // Merge: incoming entries fill gaps, existing entries win conflicts
         if (data.entries) {
@@ -429,6 +509,8 @@ function importData(file, mode) {
         }
         if (data.prompts) save(KEYS.PROMPTS, [...new Set([...getPrompts(), ...data.prompts])]);
         if (data.tags)    save(KEYS.TAGS,    [...new Set([...getTags(),    ...data.tags])]);
+        // Merge badges: keep any already earned, add incoming ones not yet earned
+        if (data.badges)  save(KEYS.BADGES, { ...data.badges, ...getBadges() });
       }
       bootstrap(); // re-evaluate state after import
     } catch {
@@ -599,6 +681,61 @@ function showConfetti() {
     origin: { y: 0.6 },
     colors: ['#7c9a7e', '#c8deca', '#5ab88a', '#f0e68c'],
   });
+}
+
+/** Fires a dramatic multi-burst confetti for milestone badges. */
+function showMilestoneConfetti(milestone) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const colors = [...milestone.gradient, '#ffffff', '#f0e68c'];
+  confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors });
+  setTimeout(() => confetti({ particleCount: 80, angle: 60,  spread: 55, origin: { x: 0,   y: 0.65 }, colors }), 350);
+  setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1,   y: 0.65 }, colors }), 600);
+}
+
+/**
+ * Returns an SVG badge for a milestone.
+ * @param {object} milestone
+ * @param {number} size  — rendered px size
+ * @param {string} uid   — unique suffix for gradient/filter IDs (avoids conflicts on same page)
+ */
+function badgeSvg(milestone, size = 120, uid = String(milestone.days)) {
+  const [c1, c2] = milestone.gradient;
+  return `<svg viewBox="0 0 120 120" width="${size}" height="${size}"
+      aria-label="${milestone.name} — ${milestone.days} day streak badge" role="img">
+    <defs>
+      <radialGradient id="bgrad-${uid}" cx="40%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="${c1}"/>
+        <stop offset="100%" stop-color="${c2}"/>
+      </radialGradient>
+      <filter id="bglow-${uid}" x="-25%" y="-25%" width="150%" height="150%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <circle cx="60" cy="60" r="55" fill="url(#bgrad-${uid})" filter="url(#bglow-${uid})"/>
+    <circle cx="60" cy="60" r="44" fill="rgba(0,0,0,0.18)"/>
+    <circle cx="60" cy="60" r="51" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+    ${milestone.icon}
+    <text x="60" y="76" text-anchor="middle" dominant-baseline="middle"
+      font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="14" font-weight="700" fill="white">${milestone.days}</text>
+    <text x="60" y="90" text-anchor="middle" dominant-baseline="middle"
+      font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="8.5" font-weight="600"
+      fill="rgba(255,255,255,0.82)" letter-spacing="0.08em">${milestone.name.toUpperCase()}</text>
+  </svg>`;
+}
+
+/**
+ * Returns a small coloured pill for use in history entry cards.
+ * @param {object} milestone
+ */
+function badgeChipHtml(milestone) {
+  const [c1, c2] = milestone.gradient;
+  // Tiny inline SVG icon scaled to 12px for use inside the pill
+  const miniIcon = `<svg viewBox="0 0 120 120" width="12" height="12" aria-hidden="true" style="vertical-align:middle">${milestone.icon}</svg>`;
+  return `<span class="badge-chip"
+    style="background:linear-gradient(135deg,${c1},${c2});"
+    title="${milestone.name} badge — ${milestone.days} day streak"
+    aria-label="${milestone.name} badge">${miniIcon} ${milestone.days}</span>`;
 }
 
 // ═══════════════════════════════════════════
@@ -1075,8 +1212,9 @@ function renderMood() {
       completedAt: new Date().toISOString(),
     });
     recordStreakCompletion();
+    const newBadges = checkMilestoneBadges(getStreak().current);
     showView('view-success');
-    renderSuccess();
+    renderSuccess(newBadges);
   });
 }
 
@@ -1084,30 +1222,72 @@ function renderMood() {
 // RENDER: SUCCESS
 // ═══════════════════════════════════════════
 
-function renderSuccess() {
-  const streak = getStreak();
-  const el = document.getElementById('view-success');
-  el.innerHTML = `
-    <div class="stack gap-xl view-center">
-      <div class="stack gap-md">
-        <p id="encourage-msg" class="text-lg"></p>
-        <p class="text-2xl font-bold">Current Streak</p>
-        <p class="streak-count">${streak.current}</p>
-        <p class="text-muted">${streak.current === 1 ? 'day' : 'days'}</p>
-      </div>
-      ${buildStreakDots()}
-    </div>
-    <div class="stack gap-md mt-auto">
-      <button id="btn-success-done" class="btn btn-ghost">Done</button>
-    </div>`;
+/** @param {object[]} newBadges — milestone objects newly earned today */
+function renderSuccess(newBadges = []) {
+  const streak      = getStreak();
+  const newBadge    = newBadges[0] ?? null; // at most one per day
+  const earnedBadges = MILESTONES.filter(m => getBadges()[m.days]);
 
-  el.querySelector('#encourage-msg').textContent = encouragingMessage();
+  // Badge shelf (all earned badges except the one being celebrated full-size)
+  const shelfBadges = newBadge
+    ? earnedBadges.filter(m => m.days !== newBadge.days)
+    : earnedBadges;
+
+  const shelfHtml = shelfBadges.length ? `
+    <div class="stack gap-sm text-center">
+      <p class="section-label">Your badges</p>
+      <div class="badge-shelf">
+        ${shelfBadges.map(m => badgeSvg(m, 56, `${m.days}-shelf`)).join('')}
+      </div>
+    </div>` : '';
+
+  const el = document.getElementById('view-success');
+
+  if (newBadge) {
+    // ── Milestone day: badge front and centre ──
+    el.innerHTML = `
+      <div class="stack gap-xl view-center">
+        <div class="badge-celebration stack gap-sm">
+          ${badgeSvg(newBadge, 144, 'main')}
+          <p class="text-2xl font-bold">${newBadge.name}!</p>
+          <p class="text-muted">${newBadge.days} days of gratitude</p>
+        </div>
+        <div class="stack gap-sm text-center">
+          <p class="text-muted text-sm">Current Streak</p>
+          <p class="streak-count">${streak.current}</p>
+          <p class="text-muted">${streak.current === 1 ? 'day' : 'days'}</p>
+        </div>
+        ${buildStreakDots()}
+        ${shelfHtml}
+      </div>
+      <div class="stack gap-md mt-auto">
+        <button id="btn-success-done" class="btn btn-ghost">Done</button>
+      </div>`;
+    showMilestoneConfetti(newBadge);
+  } else {
+    // ── Regular day ──
+    el.innerHTML = `
+      <div class="stack gap-xl view-center">
+        <div class="stack gap-md">
+          <p id="encourage-msg" class="text-lg"></p>
+          <p class="text-2xl font-bold">Current Streak</p>
+          <p class="streak-count">${streak.current}</p>
+          <p class="text-muted">${streak.current === 1 ? 'day' : 'days'}</p>
+        </div>
+        ${buildStreakDots()}
+        ${shelfHtml}
+      </div>
+      <div class="stack gap-md mt-auto">
+        <button id="btn-success-done" class="btn btn-ghost">Done</button>
+      </div>`;
+    el.querySelector('#encourage-msg').textContent = encouragingMessage();
+    showConfetti();
+  }
+
   el.querySelector('#btn-success-done').addEventListener('click', () => {
     showView('view-done');
     renderDone();
   });
-
-  showConfetti();
 }
 
 // ═══════════════════════════════════════════
@@ -1337,6 +1517,17 @@ function renderHistory() {
 /** Returns the HTML string for a single history entry card. */
 function entryCardHtml(entry) {
   const moodEmoji = entry.mood ? MOOD_EMOJIS[entry.mood - 1] : '';
+
+  // Build date→milestone lookup once
+  const badges = getBadges();
+  const dateBadge = Object.entries(badges)
+    .reduce((map, [days, record]) => {
+      const date = typeof record === 'string' ? record : record.earnedOn;
+      map[date] = MILESTONES.find(m => m.days === Number(days));
+      return map;
+    }, {});
+  const entryBadge = dateBadge[entry.date];
+
   const items = (entry.grateful ?? []).map((g, i) => `
     <li class="mb-sm">
       <p class="text-xs text-muted mb-xs">${escHtml(g.prompt ?? '')}</p>
@@ -1350,9 +1541,12 @@ function entryCardHtml(entry) {
   return `
     <article class="card stack gap-md">
       <div class="card-header">
-        <time datetime="${escHtml(entry.date)}" class="font-semibold text-sm">
-          ${formatDate(entry.date)}
-        </time>
+        <div class="row-xs">
+          <time datetime="${escHtml(entry.date)}" class="font-semibold text-sm">
+            ${formatDate(entry.date)}
+          </time>
+          ${entryBadge ? badgeChipHtml(entryBadge) : ''}
+        </div>
         ${moodEmoji ? `<span class="text-xl" aria-label="Mood ${entry.mood} of 5">${moodEmoji}</span>` : ''}
       </div>
       <ol class="pl-lg">${items}</ol>
@@ -2030,6 +2224,12 @@ function renderAbout() {
   el.innerHTML = `
     <div class="screen-body">
       <h2 class="text-xl">About</h2>
+
+      <!-- Version -->
+      <div class="card stack gap-md">
+        <p class="section-label">Version</p>
+        <p class="text-sm">${APP_VERSION}</p>
+      </div>
 
       <!-- Privacy -->
       <div class="card stack gap-md">

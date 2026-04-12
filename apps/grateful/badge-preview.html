@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badge Preview — Grateful</title>
+  <style>
+    :root {
+      --bg: #1a1f1a; --surface: #242b24; --border: #3a4a3a;
+      --text: #e8f0e8; --text-muted: #8a9e8a; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); padding: 2rem; min-height: 100vh; }
+    h1 { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 2rem; }
+    h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 1rem; }
+    .section { margin-bottom: 3rem; }
+    .row { display: flex; gap: 2rem; align-items: flex-end; flex-wrap: wrap; }
+    .badge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .badge-label { font-size: 0.75rem; color: var(--text-muted); }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .chip-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    .badge-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 7px; border-radius: 9999px; font-size: 0.75rem;
+      font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+    /* Light mode toggle */
+    body.light { --bg: #f4f7f4; --surface: #fff; --border: #d0dbd0; --text: #1a2a1a; --text-muted: #5a7a5a; }
+    .controls { position: fixed; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; }
+    .controls button {
+      padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: var(--font); font-size: 0.8rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button onclick="document.body.classList.toggle('light')">Toggle light/dark</button>
+  </div>
+
+  <h1>Grateful — Milestone Badge Preview</h1>
+  <div id="root"></div>
+
+  <script>
+    const MILESTONES = [
+      {
+        days: 7, name: 'Seedling', gradient: ['#d4a06a', '#7a4010'],
+        icon: `
+          <line x1="60" y1="64" x2="60" y2="44" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M60 55 Q51 44 42 46 Q43 57 60 55Z" fill="white"/>
+          <path d="M60 55 Q69 44 78 46 Q77 57 60 55Z" fill="white"/>
+          <circle cx="60" cy="42" r="3.5" fill="white"/>`,
+      },
+      {
+        days: 30, name: 'Growing', gradient: ['#a8c0d0', '#384858'],
+        icon: `
+          <line x1="60" y1="64" x2="60" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M60 58 Q50 48 40 50 Q41 60 60 58Z" fill="white"/>
+          <path d="M60 58 Q70 48 80 50 Q79 60 60 58Z" fill="white"/>
+          <path d="M60 46 Q52 36 44 38 Q45 48 60 46Z" fill="white" opacity="0.85"/>
+          <path d="M60 46 Q68 36 76 38 Q75 48 60 46Z" fill="white" opacity="0.85"/>
+          <circle cx="60" cy="32" r="3.5" fill="white" opacity="0.9"/>`,
+      },
+      {
+        days: 100, name: 'Thriving', gradient: ['#e8c840', '#986808'],
+        icon: `<polygon points="60,29 64,41 77,41 67,49 70,62 60,55 50,62 53,49 43,41 56,41" fill="white" opacity="0.95"/>`,
+      },
+      {
+        days: 365, name: 'Rooted', gradient: ['#50c890', '#c8a030'],
+        icon: `
+          <rect x="57" y="57" width="6" height="8" rx="1.5" fill="white" opacity="0.9"/>
+          <path d="M60,40 L73,58 L47,58Z" fill="white"/>
+          <path d="M60,31 L70,50 L50,50Z" fill="white" opacity="0.88"/>
+          <path d="M60,23 L67,38 L53,38Z" fill="white" opacity="0.78"/>`,
+      },
+    ];
+
+    function badgeSvg(m, size, uid) {
+      const [c1, c2] = m.gradient;
+      return `<svg viewBox="0 0 120 120" width="${size}" height="${size}" aria-label="${m.name}" role="img">
+        <defs>
+          <radialGradient id="bgrad-${uid}" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="${c1}"/>
+            <stop offset="100%" stop-color="${c2}"/>
+          </radialGradient>
+          <filter id="bglow-${uid}" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="60" cy="60" r="55" fill="url(#bgrad-${uid})" filter="url(#bglow-${uid})"/>
+        <circle cx="60" cy="60" r="44" fill="rgba(0,0,0,0.18)"/>
+        <circle cx="60" cy="60" r="51" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        ${m.icon}
+        <text x="60" y="76" text-anchor="middle" dominant-baseline="middle"
+          font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="14" font-weight="700" fill="white">${m.days}</text>
+        <text x="60" y="90" text-anchor="middle" dominant-baseline="middle"
+          font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="8.5" font-weight="600"
+          fill="rgba(255,255,255,0.82)" letter-spacing="0.08em">${m.name.toUpperCase()}</text>
+      </svg>`;
+    }
+
+    function badgeChipHtml(m) {
+      const [c1, c2] = m.gradient;
+      const miniIcon = `<svg viewBox="0 0 120 120" width="12" height="12" aria-hidden="true" style="vertical-align:middle">${m.icon}</svg>`;
+      return `<span class="badge-chip" style="background:linear-gradient(135deg,${c1},${c2});">${miniIcon} ${m.days} days</span>`;
+    }
+
+    const root = document.getElementById('root');
+
+    // Full size (144px) — milestone celebration
+    root.innerHTML += `<div class="section">
+      <h2>Full size — milestone celebration screen (144px)</h2>
+      <div class="row">
+        ${MILESTONES.map((m, i) => `
+          <div class="badge-wrap">
+            ${badgeSvg(m, 144, `full-${i}`)}
+            <span class="badge-label">${m.days} days · ${m.name}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+    root.innerHTML += `<hr>`;
+
+    // Shelf size (56px) — badge shelf on regular success screen
+    root.innerHTML += `<div class="section">
+      <h2>Shelf size — success screen badge shelf (56px)</h2>
+      <div class="row">
+        ${MILESTONES.map((m, i) => `
+          <div class="badge-wrap">
+            ${badgeSvg(m, 56, `shelf-${i}`)}
+            <span class="badge-label">${m.days}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+    root.innerHTML += `<hr>`;
+
+    // History chip size
+    root.innerHTML += `<div class="section">
+      <h2>History card chips</h2>
+      <div class="chip-row">
+        ${MILESTONES.map(m => badgeChipHtml(m)).join('')}
+      </div>
+    </div>`;
+  </script>
+</body>
+</html>
