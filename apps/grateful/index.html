@@ -1,10 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#7C9A7E">
   <meta name="description" content="A daily gratitude journal with mood tracking and visualizations.">
+  <meta property="og:title" content="Grateful">
+  <meta property="og:description" content="A daily gratitude journal with mood tracking and visualizations.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://personaelit.com/apps/grateful/">
+  <meta property="og:image" content="https://personaelit.com/apps/grateful/icons/apple-touch-icon.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Grateful">
+  <meta name="twitter:description" content="A daily gratitude journal with mood tracking and visualizations.">
+  <meta name="twitter:image" content="https://personaelit.com/apps/grateful/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Grateful">
@@ -13,6 +23,7 @@
   <link rel="stylesheet" href="styles.css">
   <title>Grateful</title>
 </head>
+
 <body>
 
   <!-- ═══════════════════════════════════════════
@@ -87,37 +98,39 @@
     <div class="nav-brand" aria-hidden="true">Grateful</div>
     <button class="nav-btn active" data-screen="daily" aria-label="Journal" aria-current="page">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M4 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4zm0 4h10v2H4z"/>
+        <path d="M4 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4zm0 4h10v2H4z" />
       </svg>
       <span>Journal</span>
     </button>
     <button class="nav-btn" data-screen="history" aria-label="History">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l4-4-4-4v2z"/>
+        <path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l4-4-4-4v2z" />
       </svg>
       <span>History</span>
     </button>
     <button class="nav-btn" data-screen="viz" aria-label="Visualizations">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M4 20h2v-8H4zm4 0h2V8H8zm4 0h2v-5h-2zm4 0h2V4h-2z"/>
+        <path d="M4 20h2v-8H4zm4 0h2V8H8zm4 0h2v-5h-2zm4 0h2V4h-2z" />
       </svg>
       <span>Insights</span>
     </button>
     <button class="nav-btn" data-screen="trophy" aria-label="Trophy Case">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H9v2h6v-2h-2v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+        <path
+          d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H9v2h6v-2h-2v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
       </svg>
       <span>Trophies</span>
     </button>
     <button class="nav-btn" data-screen="settings" aria-label="Settings">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M19.14 12.94c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.38-.3-.6-.22l-2.49 1c-.5-.38-1.05-.69-1.65-.88L14.5 2.03c-.04-.25-.25-.43-.49-.43h-3.99c-.24 0-.45.18-.49.43L9.98 4.25c-.5.19-1.01.5-1.47.88l-2.49-1c-.22-.09-.48 0-.6.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98L2.27 13.79c-.19.15-.24.42-.12.64l2 3.46c.12.22.38.3.6.22l2.49-1c.46.38.96.69 1.47.88l.41 2.62c.04.25.25.43.49.43h3.99c.24 0 .45-.18.49-.43l.41-2.62c.6-.19 1.15-.5 1.65-.88l2.49 1c.22.09.48 0 .6-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 8.5 12 8.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+        <path
+          d="M19.14 12.94c.04-.32.07-.65.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.38-.3-.6-.22l-2.49 1c-.5-.38-1.05-.69-1.65-.88L14.5 2.03c-.04-.25-.25-.43-.49-.43h-3.99c-.24 0-.45.18-.49.43L9.98 4.25c-.5.19-1.01.5-1.47.88l-2.49-1c-.22-.09-.48 0-.6.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98L2.27 13.79c-.19.15-.24.42-.12.64l2 3.46c.12.22.38.3.6.22l2.49-1c.46.38.96.69 1.47.88l.41 2.62c.04.25.25.43.49.43h3.99c.24 0 .45-.18.49-.43l.41-2.62c.6-.19 1.15-.5 1.65-.88l2.49 1c.22.09.48 0 .6-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 8.5 12 8.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
       </svg>
       <span>Settings</span>
     </button>
     <button class="nav-btn" data-screen="about" aria-label="About">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
       </svg>
       <span>About</span>
     </button>
@@ -129,4 +142,5 @@
 
   <script type="module" src="app.js?version=8.4.12"></script>
 </body>
+
 </html>
