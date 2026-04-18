@@ -653,6 +653,7 @@ function seedDevEntries() {
     const t1 = texts[(i * 3)     % texts.length];
     const t2 = texts[(i * 3 + 1) % texts.length];
     const t3 = texts[(i * 3 + 2) % texts.length];
+    const isSunday = new Date(dateKey + 'T12:00:00').getDay() === 0;
     saveEntry(dateKey, {
       date: dateKey,
       completed: true,
@@ -662,6 +663,7 @@ function seedDevEntries() {
         { prompt: prompts[1], text: t2[0], tags: [t2[1]] },
         { prompt: prompts[2], text: t3[0], tags: [t3[1]] },
       ],
+      ...(isSunday && { weeklyReflection: 'The family hiking trip on Saturday — everyone was laughing the whole time.' }),
     });
   }
 
@@ -1364,8 +1366,60 @@ function renderMood() {
     });
     recordStreakCompletion();
     const newBadges = checkMilestoneBadges(getStreak().current);
+    const isSunday = new Date().getDay() === 0;
+    const hasReflection = getEntry(dateKey)?.weeklyReflection !== undefined;
+    if (isSunday && !hasReflection) {
+      showView('view-weekly');
+      renderWeeklyReflection(newBadges);
+    } else {
+      showView('view-success');
+      renderSuccess(newBadges);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER: WEEKLY REFLECTION
+// ═══════════════════════════════════════════
+
+/** @param {object[]} newBadges */
+function renderWeeklyReflection(newBadges = []) {
+  const el = document.getElementById('view-weekly');
+  el.innerHTML = `
+    <div class="stack gap-xl view-body">
+      <div class="stack gap-sm">
+        <p class="section-label">Weekly reflection</p>
+        <h2 class="text-xl">What was the highlight of your week?</h2>
+      </div>
+      <textarea id="weekly-text" class="input" rows="5"
+        placeholder="Write anything…" aria-label="Weekly reflection"></textarea>
+    </div>
+    <div class="stack gap-md mt-auto">
+      <button id="btn-weekly-save" class="btn btn-primary">Save</button>
+      <button id="btn-weekly-skip" class="btn btn-ghost">Skip</button>
+    </div>`;
+
+  const textarea = el.querySelector('#weekly-text');
+  const dateKey  = today();
+
+  // Persist on keydown so closing the app mid-write doesn't lose text
+  textarea.addEventListener('input', () => {
+    saveEntry(dateKey, { weeklyReflection: textarea.value });
+  });
+
+  const finish = () => {
     showView('view-success');
     renderSuccess(newBadges);
+  };
+
+  el.querySelector('#btn-weekly-save').addEventListener('click', () => {
+    saveEntry(dateKey, { weeklyReflection: textarea.value.trim() });
+    finish();
+  });
+
+  el.querySelector('#btn-weekly-skip').addEventListener('click', () => {
+    saveEntry(dateKey, { weeklyReflection: '' });
+    finish();
   });
 }
 
@@ -1714,6 +1768,11 @@ function entryCardHtml(entry) {
         ${moodEmoji ? `<span class="text-xl" aria-label="Mood ${entry.mood} of 5">${moodEmoji}</span>` : ''}
       </div>
       <ol class="pl-lg">${items}</ol>
+      ${entry.weeklyReflection ? `
+      <div class="stack gap-xs">
+        <p class="text-xs text-muted">Weekly reflection</p>
+        <p class="text-sm">${escHtml(entry.weeklyReflection)}</p>
+      </div>` : ''}
       <div class="row-end">
         <button class="btn btn-ghost btn-sm hist-edit" data-date="${escHtml(entry.date)}">Edit</button>
         <button class="btn btn-ghost btn-sm btn-danger hist-delete" data-date="${escHtml(entry.date)}">Delete</button>
