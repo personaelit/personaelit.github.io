@@ -1723,6 +1723,43 @@ function showEditModal(date, onSave) {
 // VISUALIZATIONS SCREEN
 // ═══════════════════════════════════════════
 
+const STOP_WORDS = new Set([
+  'a','an','the','and','or','but','in','on','at','to','for','of','with',
+  'by','from','up','about','into','as','is','it','its','was','are','were',
+  'be','been','being','have','has','had','do','does','did','will','would',
+  'could','should','may','might','shall','can','need','that','this','these',
+  'those','i','me','my','we','our','you','your','he','she','him','her','they',
+  'them','their','what','which','who','whom','when','where','why','how','all',
+  'each','every','both','few','more','most','other','some','such','no','not',
+  'only','same','so','than','too','very','just','because','if','then','there',
+  'here','also','still','yet','even','though','while','after','before','since',
+  'got','get','go','went','come','came','out','over','own','said','say','know',
+  'think','make','made','take','took','see','saw','feel','felt','felt','good',
+  'like','one','two','day','time','today','something','really','much','well',
+  'am','us','re','been','they\'re','it\'s','i\'m','don\'t','didn\'t','wasn\'t',
+]);
+
+/**
+ * @param {object[]} entries completed entry objects
+ * @returns {[string, number][]} sorted [word, count] pairs, top 60
+ */
+function getWordFrequencies(entries) {
+  const freq = {};
+  for (const entry of entries) {
+    for (const g of entry.grateful ?? []) {
+      const text = g.text ?? '';
+      const words = text.toLowerCase().match(/[a-z']+/g) ?? [];
+      for (const raw of words) {
+        const word = raw.replace(/^'+|'+$/g, '');
+        if (word.length < 4) continue;
+        if (STOP_WORDS.has(word)) continue;
+        freq[word] = (freq[word] ?? 0) + 1;
+      }
+    }
+  }
+  return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 60);
+}
+
 let moodChartType = 'line';
 let tagChartType  = 'cloud';
 let moodChartInst = null;
@@ -1804,6 +1841,11 @@ function renderViz() {
           : `<p class="text-center text-muted py-xl">No tag data yet.</p>`}
       </div>
 
+      <div class="card stack gap-md">
+        <h3 class="text-lg">Word Cloud</h3>
+        <div id="word-cloud-wrap" class="tag-cloud" aria-label="Word cloud"></div>
+      </div>
+
     </div>`;
 
   // Toggle buttons
@@ -1823,6 +1865,7 @@ function renderViz() {
   if (entries.length)    buildMoodChart(entries, gridColor, textColor);
   if (sortedTags.length) buildTagChart(sortedTags, gridColor, textColor);
   buildHeatMap(getAllEntries());
+  buildWordCloud(entries);
 }
 
 /**
@@ -2040,6 +2083,30 @@ function buildTagChart(sortedTags, gridColor, textColor) {
       },
     },
   });
+}
+
+/** @param {object[]} entries completed entry objects */
+function buildWordCloud(entries) {
+  const wrap = document.getElementById('word-cloud-wrap');
+  if (!wrap) return;
+
+  const words = getWordFrequencies(entries);
+  if (!words.length) {
+    wrap.innerHTML = `<p class="text-muted">No entry text yet.</p>`;
+    return;
+  }
+
+  const maxCount = words[0][1];
+  const palette  = ['#7c9a7e','#5ab88a','#4a8a6a','#70a878','#9dbf9f','#3a7a5a','#a0c8a2','#c8deca'];
+  wrap.innerHTML = words.map(([word, count], i) => {
+    const ratio  = count / maxCount;
+    const size   = (0.75 + ratio * 1.75).toFixed(2);
+    const weight = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
+    const color  = palette[i % palette.length];
+    return `<span class="cloud-tag"
+      style="font-size:${size}rem; color:${color}; font-weight:${weight};"
+      title="${count} mention${count !== 1 ? 's' : ''}">${escHtml(word)}</span>`;
+  }).join('');
 }
 
 /** Builds the GitHub-style calendar heat map for the past 365 days. */
