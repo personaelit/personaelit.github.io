@@ -611,7 +611,65 @@ function getBirthdayStats() {
  */
 let navInitialised = false;
 
+function seedDevEntries() {
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (!isLocal) return;
+  if (Object.keys(getAllEntries()).length > 0) return;
+
+  const texts = [
+    ['Had a wonderful walk in the park this morning', 'family', 'nature'],
+    ['Finished a challenging project at work', 'work', 'achievement'],
+    ['Grateful for my morning coffee ritual', 'simplethings', 'peace'],
+    ['My friend called just to check in on me', 'friends', 'kindness'],
+    ['Learned something new about cooking today', 'learning', 'creativity'],
+    ['Felt really healthy and energetic today', 'health', 'joy'],
+    ['Had a great laugh with my family at dinner', 'family', 'joy'],
+    ['Managed to stay calm during a stressful meeting', 'work', 'resilience'],
+    ['Spent time in the garden and felt peaceful', 'nature', 'peace'],
+    ['Helped a neighbor carry their groceries', 'community', 'kindness'],
+    ['Finished reading a really inspiring book', 'learning', 'growth'],
+    ['Morning run felt amazing today', 'health', 'achievement'],
+    ['Had a long overdue heart to heart with a friend', 'friends', 'love'],
+    ['Grateful for the beautiful sunset tonight', 'nature', 'simplethings'],
+    ['Kids were especially sweet and funny today', 'family', 'joy'],
+    ['Got positive feedback on my work', 'work', 'achievement'],
+    ['Tried a new recipe and it turned out great', 'creativity', 'simplethings'],
+    ['Had a moment of quiet reflection this morning', 'mindfulness', 'peace'],
+    ['Community event brought neighbors together', 'community', 'gratitude'],
+    ['Noticed how much I have grown this year', 'growth', 'reflection'],
+  ];
+
+  const prompts = [
+    'One good thing that happened to me today…',
+    'Something I accomplished today…',
+    'A moment I felt at peace today…',
+  ];
+
+  const base = new Date();
+  for (let i = 0; i < 20; i++) {
+    const d = new Date(base);
+    d.setDate(d.getDate() - (20 - i));
+    const dateKey = d.toISOString().slice(0, 10);
+    const t1 = texts[(i * 3)     % texts.length];
+    const t2 = texts[(i * 3 + 1) % texts.length];
+    const t3 = texts[(i * 3 + 2) % texts.length];
+    saveEntry(dateKey, {
+      date: dateKey,
+      completed: true,
+      mood: 2 + (i % 4),
+      grateful: [
+        { prompt: prompts[0], text: t1[0], tags: [t1[1], t1[2]] },
+        { prompt: prompts[1], text: t2[0], tags: [t2[1]] },
+        { prompt: prompts[2], text: t3[0], tags: [t3[1]] },
+      ],
+    });
+  }
+
+  if (!getSettings().name) saveSettings({ name: 'Dev', colorPalette: 'sage' });
+}
+
 function bootstrap() {
+  seedDevEntries();
   const settings = getSettings();
   applyTheme(settings.colorScheme ?? 'system');
   applyPalette(settings.colorPalette ?? 'sage');
@@ -1834,7 +1892,7 @@ function renderViz() {
         </div>
         ${sortedTags.length
           ? tagChartType === 'cloud'
-            ? `<div id="tag-chart-wrap" class="tag-cloud" aria-label="Tag cloud"></div>`
+            ? `<div id="tag-chart-wrap" aria-label="Tag cloud"></div>`
             : `<div style="position:relative; height:${tagBarH}px;">
                  <canvas id="tag-chart" aria-label="Tag frequency chart" role="img"></canvas>
                </div>`
@@ -1843,7 +1901,7 @@ function renderViz() {
 
       <div class="card stack gap-md">
         <h3 class="text-lg">Word Cloud</h3>
-        <div id="word-cloud-wrap" class="tag-cloud" aria-label="Word cloud"></div>
+        <div id="word-cloud-wrap" aria-label="Word cloud"></div>
       </div>
 
     </div>`;
@@ -2020,32 +2078,147 @@ function buildMoodChart(entries, gridColor, textColor) {
   }
 }
 
+/**
+ * Canvas word/tag cloud with Archimedean spiral placement.
+ * @param {HTMLElement} wrap
+ * @param {[string, number][]} items sorted [label, count] pairs
+ * @param {{ prefix?: string, onClickItem?: (word: string) => void }} [opts]
+ */
+function renderCanvasCloud(wrap, items, opts = {}) {
+  const { prefix = '', onClickItem = null } = opts;
+  wrap.innerHTML = '';
+
+  if (!items.length) {
+    wrap.innerHTML = '<p class="text-muted text-sm">No data yet.</p>';
+    return;
+  }
+
+  const W   = wrap.offsetWidth || 320;
+  const H   = Math.max(180, Math.min(360, Math.round(W * 0.62)));
+  const dpr = window.devicePixelRatio || 1;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.cssText = `display:block; width:${W}px; height:${H}px;`;
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', 'Cloud visualization');
+  wrap.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const ff      = getComputedStyle(document.body).fontFamily;
+  const palette = ['#7c9a7e','#5ab88a','#4a8a6a','#70a878','#9dbf9f','#3a7a5a','#a0c8a2','#c8deca'];
+  const maxCount = items[0][1];
+
+  function fnv1a(s) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return h >>> 0;
+  }
+
+  // 60% horizontal, 20% each vertical direction
+  function pickAngle(word) {
+    const v = fnv1a(word) % 10;
+    if (v < 6) return 0;
+    return v < 8 ? Math.PI / 2 : -Math.PI / 2;
+  }
+
+  const placed = [];
+  const hitMap = [];
+
+  function overlaps(cx, cy, hw, hh) {
+    for (const p of placed) {
+      if (Math.abs(cx - p.cx) < hw + p.hw + 4 &&
+          Math.abs(cy - p.cy) < hh + p.hh + 4) return true;
+    }
+    return false;
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    const [word, count] = items[i];
+    const label  = prefix + word;
+    const ratio  = count / maxCount;
+    const size   = Math.round(11 + ratio * 33);
+    const weight = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
+    const angle  = pickAngle(word);
+    const color  = palette[i % palette.length];
+
+    ctx.font = `${weight} ${size}px ${ff}`;
+    const tw = ctx.measureText(label).width;
+    const th = size * 1.2;
+
+    const hw = (angle === 0 ? tw : th) / 2;
+    const hh = (angle === 0 ? th : tw) / 2;
+
+    const phase = (fnv1a(word) / 0xffffffff) * Math.PI * 2;
+    let placed_ = false;
+
+    for (let t = 0; t < 500; t += 0.25) {
+      const r  = t * 2.2;
+      const cx = W / 2 + r * Math.cos(t + phase);
+      const cy = H / 2 + r * Math.sin(t + phase);
+
+      if (cx - hw < 2 || cx + hw > W - 2 || cy - hh < 2 || cy + hh > H - 2) {
+        if (r > Math.min(W, H) * 0.55) break;
+        continue;
+      }
+      if (overlaps(cx, cy, hw, hh)) continue;
+
+      placed.push({ cx, cy, hw, hh });
+      hitMap.push({ cx, cy, hw, hh, word });
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, 0, 0);
+      ctx.restore();
+
+      placed_ = true;
+      break;
+    }
+    void placed_; // words that don't fit are silently skipped
+  }
+
+  if (onClickItem) {
+    canvas.style.cursor = 'default';
+    const toLogical = (e) => {
+      const r = canvas.getBoundingClientRect();
+      return { mx: (e.clientX - r.left) * (W / r.width), my: (e.clientY - r.top) * (H / r.height) };
+    };
+    canvas.addEventListener('mousemove', e => {
+      const { mx, my } = toLogical(e);
+      canvas.style.cursor = hitMap.some(
+        p => mx >= p.cx - p.hw && mx <= p.cx + p.hw && my >= p.cy - p.hh && my <= p.cy + p.hh
+      ) ? 'pointer' : 'default';
+    });
+    canvas.addEventListener('click', e => {
+      const { mx, my } = toLogical(e);
+      const hit = hitMap.find(
+        p => mx >= p.cx - p.hw && mx <= p.cx + p.hw && my >= p.cy - p.hh && my <= p.cy + p.hh
+      );
+      if (hit) onClickItem(hit.word);
+    });
+  }
+}
+
 /** @param {[string, number][]} sortedTags @param {string} gridColor @param {string} textColor */
 function buildTagChart(sortedTags, gridColor, textColor) {
   if (tagChartType === 'cloud') {
     const wrap = document.getElementById('tag-chart-wrap');
     if (!wrap) return;
-    const maxCount = sortedTags[0][1];
-    const palette = ['#7c9a7e', '#5ab88a', '#70a878', '#4a8a6a', '#9dbf9f', '#3a7a5a', '#a0c8a2', '#c8deca'];
-    wrap.innerHTML = sortedTags.map(([tag, count], i) => {
-      const ratio    = count / maxCount;
-      const size     = (0.8 + ratio * 1.7).toFixed(2); // 0.8rem – 2.5rem
-      const weight   = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
-      const color    = palette[i % palette.length];
-      return `<span class="cloud-tag" data-tag="${escHtml(tag)}" role="button" tabindex="0"
-        style="font-size:${size}rem; color:${color}; font-weight:${weight}; cursor:pointer;"
-        title="${count} mention${count !== 1 ? 's' : ''}">#${escHtml(tag)}</span>`;
-    }).join('');
-    wrap.querySelectorAll('.cloud-tag').forEach(span => {
-      span.addEventListener('click', () => {
-        histTagFilter = span.dataset.tag;
+    renderCanvasCloud(wrap, sortedTags, {
+      prefix: '#',
+      onClickItem: tag => {
+        histTagFilter = tag;
         histPage = 0;
         showScreen('history');
         renderHistory();
-      });
-      span.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); span.click(); }
-      });
+      },
     });
     return;
   }
@@ -2089,24 +2262,15 @@ function buildTagChart(sortedTags, gridColor, textColor) {
 function buildWordCloud(entries) {
   const wrap = document.getElementById('word-cloud-wrap');
   if (!wrap) return;
-
-  const words = getWordFrequencies(entries);
-  if (!words.length) {
-    wrap.innerHTML = `<p class="text-muted">No entry text yet.</p>`;
-    return;
-  }
-
-  const maxCount = words[0][1];
-  const palette  = ['#7c9a7e','#5ab88a','#4a8a6a','#70a878','#9dbf9f','#3a7a5a','#a0c8a2','#c8deca'];
-  wrap.innerHTML = words.map(([word, count], i) => {
-    const ratio  = count / maxCount;
-    const size   = (0.75 + ratio * 1.75).toFixed(2);
-    const weight = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
-    const color  = palette[i % palette.length];
-    return `<span class="cloud-tag"
-      style="font-size:${size}rem; color:${color}; font-weight:${weight};"
-      title="${count} mention${count !== 1 ? 's' : ''}">${escHtml(word)}</span>`;
-  }).join('');
+  renderCanvasCloud(wrap, getWordFrequencies(entries), {
+    onClickItem: word => {
+      histSearch = word;
+      histTagFilter = null;
+      histPage = 0;
+      showScreen('history');
+      renderHistory();
+    },
+  });
 }
 
 /** Builds the GitHub-style calendar heat map for the past 365 days. */
