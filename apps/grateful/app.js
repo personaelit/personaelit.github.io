@@ -1094,6 +1094,26 @@ function renderFirstRunTheme() {
 // RENDER: GRATITUDE ENTRY  (steps 0 / 1 / 2)
 // ═══════════════════════════════════════════
 
+/** Picks a random prompt index, avoiding lastPrompt when more than one prompt exists. */
+function pickPromptIndex(prompts, lastPrompt) {
+  if (prompts.length <= 1) return 0;
+  const candidates = prompts
+    .map((p, i) => ({ p, i }))
+    .filter(({ p }) => p !== lastPrompt);
+  const pool = candidates.length ? candidates : prompts.map((p, i) => ({ p, i }));
+  return pool[Math.floor(Math.random() * pool.length)].i;
+}
+
+/** Returns the most recently saved gratitude prompt across all entries. */
+function lastUsedPrompt(entry) {
+  const todayLast = entry.grateful?.at(-1)?.prompt;
+  if (todayLast) return todayLast;
+  const entries = Object.values(getAllEntries())
+    .filter(e => e.completed && e.grateful?.length)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  return entries[0]?.grateful.at(-1)?.prompt ?? null;
+}
+
 function renderEntry(step) {
   const el      = document.getElementById('view-entry');
   const dateKey = today();
@@ -1103,9 +1123,9 @@ function renderEntry(step) {
   // Pick starting prompt
   if (entry.draftPrompt) {
     const i = prompts.indexOf(entry.draftPrompt);
-    promptIndex = i >= 0 ? i : Math.floor(Math.random() * prompts.length);
+    promptIndex = i >= 0 ? i : pickPromptIndex(prompts, lastUsedPrompt(entry));
   } else {
-    promptIndex = Math.floor(Math.random() * prompts.length);
+    promptIndex = pickPromptIndex(prompts, lastUsedPrompt(entry));
   }
 
   // Restore selected tags from draft
