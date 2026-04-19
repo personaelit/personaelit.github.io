@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero Sum</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <a href="../../#/digital-craft" class="back-link">← Back</a>
+      <div>
+        <h1>Zero Sum</h1>
+        <p class="subtitle">Place tiles so every row and column sums to zero.</p>
+      </div>
+    </header>
+
+    <div id="controls">
+      <button data-level="0">Easy</button>
+      <button data-level="1">Medium</button>
+      <button data-level="2">Hard</button>
+    </div>
+
+    <div id="game-area">
+      <div id="grid-container"></div>
+
+      <div id="tray-section">
+        <div class="tray-label">Available Tiles</div>
+        <div id="tile-tray"></div>
+        <p class="tray-hint">Drag to place &nbsp;·&nbsp; Click placed tile to return</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-overlay" class="hidden">
+    <div id="win-dialog">
+      <div class="win-icon">✓</div>
+      <h2>Solved!</h2>
+      <p>Every row and column sums to zero.</p>
+      <button id="play-again">Play Again</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

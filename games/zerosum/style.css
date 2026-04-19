@@ -1,0 +1,281 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0f0f14;
+  color: #e8e8f0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#app {
+  width: 100%;
+  max-width: 640px;
+  padding: 28px 20px 60px;
+}
+
+/* ── Header ── */
+
+header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.back-link {
+  color: #7b8cde;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+.back-link:hover { text-decoration: underline; }
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: #7a7a9a;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+/* ── Difficulty controls ── */
+
+#controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+
+#controls button {
+  padding: 8px 22px;
+  border: 1px solid #2e2e48;
+  background: #1a1a26;
+  color: #8888a8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+#controls button:hover {
+  background: #252538;
+  color: #d0d0e8;
+}
+
+#controls button.active {
+  background: #7b8cde;
+  border-color: #7b8cde;
+  color: #fff;
+}
+
+/* ── Game area ── */
+
+#game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 36px;
+}
+
+/* ── Grid ── */
+
+#grid-container {
+  /* Inline grid styles set by grid.js */
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  user-select: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.cell.given {
+  background: #1c1e38;
+  color: #7880b8;
+  cursor: default;
+}
+
+.cell.empty {
+  background: #1a1a26;
+  border: 2px dashed #2e2e50;
+}
+
+.cell.filled {
+  background: #2c3a6a;
+  color: #dde2ff;
+  cursor: pointer;
+}
+
+.cell.filled:hover {
+  background: #374580;
+}
+
+.cell.drag-over {
+  background: #3a4a88;
+  border: 2px solid #7b8cde;
+}
+
+/* ── Sum indicators ── */
+
+.sum-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 6px;
+  color: #44445a;
+  transition: color 0.2s;
+}
+
+.sum-indicator.zero {
+  color: #4ade80;
+}
+
+.sum-indicator.nonzero {
+  color: #f87171;
+}
+
+/* ── Tile tray ── */
+
+#tray-section {
+  width: 100%;
+}
+
+.tray-label {
+  color: #7b8cde;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+#tile-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 64px;
+  padding: 10px;
+  background: #141420;
+  border: 1px solid #22223a;
+  border-radius: 12px;
+}
+
+.tile {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2c3a6a;
+  color: #dde2ff;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
+}
+
+.tile:hover {
+  background: #374580;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(123, 140, 222, 0.25);
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+.tray-hint {
+  color: #44445a;
+  font-size: 0.78rem;
+  margin-top: 8px;
+}
+
+/* ── Win overlay ── */
+
+#win-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+#win-overlay.hidden {
+  display: none;
+}
+
+#win-dialog {
+  background: #16162a;
+  border: 1px solid #2e2e50;
+  border-radius: 18px;
+  padding: 44px 48px;
+  text-align: center;
+  animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.win-icon {
+  font-size: 2.5rem;
+  color: #4ade80;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+#win-dialog h2 {
+  font-size: 1.8rem;
+  color: #e8e8f0;
+  margin-bottom: 8px;
+}
+
+#win-dialog p {
+  color: #7a7a9a;
+  font-size: 0.95rem;
+  margin-bottom: 28px;
+}
+
+#play-again {
+  padding: 12px 36px;
+  background: #7b8cde;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#play-again:hover {
+  background: #8d9ee8;
+}
