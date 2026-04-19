@@ -2152,9 +2152,10 @@ function renderCanvasCloud(wrap, items, opts = {}) {
     return;
   }
 
-  const W   = wrap.offsetWidth || 320;
-  const H   = Math.max(180, Math.min(360, Math.round(W * 0.62)));
-  const dpr = window.devicePixelRatio || 1;
+  const W        = wrap.offsetWidth || 320;
+  const isMobile = W < 480;
+  const H        = Math.max(180, Math.min(360, Math.round(W * (isMobile ? 0.9 : 0.62))));
+  const dpr      = window.devicePixelRatio || 1;
 
   const canvas = document.createElement('canvas');
   canvas.width  = W * dpr;
@@ -2177,8 +2178,9 @@ function renderCanvasCloud(wrap, items, opts = {}) {
     return h >>> 0;
   }
 
-  // 60% horizontal, 20% each vertical direction
+  // 60% horizontal, 20% each vertical direction (all horizontal on mobile)
   function pickAngle(word) {
+    if (isMobile) return 0;
     const v = fnv1a(word) % 10;
     if (v < 6) return 0;
     return v < 8 ? Math.PI / 2 : -Math.PI / 2;
@@ -2187,10 +2189,11 @@ function renderCanvasCloud(wrap, items, opts = {}) {
   const placed = [];
   const hitMap = [];
 
+  const pad = isMobile ? 2 : 4;
   function overlaps(cx, cy, hw, hh) {
     for (const p of placed) {
-      if (Math.abs(cx - p.cx) < hw + p.hw + 4 &&
-          Math.abs(cy - p.cy) < hh + p.hh + 4) return true;
+      if (Math.abs(cx - p.cx) < hw + p.hw + pad &&
+          Math.abs(cy - p.cy) < hh + p.hh + pad) return true;
     }
     return false;
   }
@@ -2198,8 +2201,9 @@ function renderCanvasCloud(wrap, items, opts = {}) {
   for (let i = 0; i < items.length; i++) {
     const [word, count] = items[i];
     const label  = prefix + word;
-    const ratio  = count / maxCount;
-    const size   = Math.round(11 + ratio * 33);
+    const ratio     = count / maxCount;
+    const sizeScale = Math.min(1, W / 380);
+    const size      = Math.max(9, Math.round((11 + ratio * 33) * sizeScale));
     const weight = ratio >= 0.6 ? '700' : ratio >= 0.3 ? '600' : '500';
     const angle  = pickAngle(word);
     const color  = palette[i % palette.length];
@@ -2220,7 +2224,7 @@ function renderCanvasCloud(wrap, items, opts = {}) {
       const cy = H / 2 + r * Math.sin(t + phase);
 
       if (cx - hw < 2 || cx + hw > W - 2 || cy - hh < 2 || cy + hh > H - 2) {
-        if (r > Math.min(W, H) * 0.55) break;
+        if (r > Math.min(W, H) * (isMobile ? 0.65 : 0.55)) break;
         continue;
       }
       if (overlaps(cx, cy, hw, hh)) continue;
