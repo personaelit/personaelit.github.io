@@ -454,6 +454,7 @@
       <button id="btn-breathe"     data-active="false" onclick="toggleEffect('breathe')"    >&#x1FAC1; Breathe: Off</button>
       <button id="btn-aurora"      data-active="false" onclick="toggleEffect('aurora')"     >&#x1F30C; Aurora: Off</button>
       <button id="btn-sunny"       data-active="false" onclick="toggleEffect('sunny')"      >&#x2600;&#xFE0F; Sunny Day: Off</button>
+      <button id="btn-analogtv"    data-active="false" onclick="toggleEffect('analogtv')"   >&#x1F4FA; Analog TV: Off</button>
     </div>
     <button id="effectsToggle" onclick="document.getElementById('effectsList').classList.toggle('open')">&#x2699; Effects</button>
   </div>
@@ -685,7 +686,8 @@
       rain:        'soDashboard.rain',
       breathe:     'soDashboard.breathe',
       aurora:      'soDashboard.aurora',
-      sunny:       'soDashboard.sunny'
+      sunny:       'soDashboard.sunny',
+      analogtv:    'soDashboard.analogtv'
     };
     const EFFECT_LABELS = {
       butterflies: '\u{1F98B} Butterflies',
@@ -694,9 +696,10 @@
       rain:        '\u{1F327} Rain',
       breathe:     '\u{1FAC1} Breathe',
       aurora:      '\u{1F30C} Aurora',
-      sunny:       '\u2600\uFE0F Sunny Day'
+      sunny:       '\u2600\uFE0F Sunny Day',
+      analogtv:    '\u{1F4FA} Analog TV'
     };
-    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false, sunny: false };
+    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false, sunny: false, analogtv: false };
 
     /* --- Particle canvas --- */
     const particleCanvas = document.getElementById('particleCanvas');
@@ -1152,6 +1155,111 @@
       document.body.style.background = '';
     }
 
+    /* --- Analog TV --- */
+    let tvCanvas = null, tvCtx = null, tvRaf = null, tvTime = 0;
+    let tvNoiseCanvas = null, tvNoiseCW = 0, tvNoiseCH = 0;
+    let tvBands = [];
+
+    function initAnalogTV() {
+      if (!tvCanvas) {
+        tvCanvas = document.createElement('canvas');
+        tvCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2;';
+        document.body.appendChild(tvCanvas);
+      }
+      if (!tvNoiseCanvas) tvNoiseCanvas = document.createElement('canvas');
+      tvCanvas.width  = window.innerWidth;
+      tvCanvas.height = window.innerHeight;
+      tvCtx = tvCanvas.getContext('2d');
+      tvBands = [];
+    }
+
+    function tvLoop() {
+      tvTime += 0.016;
+      const w = window.innerWidth, h = window.innerHeight;
+      if (tvCanvas.width !== w || tvCanvas.height !== h) {
+        tvCanvas.width = w; tvCanvas.height = h;
+      }
+      tvCtx.clearRect(0, 0, w, h);
+
+      // Noise grain via downsampled offscreen canvas
+      const sw = 400, sh = Math.round(400 * h / w);
+      if (tvNoiseCW !== sw || tvNoiseCH !== sh) {
+        tvNoiseCanvas.width = sw; tvNoiseCanvas.height = sh;
+        tvNoiseCW = sw; tvNoiseCH = sh;
+      }
+      const nctx = tvNoiseCanvas.getContext('2d');
+      const id = nctx.createImageData(sw, sh);
+      const d = id.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (Math.random() < 0.065) {
+          const v = (Math.random() * 210) | 0;
+          d[i] = v; d[i+1] = v; d[i+2] = v;
+          d[i+3] = (55 + Math.random() * 110) | 0;
+        }
+      }
+      nctx.putImageData(id, 0, 0);
+      tvCtx.save();
+      tvCtx.imageSmoothingEnabled = false;
+      tvCtx.globalAlpha = 0.42;
+      tvCtx.drawImage(tvNoiseCanvas, 0, 0, w, h);
+      tvCtx.restore();
+
+      // Scanlines
+      tvCtx.save();
+      for (let y = 0; y < h; y += 3) {
+        tvCtx.fillStyle = 'rgba(0,0,0,0.14)';
+        tvCtx.fillRect(0, y, w, 1);
+      }
+      tvCtx.restore();
+
+      // Horizontal tracking bands
+      if (Math.random() < 0.018) {
+        tvBands.push({
+          y: Math.random() * h,
+          bh: 1 + Math.random() * 5,
+          alpha: 0.35 + Math.random() * 0.45,
+          life: 1.0,
+          decay: 0.025 + Math.random() * 0.055,
+          speed: 1.2 + Math.random() * 3.5
+        });
+      }
+      for (let i = tvBands.length - 1; i >= 0; i--) {
+        const b = tvBands[i];
+        tvCtx.save();
+        tvCtx.globalAlpha = b.life * b.alpha;
+        tvCtx.fillStyle = 'rgba(210,220,255,0.7)';
+        tvCtx.fillRect(0, b.y | 0, w, b.bh | 0);
+        tvCtx.restore();
+        b.y += b.speed;
+        b.life -= b.decay;
+        if (b.life <= 0 || b.y > h) tvBands.splice(i, 1);
+      }
+
+      // Vignette / CRT curvature darkening
+      tvCtx.save();
+      const vg = tvCtx.createRadialGradient(w/2, h/2, h * 0.22, w/2, h/2, Math.max(w, h) * 0.75);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(0,0,0,0.62)');
+      tvCtx.fillStyle = vg;
+      tvCtx.fillRect(0, 0, w, h);
+      tvCtx.restore();
+
+      // Subtle flicker
+      if (Math.random() < 0.045) {
+        tvCtx.save();
+        tvCtx.fillStyle = `rgba(255,255,255,${0.015 + Math.random() * 0.045})`;
+        tvCtx.fillRect(0, 0, w, h);
+        tvCtx.restore();
+      }
+
+      tvRaf = requestAnimationFrame(tvLoop);
+    }
+
+    function stopAnalogTV() {
+      cancelAnimationFrame(tvRaf); tvRaf = null;
+      if (tvCtx) tvCtx.clearRect(0, 0, tvCanvas.width, tvCanvas.height);
+    }
+
     /* --- Toggle logic --- */
     function toggleEffect(name) {
       effects[name] = !effects[name];
@@ -1193,6 +1301,10 @@
         case 'aurora':
           if (effects.aurora) auroraLoop();
           else stopAurora();
+          break;
+        case 'analogtv':
+          if (effects.analogtv) { initAnalogTV(); tvLoop(); }
+          else stopAnalogTV();
           break;
         case 'sunny':
           if (effects.sunny) {
