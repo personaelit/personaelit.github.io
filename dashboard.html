@@ -840,6 +840,7 @@
     }
     function drawFirefly(f) {
       const op = syncFade > 0 ? f.opacity * (syncFade / SYNC_FADE_DUR) : f.opacity;
+      pctx.save();
       const g = pctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 5);
       g.addColorStop(0, `hsla(${f.hue},100%,78%,${op})`);
       g.addColorStop(1, `hsla(${f.hue},100%,60%,0)`);
@@ -847,6 +848,7 @@
       pctx.beginPath(); pctx.arc(f.x, f.y, f.r * 5, 0, Math.PI*2); pctx.fill();
       pctx.fillStyle = `hsla(${f.hue},100%,97%,${op})`;
       pctx.beginPath(); pctx.arc(f.x, f.y, f.r * 0.45, 0, Math.PI*2); pctx.fill();
+      pctx.restore();
     }
 
     /* --- Falling leaves --- */
@@ -1029,13 +1031,12 @@
           landButterflies();
           bfLandTimer = 700 + Math.random() * 500;
         }
-        pctx.font = '24px serif';
         for (const b of butterfliesList) {
           tickButterfly(b);
-          // landed: wings fully open; landing: slowing flutter; flying: full flutter
           const flutterAmt = b.state === 'landed' ? 0.32 : 1;
           const scaleX = Math.abs(Math.sin(b.wingPhase)) * (0.85 * flutterAmt) + (1 - 0.85 * flutterAmt);
           pctx.save();
+          pctx.font = '24px serif';
           pctx.translate(b.x + 12, b.y - 12);
           pctx.scale(scaleX, 1);
           pctx.fillText('\u{1F98B}', -12, 12);
