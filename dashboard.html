@@ -186,6 +186,8 @@
       align-items: center;
       gap: 12px;
       color: var(--text);
+      min-width: 0;
+      overflow: hidden;
     }
 
     .quick-link img {
@@ -211,6 +213,13 @@
       font-weight: 600;
       border-radius: 12px;
       transition: color 0.2s ease;
+      overflow: hidden;
+    }
+
+    .quick-link .link-info span {
+      white-space: wrap;
+      overflow: hidden;
+      ;
     }
 
     .quick-link a:hover { color: var(--if-blue-dark); }
