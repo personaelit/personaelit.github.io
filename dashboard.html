@@ -160,9 +160,10 @@
     }
 
     .quick-link {
+      position: relative;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       background: var(--surface);
       padding: 14px 16px;
       border-radius: 12px;
@@ -181,7 +182,6 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      flex: 1;
       color: var(--text);
     }
 
@@ -195,15 +195,25 @@
     }
 
     .quick-link a {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      padding-right: 44px;
       color: var(--if-blue);
       text-decoration: none;
       font-weight: 600;
+      border-radius: 12px;
       transition: color 0.2s ease;
     }
 
     .quick-link a:hover { color: var(--if-blue-dark); }
 
     .quick-link .delete-btn {
+      position: relative;
+      z-index: 1;
       background: none;
       border: none;
       color: #d33;
