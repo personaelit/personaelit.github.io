@@ -103,11 +103,13 @@
 
     /* === SEARCH === */
     .search-box {
+      position: relative;
       max-width: 600px;
       margin: auto;
       display: flex;
       gap: 10px;
       margin-bottom: 30px;
+      z-index: 100;
     }
 
     input[type="text"] {
@@ -161,6 +163,7 @@
 
     .quick-link {
       position: relative;
+      z-index:100;
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -201,6 +204,7 @@
       display: flex;
       align-items: center;
       padding: 14px 16px;
+      padding-left: 40px;
       padding-right: 44px;
       color: var(--if-blue);
       text-decoration: none;
@@ -223,6 +227,33 @@
     }
 
     .quick-link .delete-btn:hover { transform: scale(1.2); }
+
+    .drag-handle {
+      position: relative;
+      z-index: 2;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin-right: auto;
+      cursor: grab;
+      padding: 4px 6px;
+      border-radius: 4px;
+      opacity: 0.45;
+      transition: opacity 0.15s;
+      user-select: none;
+    }
+
+    .quick-link:hover .drag-handle { opacity: 0.75; }
+
+    .quick-link.dragging {
+      opacity: 0.35;
+      cursor: grabbing;
+    }
+
+    .quick-link.drag-over {
+      border-color: var(--if-blue);
+      box-shadow: 0 0 0 2px var(--badge), var(--shadow-lg);
+    }
 
     /* === MODAL === */
     .modal {
@@ -324,7 +355,7 @@
     }
 
     /* === CONTROLS === */
-    #controls { text-align: center; margin-bottom: 20px; }
+    #controls { text-align: center; margin-bottom: 20px; z-index: 100; position: relative; }
     #controls button { margin: 0 5px; }
 
     /* === EFFECTS PANEL === */
@@ -544,6 +575,7 @@
        ========================= */
     const quickLinksKey = "quickLinks";
     const searchKey = "recentSearches";
+    let dragSrcIndex = null;
 
     function saveRecentSearch(query) {
       let history = JSON.parse(localStorage.getItem(searchKey)) || [];
@@ -572,8 +604,44 @@
       links.forEach((link, i) => {
         const div = document.createElement("div");
         div.className = "quick-link";
+        div.draggable = true;
+
+        div.addEventListener("dragstart", (e) => {
+          dragSrcIndex = i;
+          e.dataTransfer.effectAllowed = "move";
+          requestAnimationFrame(() => div.classList.add("dragging"));
+        });
+        div.addEventListener("dragend", () => {
+          div.classList.remove("dragging");
+          container.querySelectorAll(".quick-link").forEach(el => el.classList.remove("drag-over"));
+        });
+        div.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          if (dragSrcIndex !== i) div.classList.add("drag-over");
+        });
+        div.addEventListener("dragleave", () => {
+          div.classList.remove("drag-over");
+        });
+        div.addEventListener("drop", (e) => {
+          e.preventDefault();
+          if (dragSrcIndex === null || dragSrcIndex === i) return;
+          const updated = JSON.parse(localStorage.getItem(quickLinksKey)) || [];
+          const [moved] = updated.splice(dragSrcIndex, 1);
+          updated.splice(i, 0, moved);
+          localStorage.setItem(quickLinksKey, JSON.stringify(updated));
+          dragSrcIndex = null;
+          renderLinks(updated);
+        });
+
+        const handle = document.createElement("span");
+        handle.className = "drag-handle";
+        handle.textContent = "\u22ee\u22ee";
+        handle.title = "Drag to reorder";
+
         const a = document.createElement("a");
         a.href = link.url;
+        a.draggable = false;
         const info = document.createElement("div");
         info.className = "link-info";
         const img = document.createElement("img");
@@ -586,7 +654,7 @@
         const del = document.createElement("button");
         del.className = "delete-btn"; del.textContent = "\u2715";
         del.onclick = () => deleteLink(i);
-        div.appendChild(a); div.appendChild(del);
+        div.appendChild(handle); div.appendChild(a); div.appendChild(del);
         container.appendChild(div);
       });
     }
