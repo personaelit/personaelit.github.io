@@ -506,6 +506,7 @@
       <button id="btn-aurora"      data-active="false" onclick="toggleEffect('aurora')"     >&#x1F30C; Aurora: Off</button>
       <button id="btn-sunny"       data-active="false" onclick="toggleEffect('sunny')"      >&#x2600;&#xFE0F; Sunny Day: Off</button>
       <button id="btn-analogtv"    data-active="false" onclick="toggleEffect('analogtv')"   >&#x1F4FA; Analog TV: Off</button>
+      <button id="btn-fireworks"   data-active="false" onclick="toggleEffect('fireworks')"  >&#x1F386; Fireworks: Off</button>
     </div>
     <button id="effectsToggle" onclick="document.getElementById('effectsList').classList.toggle('open')">&#x2699; Effects</button>
   </div>
@@ -774,7 +775,8 @@
       breathe:     'soDashboard.breathe',
       aurora:      'soDashboard.aurora',
       sunny:       'soDashboard.sunny',
-      analogtv:    'soDashboard.analogtv'
+      analogtv:    'soDashboard.analogtv',
+      fireworks:   'soDashboard.fireworks'
     };
     const EFFECT_LABELS = {
       butterflies: '\u{1F98B} Butterflies',
@@ -784,9 +786,10 @@
       breathe:     '\u{1FAC1} Breathe',
       aurora:      '\u{1F30C} Aurora',
       sunny:       '\u2600\uFE0F Sunny Day',
-      analogtv:    '\u{1F4FA} Analog TV'
+      analogtv:    '\u{1F4FA} Analog TV',
+      fireworks:   '\u{1F386} Fireworks'
     };
-    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false, sunny: false, analogtv: false };
+    const effects = { butterflies: false, fireflies: false, leaves: false, rain: false, breathe: false, aurora: false, sunny: false, analogtv: false, fireworks: false };
 
     /* --- Particle canvas --- */
     const particleCanvas = document.getElementById('particleCanvas');
@@ -1107,6 +1110,68 @@
       pctx.restore();
     }
 
+    /* --- Fireworks --- */
+    let fireworkRockets = [], fireworkParticles = [], fwLaunchTimer = 0;
+
+    function mkRocket() {
+      return {
+        x: Math.random() * particleCanvas.width,
+        y: particleCanvas.height,
+        vx: (Math.random() - 0.5) * 3,
+        vy: -(Math.random() * 5 + 10),
+        hue: Math.random() * 360,
+        trail: []
+      };
+    }
+
+    function explodeRocket(r) {
+      const count = 70 + Math.floor(Math.random() * 40);
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const speed = Math.random() * 5 + 1;
+        fireworkParticles.push({
+          x: r.x, y: r.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          decay: 0.012 + Math.random() * 0.018,
+          hue: r.hue + (Math.random() - 0.5) * 40,
+          size: 2 + Math.random() * 2
+        });
+      }
+    }
+
+    function drawFireworks() {
+      if (--fwLaunchTimer <= 0) {
+        fireworkRockets.push(mkRocket());
+        fwLaunchTimer = 45 + Math.floor(Math.random() * 55);
+      }
+      for (let i = fireworkRockets.length - 1; i >= 0; i--) {
+        const r = fireworkRockets[i];
+        r.trail.push({ x: r.x, y: r.y });
+        if (r.trail.length > 8) r.trail.shift();
+        r.x += r.vx; r.y += r.vy; r.vy += 0.2;
+        for (let t = 0; t < r.trail.length; t++) {
+          pctx.beginPath();
+          pctx.arc(r.trail[t].x, r.trail[t].y, 2, 0, Math.PI * 2);
+          pctx.fillStyle = `hsla(${r.hue},100%,70%,${(t / r.trail.length) * 0.6})`;
+          pctx.fill();
+        }
+        if (r.vy >= 0) { explodeRocket(r); fireworkRockets.splice(i, 1); }
+      }
+      for (let i = fireworkParticles.length - 1; i >= 0; i--) {
+        const p = fireworkParticles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.07; p.vx *= 0.97; p.vy *= 0.97;
+        p.life -= p.decay;
+        if (p.life <= 0) { fireworkParticles.splice(i, 1); continue; }
+        pctx.beginPath();
+        pctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        pctx.fillStyle = `hsla(${p.hue},100%,65%,${p.life})`;
+        pctx.fill();
+      }
+    }
+
     /* --- Main particle loop --- */
     let particleRaf = null;
 
@@ -1168,7 +1233,9 @@
         }
       }
 
-      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny) {
+      if (effects.fireworks) drawFireworks();
+
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny || effects.fireworks) {
         particleRaf = requestAnimationFrame(particleLoop);
       } else {
         particleRaf = null;
@@ -1394,6 +1461,9 @@
           if (effects.analogtv) { initAnalogTV(); tvLoop(); }
           else stopAnalogTV();
           break;
+        case 'fireworks':
+          if (!effects.fireworks) { fireworkRockets = []; fireworkParticles = []; }
+          break;
         case 'sunny':
           if (effects.sunny) {
             initSunny();
@@ -1409,7 +1479,7 @@
           break;
       }
 
-      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny) ensureParticleLoop();
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny || effects.fireworks) ensureParticleLoop();
     }
 
     function updateEffectBtn(name) {
