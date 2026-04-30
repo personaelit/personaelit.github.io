@@ -1142,7 +1142,7 @@
     }
 
     function drawFireworks() {
-      if (--fwLaunchTimer <= 0) {
+      if (effects.fireworks && --fwLaunchTimer <= 0) {
         fireworkRockets.push(mkRocket());
         fwLaunchTimer = 45 + Math.floor(Math.random() * 55);
       }
@@ -1170,6 +1170,26 @@
         pctx.fillStyle = `hsla(${p.hue},100%,65%,${p.life})`;
         pctx.fill();
       }
+    }
+
+    function grandFinale(clickX, clickY) {
+      const dist = Math.max(particleCanvas.height - clickY, 100);
+      const baseVy = -Math.sqrt(0.4 * dist);
+      const count = 8 + Math.floor(Math.random() * 5);
+      for (let i = 0; i < count; i++) {
+        const startX = clickX + (Math.random() - 0.5) * 200;
+        const targetX = clickX + (Math.random() - 0.5) * 150;
+        const frames = Math.abs(baseVy) / 0.2;
+        fireworkRockets.push({
+          x: startX,
+          y: particleCanvas.height,
+          vx: (targetX - startX) / frames,
+          vy: baseVy * (0.88 + Math.random() * 0.24),
+          hue: Math.random() * 360,
+          trail: []
+        });
+      }
+      ensureParticleLoop();
     }
 
     /* --- Main particle loop --- */
@@ -1233,9 +1253,9 @@
         }
       }
 
-      if (effects.fireworks) drawFireworks();
+      if (effects.fireworks || fireworkRockets.length > 0 || fireworkParticles.length > 0) drawFireworks();
 
-      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny || effects.fireworks) {
+      if (effects.butterflies || effects.fireflies || effects.leaves || effects.rain || effects.sunny || effects.fireworks || fireworkRockets.length > 0 || fireworkParticles.length > 0) {
         particleRaf = requestAnimationFrame(particleLoop);
       } else {
         particleRaf = null;
@@ -1502,6 +1522,11 @@
       loadBlocks();
       renderRecentSearches();
       restoreEffects();
+
+      const INTERACTIVE_SEL = 'button, a, input, textarea, .quick-link, .block, .modal-content, #effectsPanel, #controls, .search-box, .theme-toggle, #breathingGuide, #breathDim';
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest(INTERACTIVE_SEL)) grandFinale(e.clientX, e.clientY);
+      });
     };
   </script>
 </body>
