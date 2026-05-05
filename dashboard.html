@@ -601,9 +601,8 @@
         `<a href="#" onclick="execSearch('${query.replace(/'/g, "\\'")}');return false;">${query}</a>`
       ).join(" \u2022 ")}`;
     }
-    function getFavicon(url) {
-      try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; }
-      catch { return generateAvatarDataURL("?", 32); }
+    function getFavicon(hostname) {
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
     }
     function loadLinks() {
       renderLinks(JSON.parse(localStorage.getItem(quickLinksKey)) || []);
@@ -656,7 +655,7 @@
         info.className = "link-info";
         const img = document.createElement("img");
         img.alt = "icon"; img.referrerPolicy = "no-referrer";
-        img.src = link.favicon || getFavicon(link.url);
+        img.src = link.favicon || getFavicon(hostnameFromUrl(link.url));
         img.onerror = () => { img.onerror = null; img.src = generateAvatarDataURL(link.text || hostnameFromUrl(link.url), 22); };
         const text = document.createElement("span");
         text.textContent = link.text;
