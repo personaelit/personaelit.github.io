@@ -1362,6 +1362,45 @@ select {
   --text-muted: #a89878;
 }
 
+/* ── High Contrast — must come after all palette rules to win the cascade ── */
+:root[data-theme="light"][data-contrast="hc-light"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0f0f0;
+  --border: #595959;
+  --text: #000000;
+  --text-muted: #333333;
+  --accent: #1a1a99;
+  --accent-dim: #1a1a99;
+  --accent-text: #000066;
+  --danger: #990000;
+  --success: #006600;
+}
+
+:root[data-theme="light"][data-contrast="hc-light"] .btn-ghost:hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+:root[data-theme="dark"][data-contrast="hc-dark"] {
+  --bg: #000000;
+  --surface: #000000;
+  --surface-2: #1a1a1a;
+  --border: #ffffff;
+  --text: #ffffff;
+  --text-muted: #dddddd;
+  --accent: #ffff00;
+  --accent-dim: #ffcc00;
+  --accent-text: #ffff00;
+  --danger: #ff4444;
+  --success: #00dd00;
+}
+
+:root[data-theme="dark"][data-contrast="hc-dark"] .btn-ghost:hover {
+  background: #cccccc;
+  color: #000000;
+}
+
 /* Milestone badges */
 .badge-celebration {
   display: flex;
