@@ -990,44 +990,6 @@ select {
   --success: #5a7a5c;
 }
 
-[data-theme="hc-light"] {
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --surface-2: #f0f0f0;
-  --border: #000000;
-  --text: #000000;
-  --text-muted: #333333;
-  --accent: #1a1a1a;
-  --accent-dim: #000000;
-  --accent-text: #000000;
-  --danger: #990000;
-  --success: #006600;
-  --mood-1: #990000;
-  --mood-2: #8b4500;
-  --mood-3: #666600;
-  --mood-4: #006600;
-  --mood-5: #004400;
-}
-
-[data-theme="hc-dark"] {
-  --bg: #000000;
-  --surface: #0a0a0a;
-  --surface-2: #1a1a1a;
-  --border: #ffffff;
-  --text: #ffffff;
-  --text-muted: #dddddd;
-  --accent: #ffff00;
-  --accent-dim: #ffff66;
-  --accent-text: #ffff00;
-  --danger: #ff6666;
-  --success: #66ff88;
-  --mood-1: #ff6666;
-  --mood-2: #ffaa66;
-  --mood-3: #ffff66;
-  --mood-4: #66ff88;
-  --mood-5: #00ff99;
-}
-
 /* ═══════════════════════════════════════════
    COLOUR PALETTES
    Each palette overrides only the accent family.
