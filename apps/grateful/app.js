@@ -184,6 +184,7 @@ function getSettings() {
     notificationsEnabled: false,
     colorScheme: 'system',
     colorPalette: 'sage',
+    fontSize: 'md',
   });
 }
 
@@ -441,6 +442,9 @@ function applyTheme(scheme) {
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : scheme;
   document.documentElement.setAttribute('data-theme', resolved);
+  if (scheme === 'hc-light' || scheme === 'hc-dark') {
+    document.documentElement.removeAttribute('data-palette');
+  }
 }
 
 /** Applies the colour palette to <html data-palette>. */
@@ -452,11 +456,18 @@ function applyPalette(palette) {
   }
 }
 
+const FONT_SIZES = { sm: '87.5%', md: '100%', lg: '112.5%', xl: '125%' };
+
+/** Applies font size to the root element so rem units scale throughout the app. */
+function applyFontSize(size) {
+  document.documentElement.style.fontSize = FONT_SIZES[size] ?? '100%';
+}
+
 /** Returns 'dark' or 'light' accounting for any manual override. */
 function getEffectiveTheme() {
   const { colorScheme } = getSettings();
-  if (colorScheme === 'dark')  return 'dark';
-  if (colorScheme === 'light') return 'light';
+  if (colorScheme === 'dark' || colorScheme === 'hc-dark')   return 'dark';
+  if (colorScheme === 'light' || colorScheme === 'hc-light') return 'light';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
@@ -675,6 +686,7 @@ function bootstrap() {
   const settings = getSettings();
   applyTheme(settings.colorScheme ?? 'system');
   applyPalette(settings.colorPalette ?? 'sage');
+  applyFontSize(settings.fontSize ?? 'md');
 
   // Keep data-theme in sync when OS preference changes and user is on "system"
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -2565,12 +2577,18 @@ function renderSettings() {
   const notifOk  = 'Notification' in window;
   const notifPerm = notifOk ? Notification.permission : 'unsupported';
 
-  const scheme  = settings.colorScheme  ?? 'system';
-  const palette = settings.colorPalette ?? 'sage';
-  const themeBtn = s => `
+  const scheme   = settings.colorScheme  ?? 'system';
+  const palette  = settings.colorPalette ?? 'sage';
+  const fontSize = settings.fontSize     ?? 'md';
+  const themeBtn = (s, label) => `
     <button class="btn theme-opt btn-theme ${scheme === s ? 'btn-primary' : 'btn-ghost'}"
-      data-scheme="${s}">
-      ${{ system: 'System', light: 'Light', dark: 'Dark' }[s]}
+      data-scheme="${s}" aria-pressed="${scheme === s}">
+      ${label}
+    </button>`;
+  const fontBtn = (s, label) => `
+    <button class="btn btn-theme ${fontSize === s ? 'btn-primary' : 'btn-ghost'} font-size-opt"
+      data-size="${s}" aria-pressed="${fontSize === s}">
+      ${label}
     </button>`;
 
   el.innerHTML = `
@@ -2580,8 +2598,12 @@ function renderSettings() {
       <!-- Appearance -->
       <div class="card stack gap-md">
         <p class="section-label">Appearance</p>
-        <div class="row" role="group" aria-label="Colour scheme">
-          ${themeBtn('system')}${themeBtn('light')}${themeBtn('dark')}
+        <div class="row row-between-wrap" role="group" aria-label="Colour scheme">
+          ${themeBtn('system', 'System')}${themeBtn('light', 'Light')}${themeBtn('dark', 'Dark')}${themeBtn('hc-light', 'HC Light')}${themeBtn('hc-dark', 'HC Dark')}
+        </div>
+        <p class="section-label">Text Size</p>
+        <div class="row" role="group" aria-label="Text size">
+          ${fontBtn('sm', 'Small')}${fontBtn('md', 'Normal')}${fontBtn('lg', 'Large')}${fontBtn('xl', 'X-Large')}
         </div>
         <p class="section-label">Colour</p>
         <div class="palette-row" role="group" aria-label="Colour theme">
@@ -2674,6 +2696,15 @@ function renderSettings() {
       saveSettings({ colorScheme: s });
       applyTheme(s);
       renderSettings(); // refresh button states
+    });
+  });
+
+  el.querySelectorAll('.font-size-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const s = btn.dataset.size;
+      saveSettings({ fontSize: s });
+      applyFontSize(s);
+      renderSettings();
     });
   });
 
