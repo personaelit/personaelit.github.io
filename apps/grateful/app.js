@@ -175,7 +175,7 @@ function getOrCreateClientId() {
 
 // Settings
 
-/** @returns {{ name: string, dob: string|null, reminderTime: string|null, notificationsEnabled: boolean, colorScheme: string, colorPalette: string }} */
+/** @returns {{ name: string, dob: string|null, reminderTime: string|null, notificationsEnabled: boolean, colorScheme: string, colorPalette: string, highContrast: string|null }} */
 function getSettings() {
   return load(KEYS.SETTINGS, {
     name: '',
@@ -184,6 +184,7 @@ function getSettings() {
     notificationsEnabled: false,
     colorScheme: 'system',
     colorPalette: 'sage',
+    highContrast: null,
   });
 }
 
@@ -452,9 +453,21 @@ function applyPalette(palette) {
   }
 }
 
+/** Applies or removes a high-contrast mode via <html data-contrast>. */
+function applyHighContrast(mode) {
+  if (mode === 'hc-light' || mode === 'hc-dark') {
+    document.documentElement.setAttribute('data-contrast', mode);
+    document.documentElement.setAttribute('data-theme', mode === 'hc-light' ? 'light' : 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-contrast');
+  }
+}
+
 /** Returns 'dark' or 'light' accounting for any manual override. */
 function getEffectiveTheme() {
-  const { colorScheme } = getSettings();
+  const { colorScheme, highContrast } = getSettings();
+  if (highContrast === 'hc-dark')  return 'dark';
+  if (highContrast === 'hc-light') return 'light';
   if (colorScheme === 'dark')  return 'dark';
   if (colorScheme === 'light') return 'light';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -675,6 +688,7 @@ function bootstrap() {
   const settings = getSettings();
   applyTheme(settings.colorScheme ?? 'system');
   applyPalette(settings.colorPalette ?? 'sage');
+  if (settings.highContrast) applyHighContrast(settings.highContrast);
 
   // Keep data-theme in sync when OS preference changes and user is on "system"
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -2567,10 +2581,17 @@ function renderSettings() {
 
   const scheme  = settings.colorScheme  ?? 'system';
   const palette = settings.colorPalette ?? 'sage';
+  const hc      = settings.highContrast ?? null;
+  const isHC    = !!hc;
   const themeBtn = s => `
     <button class="btn theme-opt btn-theme ${scheme === s ? 'btn-primary' : 'btn-ghost'}"
-      data-scheme="${s}">
+      data-scheme="${s}" ${isHC ? 'disabled' : ''}>
       ${{ system: 'System', light: 'Light', dark: 'Dark' }[s]}
+    </button>`;
+  const hcBtn = s => `
+    <button class="btn hc-opt btn-theme ${hc === s ? 'btn-primary' : 'btn-ghost'}"
+      data-hc="${s}">
+      ${{ 'hc-light': 'HC Light', 'hc-dark': 'HC Dark' }[s]}
     </button>`;
 
   el.innerHTML = `
@@ -2582,6 +2603,11 @@ function renderSettings() {
         <p class="section-label">Appearance</p>
         <div class="row" role="group" aria-label="Colour scheme">
           ${themeBtn('system')}${themeBtn('light')}${themeBtn('dark')}
+        </div>
+        <p class="section-label">High Contrast</p>
+        <div class="row" role="group" aria-label="High contrast">
+          <button class="btn hc-opt btn-theme ${!hc ? 'btn-primary' : 'btn-ghost'}" data-hc="off">Off</button>
+          ${hcBtn('hc-light')}${hcBtn('hc-dark')}
         </div>
         <p class="section-label">Colour</p>
         <div class="palette-row" role="group" aria-label="Colour theme">
@@ -2674,6 +2700,17 @@ function renderSettings() {
       saveSettings({ colorScheme: s });
       applyTheme(s);
       renderSettings(); // refresh button states
+    });
+  });
+
+  el.querySelectorAll('.hc-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.hc;
+      const mode = v === 'off' ? null : v;
+      saveSettings({ highContrast: mode });
+      applyHighContrast(mode);
+      if (!mode) applyTheme(getSettings().colorScheme ?? 'system');
+      renderSettings();
     });
   });
 
