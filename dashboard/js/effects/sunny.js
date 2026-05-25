@@ -1,5 +1,3 @@
-import { isDarkMode } from '../theme.js';
-
 let sunTime = 0;
 let clouds = [];
 
@@ -97,11 +95,7 @@ export function drawRainbow(ctx) {
 export function init() {
   clouds = Array.from({length: 5}, () => mkCloud(Math.random() * innerWidth));
   sunTime = 0;
-  if (isDarkMode()) {
-    document.body.style.background = 'radial-gradient(ellipse at 85% 12%, rgba(255,210,60,0.18) 0%, transparent 45%), radial-gradient(1200px 800px at 70% 20%, #101827 0%, #0b1426 55%, #070b14 100%)';
-  } else {
-    document.body.style.background = 'linear-gradient(180deg, #87ceeb 0%, #b8e4f7 30%, #dff0f8 65%, #f0f8ff 100%)';
-  }
+  document.body.style.background = 'linear-gradient(180deg, #87ceeb 0%, #b8e4f7 30%, #dff0f8 65%, #f0f8ff 100%)';
 }
 
 export function stop() {

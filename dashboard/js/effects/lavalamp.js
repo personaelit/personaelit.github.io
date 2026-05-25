@@ -1,5 +1,3 @@
-import { isDarkMode } from '../theme.js';
-
 let canvas = null, ctx = null, raf = null;
 let blobs = [];
 
@@ -20,22 +18,15 @@ function mkBlob() {
 
 export function applyStyle() {
   if (!canvas) return;
-  if (isDarkMode()) {
-    canvas.style.filter = 'blur(12px) contrast(18)';
-    canvas.style.mixBlendMode = 'screen';
-    document.body.style.background = '#050508';
-  } else {
-    canvas.style.filter = 'blur(12px) contrast(15)';
-    canvas.style.mixBlendMode = 'multiply';
-    document.body.style.background = '#f5ede4';
-  }
+  canvas.style.filter = 'blur(12px) contrast(18)';
+  canvas.style.mixBlendMode = 'screen';
+  document.body.style.background = '#050508';
 }
 
 function loop() {
   const w = window.innerWidth, h = window.innerHeight;
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-  const dark = isDarkMode();
-  ctx.fillStyle = dark ? '#000005' : '#ffffff';
+  ctx.fillStyle = '#000005';
   ctx.fillRect(0, 0, w, h);
 
   for (const b of blobs) {
@@ -57,7 +48,7 @@ function loop() {
     if (b.y > h - margin) { b.y = h - margin; b.vy = -Math.abs(b.vy) * 0.6; }
     ctx.beginPath();
     ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsl(${b.hue}, 85%, ${dark ? 60 : 50}%)`;
+    ctx.fillStyle = `hsl(${b.hue}, 85%, 60%)`;
     ctx.fill();
   }
 
